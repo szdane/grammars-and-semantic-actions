@@ -45,6 +45,57 @@ record directedGraph : Type (ℓ-suc ℓ) where
       reachable start (src e) →
       reachable start (dst e)
 
+  data reachable' (start : states .fst) :
+    (end : states .fst) → Type ℓ where
+    nil : ∀ {end} → start ≡ end → reachable' start end
+    cons : ∀ {end} e → dst e ≡ end → reachable' start (src e) → reachable' start end
+
+  isSetStates : isSet (states .fst)
+  isSetStates = isFinSet→isSet (states .snd)
+
+  isPropStates≡ : {v : states .fst} → isProp (v ≡ v)
+  isPropStates≡ = isSetStates _ _
+
+  module ConvReachable {start} where
+    open import Cubical.Foundations.Equiv.Fiberwise
+
+    reachable→reachable' : ∀ {end} → reachable start end → reachable' start end
+    reachable→reachable' nil = nil refl
+    reachable→reachable' (cons e path) = cons e refl (reachable→reachable' path)
+
+    reachable'∼>reachable : ∀ {end} → reachable' start end → Σ[ v ∈ states .fst ] (reachable start v) × (v ≡ end)
+    reachable'∼>reachable (nil p) = start , nil , p
+    reachable'∼>reachable (cons e p path') =
+      let (v , path , v≡srce) = reachable'∼>reachable path' in
+      dst e , cons e (subst (reachable start) v≡srce path) , p
+
+    total : Σ _ (reachable start) → Σ _ (reachable' start)
+    total (end , path) = end , reachable→reachable' path
+
+    module _ (end' : states .fst) (path' : reachable' start end') where
+      --y = (end' , path')
+
+      --contrFibers : isContr (fiber total y)
+      contrFibers : isContr (Σ[ (end , path) ∈ (Σ _ (reachable start)) ] total (end , path) ≡ (end' , path'))
+      contrFibers .fst =
+        let (v , path , v≡end') = reachable'∼>reachable path' in
+        (v , path) , ΣPathP ({!!} , {!!})
+      contrFibers .snd = {!!}
+
+    Σreachable≃Σreachable' : Σ _ (reachable start) ≃ Σ _ (reachable' start)
+    Σreachable≃Σreachable' .fst = total
+    Σreachable≃Σreachable' .snd .equiv-proof = uncurry contrFibers
+
+    reachable≃reachable' : ∀ {end} → reachable start end ≃ reachable' start end
+    reachable≃reachable' .fst = reachable→reachable'
+    reachable≃reachable' {end} .snd = fiberEquiv (reachable start) (reachable' start) (λ end → reachable→reachable' {end = end}) equiv end
+      where
+      equiv : isEquiv λ (end , path) → end , reachable→reachable' path
+      equiv .equiv-proof (_ , nil p) .fst = (start , nil) , ΣPathP (p , λ i → nil λ j → p (j ∧ i))
+      equiv .equiv-proof (end' , cons e p path') .fst = {!!} , {!!}
+      equiv .equiv-proof (end' , nil p) .snd ((end , path) , p') using (end≡end' , idk) ← PathPΣ p' = ΣPathP (ΣPathP (p ∙ sym (end≡end') , {!!}) , {!!})
+      equiv .equiv-proof (end' , cons e p path') .snd ((end , path) , idk) = {!!}
+
   adjacent : states .fst → states .fst → Type ℓ
   adjacent u v = Σ[ e ∈ directed-edges .fst ] (src e ≡ u) × (dst e ≡ v)
 
@@ -130,9 +181,6 @@ record directedGraph : Type (ℓ-suc ℓ) where
       sec : ∀ {start end} → section (Walk→reachable {start = start} {end}) reachable→Walk
       sec nil = sym $ nil'-filler refl
       sec (cons e path) = substRefl {B = reachable _} _ ∙ congS (cons e) (substRefl {B = reachable _} _ ∙ sec path)
-
-    isPropStates≡ : {v : states .fst} → isProp (v ≡ v)
-    isPropStates≡ = isFinSet→isSet (states .snd) _ _
 
     contrFibers : ∀ {start end} (path : reachable start end) → isContr (fiber Walk→reachable path)
     contrFibers path .fst = reachable→Walk path , sec path
