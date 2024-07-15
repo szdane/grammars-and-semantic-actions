@@ -12,24 +12,31 @@ open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.DecidablePredicate
-open import Cubical.Data.Sum as Sum
-open import Cubical.Data.Bool hiding (_⊕_)
-open import Cubical.Data.W.Indexed
-open import Cubical.Data.Maybe
+open import Cubical.Data.Sum as Sum hiding (elim ; rec)
+open import Cubical.Data.Bool hiding (_⊕_ ; elim)
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Empty as ⊥ hiding (elim ; rec)
 open import Cubical.Data.Unit
-open import Cubical.Data.Nat as Nat
-open import Cubical.Data.Nat.Order.Recursive as Ord
-open import Cubical.Data.SumFin hiding (fsuc)
+open import Cubical.Data.Maybe hiding (elim ; rec)
+open import Cubical.Data.Nat as Nat hiding (elim)
+open import Cubical.Data.Nat.Order.Recursive as Ord renaming (_≤_ to _≤ℕ_)
+open import Cubical.Data.SumFin as SumFin hiding (fsuc ; elim)
+open import Cubical.Data.Vec as Vec renaming (_++_ to _++Vec_) hiding (lookup)
+open import Cubical.Data.Vec.DepVec
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.HITs.PropositionalTruncation as PT hiding (elim ; rec)
 
 open import Semantics.Helper
 private
   variable
     ℓ ℓ' : Level
+
+private
+  -- There is a similar function defined in Vec, but using another definition of Fin
+  lookup : ∀ {n} {T : Type ℓ} → Vec T n → Fin n → T
+  lookup (x ∷ xs) SumFin.fzero      = x
+  lookup (x ∷ xs) (SumFin.fsuc idx) = lookup xs idx
 
 record directedGraph : Type (ℓ-suc ℓ) where
   field
@@ -38,229 +45,160 @@ record directedGraph : Type (ℓ-suc ℓ) where
     src : directed-edges .fst → states .fst
     dst : directed-edges .fst → states .fst
 
-  data reachable (start : states .fst) :
-    (end : states .fst) → Type ℓ where
-    nil : reachable start start
-    cons : ∀ (e : directed-edges .fst) →
-      reachable start (src e) →
-      reachable start (dst e)
+  Adj : states .fst → states .fst → Type ℓ
+  Adj u v = Σ[ e ∈ directed-edges .fst ] (src e ≡ u) × (dst e ≡ v)
 
-  data reachable' (start : states .fst) :
-    (end : states .fst) → Type ℓ where
-    nil : ∀ {end} → start ≡ end → reachable' start end
-    cons : ∀ {end} e → dst e ≡ end → reachable' start (src e) → reachable' start end
+  AdjIsFinSet : ∀ {u v} → isFinSet (Adj u v)
+  AdjIsFinSet = isFinSetΣ directed-edges λ _ → _ ,
+                    isFinSet× (_ , isFinSet≡ states _ _) (_ , isFinSet≡ states _ _)
 
-  isSetStates : isSet (states .fst)
-  isSetStates = isFinSet→isSet (states .snd)
+  module Connectivity where
+    -- paths approach: define Path as isFinOrd (something), write function to path, show paths are bounded
 
-  isPropStates≡ : {v : states .fst} → isProp (v ≡ v)
-  isPropStates≡ = isSetStates _ _
+    module Walk[] where
+      opaque
+        -- Graph walks indexed by length
+        Walk[_] : ℕ → states .fst → states .fst → Type ℓ
+        Walk[ 0 ]     start end = start ≡ end
+        Walk[ suc n ] start end = Σ[ v ∈ states .fst ] Σ[ walk ∈ Walk[ n ] start v ] Adj v end
 
-  module ConvReachable {start} where
-    open import Cubical.Foundations.Equiv.Fiberwise
+        Walk[]IsFinSet : ∀ {n start end} → isFinSet (Walk[ n ] start end)
+        Walk[]IsFinSet {0}     = isFinSet≡ states _ _
+        Walk[]IsFinSet {suc n} = isFinSetΣ states λ _ → _ ,
+                                isFinSetΣ (_ , Walk[]IsFinSet) λ _ → _ ,
+                                AdjIsFinSet
 
-    reachable→reachable' : ∀ {end} → reachable start end → reachable' start end
-    reachable→reachable' nil = nil refl
-    reachable→reachable' (cons e path) = cons e refl (reachable→reachable' path)
+        nil : ∀ {start end} → start ≡ end → Walk[ 0 ] start end
+        nil p = p
 
-    reachable'∼>reachable : ∀ {end} → reachable' start end → Σ[ v ∈ states .fst ] (reachable start v) × (v ≡ end)
-    reachable'∼>reachable (nil p) = start , nil , p
-    reachable'∼>reachable (cons e p path') =
-      let (v , path , v≡srce) = reachable'∼>reachable path' in
-      dst e , cons e (subst (reachable start) v≡srce path) , p
+        cons : ∀ {n start v end} → (walk : Walk[ n ] start v) → Adj v end → Walk[ suc n ] start end
+        cons walk adj = _ , walk , adj
 
-    total : Σ _ (reachable start) → Σ _ (reachable' start)
-    total (end , path) = end , reachable→reachable' path
+        _++_ : ∀ {m n start v end} → Walk[ m ] start v → Walk[ n ] v end → Walk[ m + n ] start end
+        _++_ {n = 0} l r = subst2 (λ k → Walk[ k ] _) (sym $ +-zero _) r l
+        _++_ {n = suc n} {start = start} {end = end} l (u , walk[n] , adj) =
+          let walk = cons (l ++ walk[n]) adj in
+          subst (λ k → Walk[ k ] start end) (sym $ +-suc _ _) walk
+        infixr 5 _++_
 
-    module _ (end' : states .fst) (path' : reachable' start end') where
-      --y = (end' , path')
+        elim : {B : ∀ n start end → Walk[ n ] start end → Type ℓ'}
+            → (∀ start end → (p : start ≡ end) → B _ _ _ (nil p))
+            → (∀ n start end v → (walk[n] : Walk[ n ] start v) → (adj : Adj v end) → B _ _ _ walk[n] → B _ _ _ (cons walk[n] adj))
+            → ∀ n start end → (walk[n] : Walk[ n ] start end) → B _ _ _ walk[n]
+        elim base induct 0 _ _ p = base _ _ p
+        elim base induct (suc n) _ _ (v , walk[n] , adj) = induct _ _ _ v walk[n] adj $ elim base induct _ _ _ walk[n]
 
-      --contrFibers : isContr (fiber total y)
-      contrFibers : isContr (Σ[ (end , path) ∈ (Σ _ (reachable start)) ] total (end , path) ≡ (end' , path'))
-      contrFibers .fst =
-        let (v , path , v≡end') = reachable'∼>reachable path' in
-        (v , path) , ΣPathP ({!!} , {!!})
-      contrFibers .snd = {!!}
+        rec[] : {B : ℕ → Type ℓ'}
+              → ((start end : states .fst) → start ≡ end → B 0)
+              → (∀ n start end v → Walk[ n ] start v → Adj v end → B n → B (suc n))
+              → ∀ n start end → Walk[ n ] start end → B n
+        rec[] = elim
 
-    Σreachable≃Σreachable' : Σ _ (reachable start) ≃ Σ _ (reachable' start)
-    Σreachable≃Σreachable' .fst = total
-    Σreachable≃Σreachable' .snd .equiv-proof = uncurry contrFibers
+        rec : {B : Type ℓ'}
+            → ((start end : states .fst) → start ≡ end → B)
+            → (∀ n start end v → Walk[ n ] start v → Adj v end → B → B)
+            → ∀ n start end → Walk[ n ] start end → B
+        rec = rec[]
 
-    reachable≃reachable' : ∀ {end} → reachable start end ≃ reachable' start end
-    reachable≃reachable' .fst = reachable→reachable'
-    reachable≃reachable' {end} .snd = fiberEquiv (reachable start) (reachable' start) (λ end → reachable→reachable' {end = end}) equiv end
-      where
-      equiv : isEquiv λ (end , path) → end , reachable→reachable' path
-      equiv .equiv-proof (_ , nil p) .fst = (start , nil) , ΣPathP (p , λ i → nil λ j → p (j ∧ i))
-      equiv .equiv-proof (end' , cons e p path') .fst = {!!} , {!!}
-      equiv .equiv-proof (end' , nil p) .snd ((end , path) , p') using (end≡end' , idk) ← PathPΣ p' = ΣPathP (ΣPathP (p ∙ sym (end≡end') , {!!}) , {!!})
-      equiv .equiv-proof (end' , cons e p path') .snd ((end , path) , idk) = {!!}
+      module _ {n} {start} {end} (walk : Walk[ n ] start end) where
+        statesAlong : Vec (states .fst) (suc n)
+        statesAlong = rec[] (λ start _ _ → start ∷ [])
+                            (λ n _ _ v _ _ states → _∷_ {n = suc n} v states)
+                            _ _ _ walk
 
-  adjacent : states .fst → states .fst → Type ℓ
-  adjacent u v = Σ[ e ∈ directed-edges .fst ] (src e ≡ u) × (dst e ≡ v)
+        stateAt : Fin (suc n) → states .fst
+        stateAt = lookup statesAlong
 
-  adjacentIsFinSet : ∀ {u v} → isFinSet (adjacent u v)
-  adjacentIsFinSet = isFinSetΣ directed-edges λ _ → _ ,
-                     isFinSet× (_ , isFinSet≡ states _ _) (_ , isFinSet≡ states _ _)
+        prefixes' : depVec (λ k → Walk[ k ] start (stateAt (fromℕ k))) (suc n)
+        prefixes' = elim {B = λ n _ _ _ → depVec {!λ k → Walk[ k ] _ (stateAt (fromℕ k))!} (suc n)} (λ _ _ p → nil p □ ⋆) (λ _ _ _ v walk[n] adj → {!!} □_) _ _ _ walk
 
-  opaque
-    nil' : ∀ {start end} → start ≡ end → reachable start end
-    nil' start≡end = subst (reachable _) start≡end nil
+        prefixes : depVec (λ k → Σ[ v ∈ (states .fst)] Walk[ k ] start v) (suc n)
+        prefixes = elim {B = λ n start end _ → depVec (λ k → Σ[ v ∈ (states .fst)] Walk[ k ] start v) (suc n)}
+                        (λ _ _ p → (_ , nil p) □ ⋆)
+                        (λ _ _ _ v walk[n] adj prev → (_ , cons walk[n] adj) □ prev)
+                        _ _ _ walk
 
-    nil'-filler : ∀ {start end} (p : start ≡ end) → PathP (λ i → reachable start (p i)) nil (nil' p)
-    nil'-filler p = subst-filler (reachable _) p nil
+      simplifyLoops : ∀ {n start end} → Walk[ n ] start end → Σ[ k ∈ Fin (card states) ] Walk[ toℕ k ] start end
+      simplifyLoops walk[n] = {!!}
+    open Walk[] public using (Walk[_] ; Walk[]IsFinSet)
 
-  opaque
-    cons' : ∀ {start v end} → adjacent v end → reachable start v → reachable start end
-    cons' {start = start} (e , srce≡v , dste≡end) path =
-      let path' = subst (reachable start) (sym srce≡v) path in
-      let consPath = cons e path' in
-      subst (reachable start) dste≡end consPath
+    module Walk where opaque
+      -- Graph walks of arbitrary length
+      Walk : states .fst → states .fst → Type ℓ
+      Walk start end = Σ[ n ∈ ℕ ] Walk[ n ] start end
 
-  opaque
-    cons'' : ∀ {start v end} → ((e , srce≡v , dste≡end) : adjacent v end) → reachable start v → reachable start (dst e)
-    cons'' (e , srce≡v , dste≡end) path = cons e (subst (reachable _) (sym srce≡v) path)
+      Walk[]→Walk : ∀ {n start end} → Walk[ n ] start end → Walk start end
+      Walk[]→Walk walk[] = _ , walk[]
 
-  -- length : ∀ {start end} → reachable start end → ℕ
-  -- -- length nil = 0
-  -- -- length (cons _ path) = suc (length path)
-  -- length {start = start} {end = .start} nil = 0
-  -- length {start = start} {end = .(dst e)} (cons e path) = suc (length {start} {src e} path)
-
-  -- lengthNil'≡0 : ∀ {start end} (start≡end : start ≡ end) → length (nil' start≡end) ≡ 0
-  -- lengthNil'≡0 {start = start} _ = refl {x = length {start = start} nil}
-
-  -- lengthCons' : ∀ {start v end} (adj : adjacent v end) (path : reachable start v) →
-  --   length (
-  --     let (e , srce≡v , dste≡end) = adj in
-  --     let path' = subst (reachable start) (sym srce≡v) path in
-  --     let consPath = cons e path' in
-  --     subst (reachable start) dste≡end consPath
-  --   ) ≡ suc (length path)
-  -- lengthCons' {start = start} {v} {end} adj path = {!!}
-
-  -- Graph walks indexed by length
-  Walk[_] : ℕ → states .fst → states .fst → Type ℓ
-  Walk[ 0 ]     start end = start ≡ end
-  Walk[ suc n ] start end = Σ[ v ∈ states .fst ] Σ[ walk ∈ Walk[ n ] start v ] adjacent v end
-
-  -- Graph walks of arbitrary length
-  Walk : states .fst → states .fst → Type ℓ
-  Walk start end = Σ[ n ∈ ℕ ] Walk[ n ] start end
-
-  -- "Efficient" graph walks, with length less than the number of vertices
-  -- The idea is that any walk is equivalent to one of these
-  FastWalk : states .fst → states .fst → Type ℓ
-  FastWalk start end = Σ[ n ∈ Fin (card states) ] Walk[ toℕ n ] start end
-
-  -- `Walk` is supposed to be a more convenient formulation of `reachable`,
-  -- so we expect them to be equivalent
-  module Conv where
-    -- Walk[_]→fiberLength : ∀ n {start end} → Walk[ n ] start end → fiber (length {start = start} {end = end}) n
-    -- Walk[ 0 ]→fiberLength {start = start} start≡end = nil' start≡end , refl {x = length {start = start} nil}
-    -- Walk[ suc n ]→fiberLength (v , walk , adj) = cons' adj path , {!!}
-    --   where
-    --   path = Walk[ n ]→fiberLength walk .fst
-    --   inFiber = Walk[ n ]→fiberLength walk .snd
-
-    Walk[_]→reachable : ∀ n {start end} → Walk[ n ] start end → reachable start end
-    Walk[ 0 ]→reachable = nil'
-    Walk[ suc n ]→reachable (v , walk' , adj) = cons' adj (Walk[ n ]→reachable walk')
-
-    Walk→reachable : ∀ {start end} → Walk start end → reachable start end
-    Walk→reachable (n , walk) = Walk[ n ]→reachable walk
-
-    reachable→Walk : ∀ {start end} → reachable start end → Walk start end
-    reachable→Walk nil = 0 , refl
-    reachable→Walk (cons e path) =
-      let (n , walk') = reachable→Walk path in
-      suc n , src e , walk' , e , refl , refl
+      rec : {T : Type ℓ'}
+          → (f : ∀ {n begin end} → Walk[ n ] begin end → T)
+          → ∀ {begin end} → Walk begin end → T
+      rec f (_ , walk[]) = f walk[]
+    open Walk public hiding (rec)
 
     opaque
-      unfolding cons'
-      sec : ∀ {start end} → section (Walk→reachable {start = start} {end}) reachable→Walk
-      sec nil = sym $ nil'-filler refl
-      sec (cons e path) = substRefl {B = reachable _} _ ∙ congS (cons e) (substRefl {B = reachable _} _ ∙ sec path)
+      -- Mere existence of a path between states
+      isReachable : states .fst → states .fst → Type ℓ
+      isReachable start end = ∥ Walk start end ∥₁
 
-    contrFibers : ∀ {start end} (path : reachable start end) → isContr (fiber Walk→reachable path)
-    contrFibers path .fst = reachable→Walk path , sec path
-    contrFibers nil .snd (walk , isInFiber) = {!!}
-    contrFibers (cons e path) .snd ((n , walk[n]) , isInFiber) = {!!}
+    -- Decidability of reachability
+    module DecReachability where opaque
+      bound : ℕ
+      bound = card states
 
-    -- opaque
-    --   unfolding nil'
-    --   ret0 : ∀ {start end} (p : start ≡ end) → reachable→Walk {start = start} {end} (Walk→reachable (0 , p)) ≡ (0 , p)
-    --   ret0 p with nil' p -- with abstraction satiates the positivity checker
-    --   ...       | nil         = ΣPathP (refl , isFinSet→isSet (states .snd) _ _ _ p)
-    --   ...       | cons e path = ΣPathP (refl , isFinSet→isSet (states .snd) _ _ _ p)
+      -- "Efficient" graph walks, with length no more than the number of vertices
+      -- The idea is that there are finitely many fast walks, and any walk is equivalent to one of them
+      FastWalk : states .fst → states .fst → Type ℓ
+      FastWalk start end = Σ[ n ∈ Fin bound ] Walk[ toℕ n ] start end
 
-    -- opaque
-    --   --unfolding cons'
-    --   retsuc : ∀ {start end} n v (walk[n] : Walk[ n ] start v) (adj : adjacent v end)
-    --          → reachable→Walk {start = start} {end} (Walk→reachable (suc n , v , walk[n] , adj)) ≡ (suc n , v , walk[n] , adj)
-    --   retsuc n v walk[n] adj with cons' adj (Walk[ n ]→reachable walk[n])
-    --   retsuc {start = start} {end} n v walk[n] (e , l , r) | path with src e | l
-    --   ...                                                            | v     | refl = ?
+      FastWalkIsFinSet : ∀ {start end} → isFinSet (FastWalk start end)
+      FastWalkIsFinSet = isFinSetΣ (_ , isFinSetFin) λ _ → _ , Walk[]IsFinSet
 
-    -- opaque
-    --   unfolding nil'
-    --   unfolding cons'
-    --   ret : ∀ {start end} → retract (Walk→reachable {start = start} {end}) reachable→Walk
-    --   ret (0 , start≡end) = ret0 start≡end
-    --   ret (suc n , v , walk[n] , adj) with cons' adj (Walk[ n ]→reachable walk[n])
-    --   ret {start = start} {.start} (suc n , v , walk[n] , e , l , r) | nil = {!!}
-    --   ret {start = start} {.(dst e₁)} (suc n , v , walk[n] , e , l , r) | cons e₁ path = {!!}
+      FastWalk→Walk : ∀ {start end} → FastWalk start end → Walk start end
+      FastWalk→Walk (_ , walk[]) = Walk[]→Walk walk[]
 
-    -- WalkIsoReachable : ∀ {start end} → Iso (Walk start end) (reachable start end)
-    -- WalkIsoReachable .Iso.fun = Walk→reachable
-    -- WalkIsoReachable .Iso.inv = reachable→Walk
-    -- WalkIsoReachable .Iso.rightInv = sec
-    -- WalkIsoReachable .Iso.leftInv = ret
+      -- The core of the proof, that any walk is equivalent to a fast walk
+      Walk→FastWalk : ∀ {start end} → Walk start end → FastWalk start end
+      Walk→FastWalk = Walk.rec {!!}
+    open DecReachability public hiding (bound)
 
-    Walk≃reachable : ∀ {start end} → Walk start end ≃ reachable start end
-    Walk≃reachable .fst = Walk→reachable
-    Walk≃reachable .snd .equiv-proof = contrFibers
+    -- Walk[_]Dec : ∀ n {start end} → Dec ∥ Walk[ n ] start end ∥₁
+    -- Walk[ n ]Dec = isFinSet→Dec∥∥ $ Walk[ n ]IsFinSet
 
-  Walk[_]IsFinSet : ∀ n {start end} → isFinSet (Walk[ n ] start end)
-  Walk[_]IsFinSet = Nat.elim (λ {_} → isFinSet≡ states _ _)
-                             (λ _ ih → isFinSetΣ states λ _ → _ ,
-                                       isFinSetΣ (_ , ih) λ _ → _ ,
-                                       adjacentIsFinSet)
+    -- FastWalk→reachable : ∀ start end → FastWalk start end → reachable start end
+    -- FastWalk→reachable start end (_ , walk) = Conv.Walk[ _ ]→reachable walk
 
-  Walk[_]Dec : ∀ n {start end} → Dec ∥ Walk[ n ] start end ∥₁
-  Walk[ n ]Dec = isFinSet→Dec∥∥ $ Walk[ n ]IsFinSet
+    -- reachable→Walk[] : ∀ start end → reachable start end → Σ[ n ∈ ℕ ] Walk[ n ] start end
+    -- reachable→Walk[] = {!!}
 
-  FastWalkIsFinSet : ∀ start end → isFinSet (FastWalk start end)
-  FastWalkIsFinSet start end = isFinSetΣ (_ , isFinSetFin) λ _ → _ , Walk[ _ ]IsFinSet
+    -- reachable→FastWalk : ∀ start end → reachable start end → FastWalk start end
+    -- reachable→FastWalk = {!!}
 
-  FastWalk→reachable : ∀ start end → FastWalk start end → reachable start end
-  FastWalk→reachable start end (_ , walk) = Conv.Walk[ _ ]→reachable walk
+    -- ∥reachable∥≃∥FastWalk∥ : ∀ start end → ∥ reachable start end ∥₁ ≃ ∥ FastWalk start end ∥₁
+    -- ∥reachable∥≃∥FastWalk∥ start end = propBiimpl→Equiv isPropPropTrunc isPropPropTrunc
+    --                                       (PT.map $ reachable→FastWalk start end)
+    --                                       (PT.map $ FastWalk→reachable start end)
 
-  reachable→Walk[] : ∀ start end → reachable start end → Σ[ n ∈ ℕ ] Walk[ n ] start end
-  reachable→Walk[] = {!!}
+    -- isSetStates : isSet (states .fst)
+    -- isSetStates = isFinSet→isSet (states .snd)
 
-  reachable→FastWalk : ∀ start end → reachable start end → FastWalk start end
-  reachable→FastWalk = {!!}
+    -- isPropStates≡ : {v : states .fst} → isProp (v ≡ v)
+    -- isPropStates≡ = isSetStates _ _
 
-  ∥reachable∥≃∥FastWalk∥ : ∀ start end → ∥ reachable start end ∥₁ ≃ ∥ FastWalk start end ∥₁
-  ∥reachable∥≃∥FastWalk∥ start end = propBiimpl→Equiv isPropPropTrunc isPropPropTrunc
-                                        (PT.map $ reachable→FastWalk start end)
-                                        (PT.map $ FastWalk→reachable start end)
+    reachDecProp :
+      ∀ start end → DecProp ℓ
+    fst (fst (reachDecProp start end)) = {!!} -- ∥ reachable start end ∥₁
+    snd (fst (reachDecProp start end)) = {!!} -- isPropPropTrunc
+    snd (reachDecProp start end) = {!!}
+      -- -- Branch on if the start state is equal to the end state
+      -- decRec
+      --   -- if yes then we have a path
+      --   (λ start=end → yes ∣ transport (cong (λ a → reachable start a) start=end) nil ∣₁)
+      --   -- if no then we have to search
+      --   (λ start≠end → {!!})
+      --   (isFinSet→Discrete (states .snd) start end)
 
-  reachDecProp :
-    ∀ start end → DecProp ℓ
-  fst (fst (reachDecProp start end)) = ∥ reachable start end ∥₁
-  snd (fst (reachDecProp start end)) = isPropPropTrunc
-  snd (reachDecProp start end) =
-    -- Branch on if the start state is equal to the end state
-    decRec
-      -- if yes then we have a path
-      (λ start=end → yes ∣ transport (cong (λ a → reachable start a) start=end) nil ∣₁)
-      -- if no then we have to search
-      (λ start≠end → {!!})
-      (isFinSet→Discrete (states .snd) start end)
-
-  -- Set of reachable states from a start states
-  -- are the ones for which there exists a path
-  reachableFrom : states .fst → FinSetDecℙ states .fst
-  reachableFrom start end = DecProp∃ states (reachDecProp start)
+    -- Set of reachable states from a start states
+    -- are the ones for which there exists a path
+    reachableFrom : states .fst → FinSetDecℙ states .fst
+    reachableFrom start end = DecProp∃ states (reachDecProp start)
