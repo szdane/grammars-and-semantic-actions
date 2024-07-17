@@ -12,20 +12,22 @@ open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.DecidablePredicate
-open import Cubical.Data.Sum as Sum hiding (elim ; rec)
-open import Cubical.Data.Bool hiding (_⊕_ ; elim)
+open import Cubical.Data.Sum as Sum hiding (elim ; rec ; map)
+open import Cubical.Data.Bool hiding (_⊕_ ; elim ; _≤_ ; _≟_)
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as ⊥ hiding (elim ; rec)
 open import Cubical.Data.Unit
 open import Cubical.Data.Maybe hiding (elim ; rec)
 open import Cubical.Data.Nat as Nat hiding (elim)
-open import Cubical.Data.Nat.Order.Recursive as Ord renaming (_≤_ to _≤ℕ_)
-open import Cubical.Data.SumFin as SumFin hiding (fsuc ; elim)
-open import Cubical.Data.Vec as Vec renaming (_++_ to _++Vec_) hiding (lookup)
-open import Cubical.Data.Vec.DepVec
+import      Cubical.Data.Nat.Order as Order
+open import Cubical.Data.Nat.Order.Recursive as Ord
+open import Cubical.Data.Fin as Fin using (finj)
+open import Cubical.Data.SumFin as SumFin hiding (finj ; fsuc ; elim)
+open import Cubical.Data.Vec as Vec renaming (_++_ to _++Vec_) hiding (lookup ; map)
+open import Cubical.Data.Vec.DepVec as DepVec'
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation as PT hiding (elim ; rec)
+open import Cubical.HITs.PropositionalTruncation as PT hiding (elim ; rec ; map)
 
 open import Semantics.Helper
 private
@@ -41,6 +43,20 @@ private
   foldlVec : ∀ {n} {T : Type ℓ} {U : Type ℓ'} → (U → T → U) → U → Vec T n → U
   foldlVec f acc [] = acc
   foldlVec f acc (x ∷ xs) = foldlVec f (f acc x) xs
+
+module DepVec where
+  open DepVec' public
+
+  map : ∀ {ℓ ℓ'} {G : (k : ℕ) → Type ℓ} → {G' : (k : ℕ) → Type ℓ'} → (∀ {n} → G n → G' n) → ∀ {n} → depVec G n → depVec G' n
+  map f ⋆ = ⋆
+  map f (x □ xs) = (f x) □ (map f xs)
+
+  _<$>_ : ∀ {ℓ ℓ'} {G : (k : ℕ) → Type ℓ} {G' : (k : ℕ) → Type ℓ'} → (∀ {n} → G n → G' n) → ∀ {n} → depVec G n → depVec G' n
+  f <$> xs = map f xs
+
+  pure : ∀ {ℓ} {G : (k : ℕ) → Type ℓ} → G 0 → depVec G 1
+  pure x = x □ ⋆
+open DepVec using (_<$>_ ; pure)
 
 record directedGraph : Type (ℓ-suc ℓ) where
   field
@@ -59,123 +75,141 @@ record directedGraph : Type (ℓ-suc ℓ) where
   module Connectivity where
     -- paths approach: define Path as isFinOrd (something), write function to path, show paths are bounded
 
-    module Walk[] where
+    module Walk where
 
       -- Graph walks indexed by length
-      data Walk[_][_,_] : ℕ → states .fst → states .fst → Type ℓ where
-        nil : ∀ {u v} → u ≡ v → Walk[ 0 ][ u , v ]
-        cons : ∀ {n u v w} → Walk[ n ][ u , v ] → Adj v w → Walk[ suc n ][ u , w ]
+      -- data Walk[_][_,_] : ℕ → states .fst → states .fst → Type ℓ where
+      --   nil : ∀ {u v} → u ≡ v → Walk[ 0 ][ u , v ]
+      --   cons : ∀ {n u v w} → Walk[ n ][ u , v ] → Adj v w → Walk[ suc n ][ u , w ]
 
-      foldl : ∀ {u} (B : ℕ → Type ℓ')
-            → (∀ {n} → B n → (v : states .fst) → B (suc n))
-            → B 0
-            → ∀ {n v} → Walk[ n ][ u , v ] → B n
-      foldl B induct acc (nil _) = acc
-      foldl B induct acc {v = v} (cons walk adj) = foldl (B ∘ suc) induct (induct acc v) walk
+      Walk[_][_,_] : ℕ → states .fst → states .fst → Type ℓ
+      Walk[ 0 ][ u , v ] = u ≡ v
+      Walk[ suc n ][ u , v ] = Σ[ w ∈ states .fst ] Walk[ n ][ u , w ] × Adj w v
 
-      module test where
-        -- open import Cubical.Data.FinData as FinData using (FinVec)
-        -- open import Cubical.Data.FinData.DepFinVec
+      -- nil : ∀ {u v} → u ≡ v → Walk[ 0 ][ u , v ]
+      -- nil p = p
 
-        -- statesAlong : ∀ {u n v} → Walk[ n ][ u , v ] → FinVec (states .fst) (suc n)
-        -- statesAlong {v = v} (nil x) fn = v
-        -- statesAlong (cons walk x) fn with fn
-        -- ... | FinData
+      pattern nil p = p
 
-        statesAlong : ∀ {u n v} → Walk[ n ][ u , v ] → Fin (suc n) → states .fst
-        statesAlong {v = v} (nil _) SumFin.fzero = v
-        statesAlong {v = v} (cons walk x) fn = {!fn!}
+      -- cons : ∀ {n u v w} → Walk[ n ][ u , v ] → Adj v w → Walk[ suc n ][ u , w ]
+      -- cons walk adj = _ , walk , adj
 
-      statesAlong : ∀ {u n v} → Walk[ n ][ u , v ] → Vec (states .fst) (suc n)
-      statesAlong {u} = foldl (Vec (states .fst) ∘ suc) (λ rest v → v ∷ rest) (u ∷ [])
+      pattern cons walk adj = _ , walk , adj
 
-      stateAt : ∀ {n u v} → Walk[ n ][ u , v ] → Fin (suc n) → states .fst
-      stateAt walk = lookup (statesAlong walk)
+      -- foldl : ∀ {u} (B : ℕ → Type ℓ')
+      --       → (∀ {n} → B n → (v : states .fst) → B (suc n))
+      --       → B 0
+      --       → ∀ {n v} → Walk[ n ][ u , v ] → B n
+      -- foldl B induct acc (nil _) = acc
+      -- foldl B induct acc {v = v} (cons walk adj) = foldl (B ∘ suc) induct (induct acc v) walk
 
-      startAt0 : ∀ {n u v} → (walk : Walk[ n ][ u , v ]) → stateAt walk SumFin.fzero ≡ u
-      startAt0 walk = {!!}
+      -- Split[_,_][_,_] : ℕ → ℕ → states .fst → states .fst → Type ℓ
+      -- Split[ l , r ][ u , v ] = Σ[ w ∈ states .fst ] (Walk[ l ][ u , w ] × Walk[ r ][ w , v ])
 
-      prefixes : ∀ {n u v} → (walk : Walk[ n ][ u , v ]) → depVec (λ k → Walk[ k ][ u , stateAt walk (fromℕ k) ]) (suc n)
-      prefixes (nil _) = (nil refl) □ ⋆
-      prefixes {u = u} {w} (cons {v = v} walk adj) = (cons walk {!adj!}) □ {!prefixes walk!}
-    --   opaque
-    --     Walk[_] : ℕ → states .fst → states .fst → Type ℓ
-    --     Walk[ 0 ]     start end = start ≡ end
-    --     Walk[ suc n ] start end = Σ[ v ∈ states .fst ] Σ[ walk ∈ Walk[ n ] start v ] Adj v end
+      record Split[_,_][_,_] (l r : ℕ) (u v : states .fst) : Type ℓ where
+        inductive
+        constructor mk-split'
+        field
+          at : states .fst
+          walkl : Walk[ l ][ u , at ]
+          walkr : Walk[ r ][ at , v ]
+      open Split[_,_][_,_]
 
-    --     Walk[]IsFinSet : ∀ {n start end} → isFinSet (Walk[ n ] start end)
-    --     Walk[]IsFinSet {0}     = isFinSet≡ states _ _
-    --     Walk[]IsFinSet {suc n} = isFinSetΣ states λ _ → _ ,
-    --                             isFinSetΣ (_ , Walk[]IsFinSet) λ _ → _ ,
-    --                             AdjIsFinSet
+      Split[_/_][_,_] : (n : ℕ) → Fin.Fin (suc n) → states .fst → states .fst → Type ℓ
+      Split[ n / k ][ u , v ] = Σ[ at ∈ _ ] Walk[ Fin.toℕ k ][ u , at ] × Walk[ n ∸ Fin.toℕ k ][ at , v ]
+      pattern mk-split at walkl walkr = at , walkl , walkr
 
-    --     nil : ∀ {start end} → start ≡ end → Walk[ 0 ] start end
-    --     nil p = p
+      -- record Split[_/_][_,_] (n : ℕ) (k : Fin.Fin (suc n)) (u v : states .fst) : Type ℓ where
+      --   inductive
+      --   constructor mk-split
+      --   field
+      --     at : states .fst
+      --     walkl : Walk[ Fin.toℕ k ][ u , at ]
+      --     walkr : Walk[ n ∸ Fin.toℕ k ][ at , v ]
+      -- open Split[_/_][_,_]
 
-    --     cons : ∀ {n start v end} → Walk[ n ] start v → Adj v end → Walk[ suc n ] start end
-    --     cons walk adj = _ , walk , adj
+      -- consr' : ∀ {l r u v w} → Split[ l , r ][ u , v ] → Adj v w → Split[ l , suc r ][ u , w ]
+      -- consr' split adj .at = split .at
+      -- consr' split adj .walkl = split .walkl
+      -- consr' split adj .walkr = cons (split .walkr) adj
 
-    --     _++_ : ∀ {m n start v end} → Walk[ m ] start v → Walk[ n ] v end → Walk[ m + n ] start end
-    --     _++_ {n = 0} l r = subst2 (λ k → Walk[ k ] _) (sym $ +-zero _) r l
-    --     _++_ {n = suc n} {start = start} {end = end} l (u , walk[n] , adj) =
-    --       let walk = cons (l ++ walk[n]) adj in
-    --       subst (λ k → Walk[ k ] start end) (sym $ +-suc _ _) walk
-    --     infixr 5 _++_
+      consr : ∀ {n k u v w} → Split[ n / k ][ u , v ] → Adj v w → Split[ suc n / finj k ][ u , w ]
+      consr {n = n} {k = k} {w = w} (mk-split at walkl walkr) adj =
+        let walkr' = cons walkr adj in
+        let walkr'' = subst (Walk[_][ at , w ]) (Order.≤-∸-suc (k .snd)) walkr' in
+        mk-split at walkl walkr''
 
-    --     elim : {B : ∀ n start end → Walk[ n ] start end → Type ℓ'}
-    --         → (∀ start end → (p : start ≡ end) → B _ _ _ (nil p))
-    --         → (∀ n start end v → (walk[n] : Walk[ n ] start v) → (adj : Adj v end) → B _ _ _ walk[n] → B _ _ _ (cons walk[n] adj))
-    --         → ∀ n start end → (walk[n] : Walk[ n ] start end) → B _ _ _ walk[n]
-    --     elim base induct 0 _ _ p = base _ _ p
-    --     elim base induct (suc n) _ _ (v , walk[n] , adj) = induct _ _ _ v walk[n] adj $ elim base induct _ _ _ walk[n]
+      Splitᴰ→Walkᴰ : ∀ {n k u v} → Split[ n / k ][ u , v ] → Walk[ n ][ u , v ]
+      Splitᴰ→Walkᴰ = {!!}
 
-    --     rec[] : {B : ℕ → Type ℓ'}
-    --           → ((start end : states .fst) → start ≡ end → B 0)
-    --           → (∀ n start end v → Walk[ n ] start v → Adj v end → B n → B (suc n))
-    --           → ∀ n start end → Walk[ n ] start end → B n
-    --     rec[] = elim
+      splits' : ∀ {n u v} → Walk[ n ][ u , v ] → (k : Fin.Fin (suc n)) → Split[ n / k ][ u , v ]
+      splits' {0} {u} {v} (nil p) (k , k<1) =
+        let splits'' = mk-split u (nil refl) (nil p) in
+        let pk : (0 , Order.≤-refl) ≡ (k , k<1)
+            pk = Σ≡Prop (λ _ → Order.isProp≤) (sym $ (Order.≤0→≡0 ∘ Order.predℕ-≤-predℕ) k<1) in
+        subst (Split[ 0 /_][ u , v ]) pk splits''
+      splits' {suc n} {u = u} {v} cwalk@(cons walk adj) fk@(k , k≤sucn) with k Fin.≤? suc n
+      ... | inr sucn≤k =
+        let walkr : Walk[ n ∸ n ][ v , v ]
+            walkr = {!!} in
+        let s : Split[ suc n / Fin.flast ][ u , v ]
+            s = mk-split v cwalk walkr in
+        let s' : Split[ suc n / fk ][ u , v ]
+            s' = {!mk-split v cwalk walkr'!} in
+        s'
+      ... | inl k<sucn =
+        let s = splits' walk (k , k<sucn) in
+        consr {k = (k , k<sucn)} s adj
 
-    --     rec : {B : Type ℓ'}
-    --         → ((start end : states .fst) → start ≡ end → B)
-    --         → (∀ n start end v → Walk[ n ] start v → Adj v end → B → B)
-    --         → ∀ n start end → Walk[ n ] start end → B
-    --     rec = rec[]
+      -- splits : ∀ {n u v} → Walk[ n ][ u , v ] → depVec (λ k → Split[ n / k , {!!} ][ u , v ]) (suc n)
+      -- splits {u = u} {v} (nil p) =
+      --   pure $ mk-split u (nil refl) (nil p)
+      -- splits (cons {n = n} walk adj) =
+      --   let splits' = flip consr adj <$> splits walk in
+      --   {!!} □ splits'
 
-    --   module _ {n} {start} {end} (walk : Walk[ n ] start end) where
-    --     statesAlong : Vec (states .fst) (suc n)
-    --     statesAlong = rec[] (λ start _ _ → start ∷ [])
-    --                         (λ n _ _ v _ _ states → _∷_ {n = suc n} v states)
-    --                         _ _ _ walk
+    open Walk public using (Walk[_][_,_] ; Split[_/_][_,_] ; Splitᴰ→Walkᴰ)
 
-    --     stateAt : Fin (suc n) → states .fst
-    --     stateAt = lookup statesAlong
+    bound : ℕ
+    bound = card states
 
-    --     prefixes' : depVec (λ k → Walk[ k ] start (stateAt (fromℕ k))) (suc n)
-    --     prefixes' = elim {B = λ n _ _ _ → depVec {!λ k → Walk[ k ] _ (stateAt (fromℕ k))!} (suc n)} (λ _ _ p → nil p □ ⋆) (λ _ _ _ v walk[n] adj → {!!} □_) _ _ _ walk
+    WalksAreBounded : ℕ → states .fst → states .fst → Type ℓ
+    WalksAreBounded n u v = Walk[ n ][ u , v ] → Σ[ n' ∈ ℕ ] (Walk[ n' ][ u , v ] × (n' ≤ bound))
 
-    --     prefixes : depVec (λ k → Σ[ v ∈ (states .fst)] Walk[ k ] start v) (suc n)
-    --     prefixes = elim {B = λ n start end _ → depVec (λ k → Σ[ v ∈ (states .fst)] Walk[ k ] start v) (suc n)}
-    --                     (λ _ _ p → (_ , nil p) □ ⋆)
-    --                     (λ _ _ _ v walk[n] adj prev → (_ , cons walk[n] adj) □ prev)
-    --                     _ _ _ walk
+    splitsPhp : ∀ {n u v} → Walk[ n ][ u , v ] → bound < n → Σ[ l ∈ ℕ ] Σ[ r ∈ ℕ ] (Split[ l + r / l , Order.≤SumLeft ][ u , v ] × (l + r < n))
+    splitsPhp = {!!}
 
-    --   simplifyLoops : ∀ {n start end} → Walk[ n ] start end → Σ[ k ∈ Fin (card states) ] Walk[ toℕ k ] start end
-    --   simplifyLoops walk[n] = {!!}
-    -- open Walk[] public using (Walk[_] ; Walk[]IsFinSet)
+    simplifyStep< : ∀ {n u v} → Walk[ n ][ u , v ] → bound < n → Σ[ n' ∈ ℕ ] (Walk[ n' ][ u , v ] × (n' < n))
+    simplifyStep< walk bound<n =
+      let (l , r , split , l+r<n) = splitsPhp walk bound<n in
+      (l + r) , (Splitᴰ→Walkᴰ split) , l+r<n
 
-    -- module Walk where opaque
-    --   -- Graph walks of arbitrary length
-    --   Walk : states .fst → states .fst → Type ℓ
-    --   Walk start end = Σ[ n ∈ ℕ ] Walk[ n ] start end
+    private
+      -- This should probably be in the standard library, but doesn't appear to be
+      ¬≤→> : ∀ a b → ¬ (a ≤ b) → b < a
+      ¬≤→> a b ¬a≤b with a ≟ b
+      ... | lt a<b = ⊥.elim $ ¬a≤b (<-weaken {a} a<b)
+      ... | eq a≡b = ⊥.elim $ ¬a≤b (subst (a ≤_) a≡b (≤-refl a))
+      ... | gt b<a = b<a
 
-    --   Walk[]→Walk : ∀ {n start end} → Walk[ n ] start end → Walk start end
-    --   Walk[]→Walk walk[] = _ , walk[]
+    simplifyStep : ∀ {n u v} → Walk[ n ][ u , v ] → Σ[ n' ∈ ℕ ] (Walk[ n' ][ u , v ] × ((n' < n) ⊎ (n' ≤ bound)))
+    simplifyStep {n} walk with n ≤? bound
+    ... | yes n≤bound =
+            n , walk , inr n≤bound
+    ... | no ¬n≤bound =
+            let bound<n = ¬≤→> n bound ¬n≤bound in
+            let (l , r , split , l+r<n) = splitsPhp walk bound<n in
+            (l + r) , (Splitᴰ→Walkᴰ split) , inl l+r<n
 
-    --   rec : {T : Type ℓ'}
-    --       → (f : ∀ {n begin end} → Walk[ n ] begin end → T)
-    --       → ∀ {begin end} → Walk begin end → T
-    --   rec f (_ , walk[]) = f walk[]
-    -- open Walk public hiding (rec)
+    simplify : ∀ {n u v} → WalksAreBounded n u v
+    simplify {n} {u} {v} = wf-elim {P = λ n → WalksAreBounded n u v}
+      (λ n ih walk →
+        let (n' , walk' , ineq) = simplifyStep walk in
+        Sum.rec
+          (λ n'<n → ih n' n'<n walk')
+          (λ n'≤bound → n' , walk' , n'≤bound)
+          ineq
+      ) n
 
     -- opaque
     --   -- Mere existence of a path between states
