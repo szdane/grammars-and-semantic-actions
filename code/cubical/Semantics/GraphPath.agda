@@ -36,25 +36,48 @@ private
 module Vec where
   open import Cubical.Data.Vec hiding (lookup) public
 
+  private variable
+    n : ℕ
+    T U : Type ℓ
+
   -- -- There is a similar function defined in Vec, but using another definition of Fin
   -- lookup : ∀ {n} {T : Type ℓ} → Vec T n → Fin n → T
   -- lookup (x ∷ xs) SumFin.fzero      = x
   -- lookup (x ∷ xs) (SumFin.fsuc idx) = lookup xs idx
 
-  lookup : ∀ {n} {T : Type ℓ} → Vec T n → Fin.Fin n → T
+  lookup : Vec T n → Fin.Fin n → T
   lookup [] (_ , idx<0) = ⊥.rec (Order.¬-<-zero idx<0)
   lookup (x ∷ xs) fidx with Fin.fsplit fidx
   ... | inl 0≡idx = x
   ... | inr (fidx' , sucfidx'≡idx) = lookup xs fidx'
 
-  foldl : ∀ {n} {T : Type ℓ} {U : Type ℓ'} → (U → T → U) → U → Vec T n → U
+  foldl : (U → T → U) → U → Vec T n → U
   foldl f acc [] = acc
   foldl f acc (x ∷ xs) = foldl f (f acc x) xs
+
+  --ifoldr : (Fin.Fin n → T → U → U)
+
+  -- elim : ∀ {n} {B : (idx : Fin.Fin n) → Type ℓ}
+  --      → ({idx : Fin.Fin n} → T → B idx → B (suc (Fin.toℕ idx)))
+  --      → B 0
+  --      → Vec T n → B n
+  -- elim induct base [] = base
+  -- elim induct base (x ∷ xs) = {!induct x $ elim induct base xs!}
+
+  take : (k : Fin.Fin (suc n)) → Vec T n → Vec T (Fin.toℕ k)
+  take (k , k<1) [] = subst (Vec _) (sym $ Order.≤0→≡0 ∘ Order.predℕ-≤-predℕ $ k<1) []
+  take (0 , k<sucn) (x ∷ xs) = []
+  take (suc k , k<sucn) (x ∷ xs) = x ∷ take (k , Order.predℕ-≤-predℕ k<sucn) xs
+
+open Vec using (Vec ; _∷_ ; [] )
+
+module VecSyntax where
 
   pure : {T : Type ℓ} → T → Vec T 1
   pure x = x ∷ []
 
-open Vec using (Vec ; _∷_ ; [] ; pure )
+  _<$>_ : {T : Type ℓ} {U : Type ℓ} → (T → U) → ∀ {n} → Vec T n → Vec U n
+  f <$> xs = Vec.map f xs
 
 -- module DepVec where
 --   open DepVec' public
@@ -86,22 +109,80 @@ record directedGraph : Type (ℓ-suc ℓ) where
   module Connectivity where
     -- paths approach: define Path as isFinOrd (something), write function to path, show paths are bounded
 
+    module _ where
+      open VecSyntax
+      data WalkAlong : {n : ℕ} → Vec (states .fst) (suc n) → Type ℓ where
+        nil : ∀ v → WalkAlong (pure v)
+
     module Walk where
+      private variable
+        n : ℕ
+        u v : states .fst
 
       -- Graph walks indexed by length
       data Walk[_][_,_] : ℕ → states .fst → states .fst → Type ℓ where
         nil : ∀ {u v} → u ≡ v → Walk[ 0 ][ u , v ]
         cons : ∀ {n u v w} → Walk[ n ][ u , v ] → Adj v w → Walk[ suc n ][ u , w ]
 
-      statesAlong : ∀ {n u v} → Walk[ n ][ u , v ] → Vec (states .fst) (suc n)
-      statesAlong {u = u} (nil p) = pure u
-      statesAlong {v = v} (cons walk adj) = v ∷ statesAlong walk
+      Walk[_,_] : states .fst → states .fst → Type ℓ
+      Walk[ u , v ] = Σ[ n ∈ ℕ ] Walk[ n ][ u , v ]
+
+      WalkLen : ℕ → Type ℓ
+      WalkLen n = Σ[ u ∈ _ ] Σ[ v ∈ _ ] Walk[ n ][ u , v ]
+
+      Walk : Type ℓ
+      Walk = Σ[ u ∈ _ ] Σ[ v ∈ _ ] Walk[ u , v ]
+
+      edgesAlong : Walk[ n ][ u , v ] → Vec (directed-edges .fst) n
+      edgesAlong (nil p) = []
+      edgesAlong (cons walk adj) = adj .fst ∷ edgesAlong walk
+
+      statesAlong : Walk[ n ][ u , v ] → Vec (states .fst) (suc n)
+      statesAlong {u = u} walk = u ∷ src <$> edgesAlong walk
+        where open VecSyntax
 
       stateAtIdx : ∀ {n u v} → Walk[ n ][ u , v ] → Fin.Fin (suc n) → states .fst
       stateAtIdx walk = Vec.lookup (statesAlong walk)
 
+      module Interleave
+        (edges : Vec (directed-edges .fst) n)
+        (vertices : Vec (states .fst) (suc n)) where
+
+        edgeAt = Vec.lookup edges
+        srcAt = src ∘ edgeAt
+        dstAt = dst ∘ edgeAt
+
+        vertAt = Vec.lookup vertices
+        lAt = vertAt ∘ Fin.finj
+        rAt = vertAt ∘ Fin.fsuc
+
+        isCoherentEdge : Fin.Fin n → Type _
+        isCoherentEdge idx = (srcAt idx ≡ lAt idx) × (dstAt idx ≡ rAt idx)
+
+        isCoherent = ∀ idx → isCoherentEdge idx
+
+        private
+          coherence→adj : isCoherent → (idx : Fin.Fin (n ∸ 1)) → {!!} --Adj (src $ lookup idx) (dst $ lookup idx)
+          coherence→adj coheres idx = {!!}
+
+        →Walk : isCoherent → Walk
+        →Walk coherence =
+          let start = vertAt 0 , _ , _ , nil refl in
+          let ev = Vec.zipWith (_,_) edges (Vec.tail vertices) in
+          Vec.foldr (λ (e , w) (u , v , n , walk) → u , w , suc n , cons walk (e , {!!})) start ev
+
+      takeWeak : (k : Fin.Fin (suc n)) (walk : Walk[ n ][ u , v ]) → Vec (directed-edges .fst) (Fin.toℕ k)
+      takeWeak k walk = Vec.take k (edgesAlong walk)
+
+      take' : (k : Fin.Fin (suc n)) (walk : Walk[ n ][ u , v ]) → Walk
+      take' k walk = Interleave.→Walk (Vec.take k $ edgesAlong walk) (Vec.take (Fin.fsuc k) $ statesAlong walk)
+        λ { (0 , 0<k) → {!!} , {!!}
+          ; (suc idx , sucidx<k) → {!!}
+          }
+
       take : ∀ {n u v} (k : Fin.Fin (suc n)) (walk : Walk[ n ][ u , v ]) → Walk[ Fin.toℕ k ][ u , stateAtIdx walk k ]
-      take = Fin.elim ? ? ?
+      take (k , k<1) (nil p) = {!nil p!}
+      take fk (cons walk adj) = {!!}
 
       record Split {n u v} (walk : Walk[ n ][ u , v ]) : Type ℓ where
         field
