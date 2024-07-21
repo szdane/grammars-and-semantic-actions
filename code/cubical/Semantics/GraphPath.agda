@@ -19,10 +19,12 @@ open import Cubical.Data.Empty as ⊥ hiding (elim ; rec)
 open import Cubical.Data.Unit
 open import Cubical.Data.Maybe hiding (elim ; rec)
 open import Cubical.Data.Nat as Nat hiding (elim)
-import      Cubical.Data.Nat.Order as Order
-open import Cubical.Data.Nat.Order.Recursive as Ord
-open import Cubical.Data.Fin as Fin using (finj)
+open import Cubical.Data.Nat.Order as Order
+import      Cubical.Data.Nat.Order.Recursive as Ord
+open import Cubical.Data.NatPlusOne
+import      Cubical.Data.Fin as Fin
 open import Cubical.Data.SumFin as SumFin hiding (finj ; fsuc ; elim)
+import      Cubical.Data.FinData as FinData
 open import Cubical.Data.Vec.DepVec as DepVec'
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
@@ -33,64 +35,231 @@ private
   variable
     ℓ ℓ' : Level
 
+-- should perhaps be in standard library, but doesn't seem to be
+private
+  module _ where
+    open SumFin
+
+    fin< : ∀ {n} → (k : Fin n) → toℕ k < n
+    fin< {n = suc n} fzero = n , +-comm n 1
+    fin< {n = suc n} (fsuc k) = fin< k .fst , +-suc _ _ ∙ congS suc (fin< k .snd)
+
+    -- fin< : ∀ {n} → (k : Fin n) → toℕ k < n
+    -- fin< {n = suc n} fzero = tt
+    -- fin< {n = suc n} (fsuc k) = fin< k
+
 module Vec where
+  open SumFin
+
   open import Cubical.Data.Vec hiding (lookup) public
 
   private variable
     n : ℕ
     T U : Type ℓ
 
-  -- -- There is a similar function defined in Vec, but using another definition of Fin
-  -- lookup : ∀ {n} {T : Type ℓ} → Vec T n → Fin n → T
-  -- lookup (x ∷ xs) SumFin.fzero      = x
-  -- lookup (x ∷ xs) (SumFin.fsuc idx) = lookup xs idx
+  pure : {T : Type ℓ} → T → Vec T 1
+  pure x = x ∷ []
 
-  lookup : Vec T n → Fin.Fin n → T
-  lookup [] (_ , idx<0) = ⊥.rec (Order.¬-<-zero idx<0)
-  lookup (x ∷ xs) fidx with Fin.fsplit fidx
-  ... | inl 0≡idx = x
-  ... | inr (fidx' , sucfidx'≡idx) = lookup xs fidx'
+  -- There is a similar function defined in Vec, but using another definition of Fin
+  lookup : Vec T n → Fin n → T
+  lookup (x ∷ xs) fzero = x
+  lookup (x ∷ xs) (fsuc idx) = lookup xs idx
 
   foldl : (U → T → U) → U → Vec T n → U
   foldl f acc [] = acc
   foldl f acc (x ∷ xs) = foldl f (f acc x) xs
 
-  --ifoldr : (Fin.Fin n → T → U → U)
+  take : (k : Fin (suc n)) → Vec T n → Vec T (toℕ k)
+  take fzero xs = []
+  take (fsuc k) (x ∷ xs) = x ∷ take k xs
 
-  -- elim : ∀ {n} {B : (idx : Fin.Fin n) → Type ℓ}
-  --      → ({idx : Fin.Fin n} → T → B idx → B (suc (Fin.toℕ idx)))
-  --      → B 0
-  --      → Vec T n → B n
-  -- elim induct base [] = base
-  -- elim induct base (x ∷ xs) = {!induct x $ elim induct base xs!}
+  drop : (k : Fin (suc n)) → Vec T n → Vec T (n ∸ toℕ k)
+  drop fzero xs = xs
+  drop (fsuc k) (x ∷ xs) = drop k xs
 
-  take : (k : Fin.Fin (suc n)) → Vec T n → Vec T (Fin.toℕ k)
-  take (k , k<1) [] = subst (Vec _) (sym $ Order.≤0→≡0 ∘ Order.predℕ-≤-predℕ $ k<1) []
-  take (0 , k<sucn) (x ∷ xs) = []
-  take (suc k , k<sucn) (x ∷ xs) = x ∷ take (k , Order.predℕ-≤-predℕ k<sucn) xs
-
-open Vec using (Vec ; _∷_ ; [] )
+open Vec using (Vec ; [] )
 
 module VecSyntax where
+  infixr 5 _∷_
+  _∷_ : ∀ {T : Type ℓ} {n} → T → Vec T n → Vec T (suc n)
+  _∷_ = Vec._∷_
+  pure = Vec.pure
+  _<$>_ = Vec.map
 
-  pure : {T : Type ℓ} → T → Vec T 1
-  pure x = x ∷ []
+module Vec⁺ where
+  open SumFin
 
-  _<$>_ : {T : Type ℓ} {U : Type ℓ} → (T → U) → ∀ {n} → Vec T n → Vec U n
-  f <$> xs = Vec.map f xs
+  private variable
+    n m : ℕ
+    T U : Type ℓ
 
--- module DepVec where
---   open DepVec' public
+  data Vec⁺ (T : Type ℓ) : ℕ → Type ℓ where
+    [_] : T → Vec⁺ T 0
+    _∷_ : {n : ℕ} → T → Vec⁺ T n → Vec⁺ T (suc n)
+  infixr 5 _∷_
 
---   map : ∀ {ℓ ℓ'} {G : (k : ℕ) → Type ℓ} → {G' : (k : ℕ) → Type ℓ'} → (∀ {n} → G n → G' n) → ∀ {n} → depVec G n → depVec G' n
---   map f ⋆ = ⋆
---   map f (x □ xs) = (f x) □ (map f xs)
+  pure : T → Vec⁺ T 0
+  pure x = [ x ]
 
---   _<$>_ : ∀ {ℓ ℓ'} {G : (k : ℕ) → Type ℓ} {G' : (k : ℕ) → Type ℓ'} → (∀ {n} → G n → G' n) → ∀ {n} → depVec G n → depVec G' n
---   f <$> xs = map f xs
+  head : Vec⁺ T n → T
+  head [ x ] = x
+  head (x ∷ xs) = x
 
---   pure : ∀ {ℓ} {G : (k : ℕ) → Type ℓ} → G 0 → depVec G 1
---   pure x = x □ ⋆
+  tail : Vec⁺ T n → Vec T n
+  tail [ x ] = Vec.[]
+  tail (x ∷ xs) = Vec._∷_ x (tail xs)
+
+  last : Vec⁺ T n → T
+  last [ x ] = x
+  last (x ∷ xs) = last xs
+
+  lookup : Vec⁺ T n → Fin (suc n) → T
+  lookup xs fzero = head xs
+  lookup (x ∷ xs) (fsuc idx) = lookup xs idx
+
+  take : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (toℕ k)
+  take fzero xs = [ head xs ]
+  take (fsuc k) (x ∷ xs) = x ∷ take k xs
+
+  drop : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (n ∸ toℕ k)
+  drop fzero xs = xs
+  drop (fsuc k) (x ∷ xs) = drop k xs
+
+  splice : Vec⁺ T n → Vec⁺ T m → Vec⁺ T (n + m)
+  splice [ l ] rs = rs
+  splice (l ∷ ls) rs = l ∷ splice ls rs
+
+  loop : (i j : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (toℕ i + (n ∸ toℕ j))
+  loop i j xs = splice (take i xs) (drop j xs)
+
+  head≡headTake : (xs : Vec⁺ T n) (k : Fin (suc n)) → head xs ≡ head (take k xs)
+  head≡headTake xs fzero = refl
+  head≡headTake (x ∷ xs) (fsuc k) = refl
+
+  lookup≡lastTake : (xs : Vec⁺ T n) (k : Fin (suc n)) → lookup xs k ≡ last (take k xs)
+  lookup≡lastTake xs fzero = refl
+  lookup≡lastTake (x ∷ xs) (fsuc k) = lookup≡lastTake xs k
+
+  lookup≡headDrop : (xs : Vec⁺ T n) (k : Fin (suc n)) → lookup xs k ≡ head (drop k xs)
+  lookup≡headDrop xs fzero = refl
+  lookup≡headDrop (x ∷ xs) (fsuc k) = lookup≡headDrop xs k
+
+  head≡headSplice : (xs : Vec⁺ T n) (ys : Vec⁺ T m) (lastxs≡headys : last xs ≡ head ys) → head xs ≡ head (splice xs ys)
+  head≡headSplice [ x ] ys lastxs≡headys = lastxs≡headys
+  head≡headSplice (x ∷ xs) ys lastxs≡headys = refl
+
+module list where
+  open import Cubical.Data.List
+
+  private variable
+    n m : ℕ
+    T U : Type ℓ
+
+  loop : (i j : ℕ) → List T → List T
+  loop i j xs = take i xs ++ drop j xs
+
+  x : List ℕ
+  x = 0 ∷ 1 ∷ 2 ∷ 1 ∷ 4 ∷ []
+
+  _ : loop 1 3 x ≡ 0 ∷ 1 ∷ 4 ∷ []
+  _ = refl
+
+  decomp2 : (i : ℕ) → List T → List T × List T
+  decomp2 i xs = take i xs , drop i xs
+
+  decomp2→id : (i : ℕ) (xs : List T) → take i xs ++ drop i xs ≡ xs
+  decomp2→id zero xs = refl
+  decomp2→id (suc i) [] = refl
+  decomp2→id (suc i) (x ∷ xs) = congS (x ∷_) $ decomp2→id i xs
+
+  decomp : (i j : ℕ) → List T → (List T × List T × List T)
+  decomp i j xs = take i xs , drop i (take j xs) , drop j xs
+
+  _ : decomp 1 3 x ≡ (0 ∷ [] , 1 ∷ 2 ∷ [] , 1 ∷ 4 ∷ [])
+  _ = refl
+
+  decomp→loop : (i j : ℕ) → (xs : List T) → decomp i j xs .fst ++ decomp i j xs .snd .snd ≡ loop i j xs
+  decomp→loop i j xs = refl
+
+  decomp→take : (i j : ℕ) → i < j → (xs : List T) → take i xs ++ drop i (take j xs) ≡ take j xs
+  decomp→take i j i<j xs = {!take++!}
+
+  decomp→id : (i j : ℕ) → (xs : List T) → decomp i j xs .fst ++ decomp i j xs .snd .fst ++ decomp i j xs .snd .snd ≡ xs
+  decomp→id i j xs = {!!}
+
+module Between where
+  open SumFin
+  open Vec⁺ using (Vec⁺ ; pure ; _∷_)
+
+  private variable
+    n m : ℕ
+    T U : Type ℓ
+    R : T → T → Type ℓ
+    x y : T
+    xs ys : Vec⁺ T n
+
+  data Between (T : Type ℓ) (R : T → T → Type ℓ') : (n : ℕ) → Vec⁺ T n → Type (ℓ-max ℓ ℓ') where
+    nil : (x : T) → Between T R 0 (pure x)
+    cons : R x (Vec⁺.head xs) → Between T R n xs → Between T R (suc n) (x ∷ xs)
+
+  module _ {xs} (between : Between T R n xs) where
+    headUnder = Vec⁺.head xs
+    lastUnder = Vec⁺.last xs
+
+    lookupUnder = Vec⁺.lookup xs
+    lookupUnderL = lookupUnder ∘ finj
+    lookupUnderR = lookupUnder ∘ fsuc
+
+    Lookup : Fin n → Type _
+    Lookup idx = R (lookupUnderL idx) (lookupUnderR idx)
+
+  lookup : (between : Between T R n xs) (idx : Fin n) → Lookup between idx
+  lookup (cons r between) fzero = r
+  lookup (cons r between) (fsuc idx) = lookup between idx
+
+  Head : Between T R (suc n) xs → Type _
+  Head between = Lookup between fzero
+
+  head : (between : Between T R (suc n) xs) → Head between
+  head between = lookup between fzero
+
+  Take : Fin (suc n) → Between T R n xs → Type _
+  Take {T = T} {R = R} {xs = xs} k between = Between T R (toℕ k) (Vec⁺.take k xs)
+
+  take : (k : Fin (suc n)) → (between : Between T R n xs) → Take k between
+  take fzero between = nil (headUnder between)
+  take {R = R} (fsuc k) (cons {xs = xs} r between) =
+    let r' = subst (R _) (Vec⁺.head≡headTake xs k) r in
+    cons r' (take k between)
+
+  Drop : Fin (suc n) → Between T R n xs → Type _
+  Drop {n = n} {T = T} {R = R} {xs = xs} k between = Between T R (n ∸ toℕ k) (Vec⁺.drop k xs)
+
+  drop : (k : Fin (suc n)) → (between : Between T R n xs) → Drop k between
+  drop fzero between = between
+  drop (fsuc k) (cons r between) = drop k between
+
+  Splice : (l : Between T R n xs) (r : Between T R m ys) → Type _
+  Splice {T = T} {R = R} {n = n} {xs = xs} {m = m} {ys = ys} l r = Between T R (n + m) (Vec⁺.splice xs ys)
+
+  splice : (ls : Between T R n xs) (rs : Between T R m ys) → lastUnder ls ≡ headUnder rs → Splice ls rs
+  splice (nil l) rs lastl≡headr = rs
+  splice {R = R} {ys = ys} (cons {xs = xs} r ls) rs lastl≡headr =
+    let r' = subst (R _) (Vec⁺.head≡headSplice xs ys lastl≡headr) r in
+    cons r' (splice ls rs lastl≡headr)
+
+  Loop : Between T R n xs → Fin (suc n) → Fin (suc n) → Type _
+  Loop {T = T} {R = R} {n = n} {xs = xs} between i j = Between T R (toℕ i + (n ∸ toℕ j)) (Vec⁺.splice (Vec⁺.take i xs) (Vec⁺.drop j xs))
+
+  loop : (between : Between T R n xs) (i j : Fin (suc n)) → lookupUnder between i ≡ lookupUnder between j → Loop between i j
+  loop {xs = xs} between i j lookupi≡lookupj = splice (take i between) (drop j between) (sym (Vec⁺.lookup≡lastTake xs i) ∙∙ lookupi≡lookupj ∙∙ Vec⁺.lookup≡headDrop xs j)
+
+  loop-< : (between : Between T R n xs) (i j : Fin (suc n)) → toℕ i < toℕ j → toℕ i + (n ∸ toℕ j) < n
+  loop-< {n = n} between i j = {!+induction!}
+    -- where
+    -- open <-Reasoning
+    -- lemma : toℕ i + n < n + toℕ j
+    -- lemma = toℕ i + n ≡<⟨ +-comm (toℕ i) n ⟩ <-k+ i<j
 
 record directedGraph : Type (ℓ-suc ℓ) where
   field
@@ -109,108 +278,68 @@ record directedGraph : Type (ℓ-suc ℓ) where
   module Connectivity where
     -- paths approach: define Path as isFinOrd (something), write function to path, show paths are bounded
 
+    private variable
+      n : ℕ
+      start u v : states .fst
+      vs : Vec⁺.Vec⁺ (states .fst) n
+
+    data Walk (start : states .fst) : states .fst → Type ℓ where
+      nil : Walk start start
+      cons : Walk start u → Adj u v → Walk start v
+
+    length : Walk u v → ℕ
+    length nil = 0
+    length (cons walk adj) = suc (length walk)
+
     module _ where
-      open VecSyntax
-      data WalkAlong : {n : ℕ} → Vec (states .fst) (suc n) → Type ℓ where
-        nil : ∀ v → WalkAlong (pure v)
+      open Vec⁺
+      open Between
 
-    module Walk where
-      private variable
-        n : ℕ
-        u v : states .fst
+      WalkAlong : (n : ℕ) → Vec⁺ (states .fst) n → Type ℓ
+      WalkAlong = Between (states .fst) (flip Adj)
 
-      -- Graph walks indexed by length
-      data Walk[_][_,_] : ℕ → states .fst → states .fst → Type ℓ where
-        nil : ∀ {u v} → u ≡ v → Walk[ 0 ][ u , v ]
-        cons : ∀ {n u v w} → Walk[ n ][ u , v ] → Adj v w → Walk[ suc n ][ u , w ]
+      statesAlong : (walk : Walk u v) → Vec⁺ (states .fst) (length walk)
+      statesAlong {u = u} nil = [ u ]
+      statesAlong {v = v} (cons walk adj) = v ∷ statesAlong walk
 
-      Walk[_,_] : states .fst → states .fst → Type ℓ
-      Walk[ u , v ] = Σ[ n ∈ ℕ ] Walk[ n ][ u , v ]
+      along : (walk : Walk u v) → WalkAlong (length walk) (statesAlong walk)
+      along nil = nil _
+      along (cons {u = u} nil adj) = cons adj (along nil)
+      along (cons {u = u} w@(cons walk x) adj) = cons adj (along w)
 
-      WalkLen : ℕ → Type ℓ
-      WalkLen n = Σ[ u ∈ _ ] Σ[ v ∈ _ ] Walk[ n ][ u , v ]
+      WalkAlong→Walk : (wa : WalkAlong n vs) → Walk (lastUnder wa) (headUnder wa)
+      WalkAlong→Walk (nil u) = nil
+      WalkAlong→Walk (cons adj wa) = cons (WalkAlong→Walk wa) adj
 
-      Walk : Type ℓ
-      Walk = Σ[ u ∈ _ ] Σ[ v ∈ _ ] Walk[ u , v ]
+      length-WalkAlong→Walk : (wa : WalkAlong n vs) → length (WalkAlong→Walk wa) ≡ n
+      length-WalkAlong→Walk (nil u) = refl
+      length-WalkAlong→Walk (cons adj wa) = cong suc (length-WalkAlong→Walk wa)
 
-      edgesAlong : Walk[ n ][ u , v ] → Vec (directed-edges .fst) n
-      edgesAlong (nil p) = []
-      edgesAlong (cons walk adj) = adj .fst ∷ edgesAlong walk
+      bound : ℕ
+      bound = card states
 
-      statesAlong : Walk[ n ][ u , v ] → Vec (states .fst) (suc n)
-      statesAlong {u = u} walk = u ∷ src <$> edgesAlong walk
-        where open VecSyntax
+      opaque
+        statesPhp : (walk : Walk u v) → bound < length walk → Σ[ i ∈ _ ] Σ[ j ∈ _ ] (toℕ i < toℕ j) × (Vec⁺.lookup (statesAlong walk) i ≡ Vec⁺.lookup (statesAlong walk) j)
+        statesPhp walk bound<len = {!!}
 
-      stateAtIdx : ∀ {n u v} → Walk[ n ][ u , v ] → Fin.Fin (suc n) → states .fst
-      stateAtIdx walk = Vec.lookup (statesAlong walk)
-
-      module Interleave
-        (edges : Vec (directed-edges .fst) n)
-        (vertices : Vec (states .fst) (suc n)) where
-
-        edgeAt = Vec.lookup edges
-        srcAt = src ∘ edgeAt
-        dstAt = dst ∘ edgeAt
-
-        vertAt = Vec.lookup vertices
-        lAt = vertAt ∘ Fin.finj
-        rAt = vertAt ∘ Fin.fsuc
-
-        isCoherentEdge : Fin.Fin n → Type _
-        isCoherentEdge idx = (srcAt idx ≡ lAt idx) × (dstAt idx ≡ rAt idx)
-
-        isCoherent = ∀ idx → isCoherentEdge idx
-
-        private
-          coherence→adj : isCoherent → (idx : Fin.Fin (n ∸ 1)) → {!!} --Adj (src $ lookup idx) (dst $ lookup idx)
-          coherence→adj coheres idx = {!!}
-
-        →Walk : isCoherent → Walk
-        →Walk coherence =
-          let start = vertAt 0 , _ , _ , nil refl in
-          let ev = Vec.zipWith (_,_) edges (Vec.tail vertices) in
-          Vec.foldr (λ (e , w) (u , v , n , walk) → u , w , suc n , cons walk (e , {!!})) start ev
-
-      takeWeak : (k : Fin.Fin (suc n)) (walk : Walk[ n ][ u , v ]) → Vec (directed-edges .fst) (Fin.toℕ k)
-      takeWeak k walk = Vec.take k (edgesAlong walk)
-
-      take' : (k : Fin.Fin (suc n)) (walk : Walk[ n ][ u , v ]) → Walk
-      take' k walk = Interleave.→Walk (Vec.take k $ edgesAlong walk) (Vec.take (Fin.fsuc k) $ statesAlong walk)
-        λ { (0 , 0<k) → {!!} , {!!}
-          ; (suc idx , sucidx<k) → {!!}
-          }
-
-      take : ∀ {n u v} (k : Fin.Fin (suc n)) (walk : Walk[ n ][ u , v ]) → Walk[ Fin.toℕ k ][ u , stateAtIdx walk k ]
-      take (k , k<1) (nil p) = {!nil p!}
-      take fk (cons walk adj) = {!!}
-
-      record Split {n u v} (walk : Walk[ n ][ u , v ]) : Type ℓ where
-        field
-          atIdx : Fin.Fin (suc n)
-
-        atState : states .fst
-        atState = stateAtIdx walk atIdx
-
-        lengthl : ℕ
-        lengthl = Fin.toℕ atIdx
-
-        lengthr : ℕ
-        lengthr = n ∸ Fin.toℕ atIdx
-
-        walkl : Walk[ lengthl ][ u , atState ]
-        walkl = {!!}
-
-        walkr : Walk[ lengthr ][ atState , v ]
-        walkr = {!!}
-
-      -- Walk[_][_,_] : ℕ → states .fst → states .fst → Type ℓ
-      -- Walk[ 0 ][ u , v ] = u ≡ v
-      -- Walk[ suc n ][ u , v ] = Σ[ w ∈ states .fst ] Walk[ n ][ u , w ] × Adj w v
-
-      -- pattern nil p = p
-      -- pattern cons walk adj = _ , walk , adj
-
-    open Walk public using ()
+      -- simplifyStep< : (walk : Walk u v) → bound < length walk → Σ[ walk' ∈ Walk u v ] length walk' < length walk
+      -- simplifyStep< walk bound<len =
+      --   let (i , j , i<j , statei≡statej) = statesPhp walk bound<len in
+      --   let l = Between.take i (along walk) in
+      --   let r = Between.drop j (along walk) in
+      --   let alongWalk' = Between.splice l r {!statei≡statej!} in
+      --   let walk' = WalkAlong→Walk alongWalk' in
+      --   let j≤lenwalk : toℕ j ≤ length walk
+      --       j≤lenwalk = predℕ-≤-predℕ (fin< j) in
+      --   let lem : toℕ j + length walk' < toℕ j + length walk
+      --       lem = toℕ j + length walk' ≡<⟨ +-comm _ _ ⟩
+      --             length walk' + toℕ j ≡<⟨ congS (_+ toℕ j) $ length-WalkAlong→Walk alongWalk' ⟩
+      --             (toℕ i + (length walk ∸ toℕ j)) + toℕ j ≡<⟨ +-assoc _ _ _ ⟩
+      --             toℕ i + ((length walk ∸ toℕ j) + toℕ j) ≡<⟨ congS (toℕ i +_) (≤-∸-+-cancel j≤lenwalk) ⟩
+      --             toℕ i + length walk <≡⟨ <-+k {k = length walk} i<j ⟩ refl in
+      --   let lenwalk'<lenwalk = <-k+-cancel {k = toℕ j} lem in
+      --   {!!} , {!!}
+      --   where open <-Reasoning
 
     -- simplifyStep< : ∀ {n u v} → Walk[ n ][ u , v ] → bound < n → Σ[ n' ∈ ℕ ] (Walk[ n' ][ u , v ] × (n' < n))
     -- simplifyStep< walk bound<n =
