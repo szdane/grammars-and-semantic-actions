@@ -40,13 +40,37 @@ private
   module _ where
     open SumFin
 
-    fin< : ∀ {n} → (k : Fin n) → toℕ k < n
+    private variable
+      n : ℕ
+
+    fin< : (k : Fin n) → toℕ k < n
     fin< {n = suc n} fzero = n , +-comm n 1
     fin< {n = suc n} (fsuc k) = fin< k .fst , +-suc _ _ ∙ congS suc (fin< k .snd)
 
     -- fin< : ∀ {n} → (k : Fin n) → toℕ k < n
     -- fin< {n = suc n} fzero = tt
     -- fin< {n = suc n} (fsuc k) = fin< k
+
+    -- _-ᶠ_ : (a : Fin n) → Fin (suc (toℕ a)) → Fin n
+    -- _-ᶠ_ a fzero = a
+    -- _-ᶠ_ {n = suc n} (fsuc a) (fsuc b) = finj $ a -ᶠ b
+
+    -ᶠ_ : Fin n → Fin n
+    -ᶠ_ {n = suc n} fzero = flast
+    -ᶠ_ {n = suc n} (fsuc k) = finj $ -ᶠ k
+
+    -ᶠℕ_ : Fin n → ℕ
+    -ᶠℕ_ {n = suc n} fzero = n
+    -ᶠℕ_ {n = suc n} (fsuc k) = -ᶠℕ k
+
+    -ᶠfinj : (k : Fin n) → -ᶠ (finj k) ≡ fsuc (-ᶠ k)
+    -ᶠfinj {n = suc n} fzero = refl
+    -ᶠfinj {n = suc n} (fsuc k) = congS finj $ -ᶠfinj k
+
+    -ᶠ-ᶠ : (k : Fin n) → -ᶠ (-ᶠ k) ≡ k
+    -ᶠ-ᶠ {n = 1} fzero = refl
+    -ᶠ-ᶠ {n = suc (suc n)} fzero = congS finj $ -ᶠ-ᶠ fzero
+    -ᶠ-ᶠ {n = suc n} (fsuc k) = -ᶠfinj (-ᶠ k) ∙ congS fsuc (-ᶠ-ᶠ k)
 
 module Vec where
   open SumFin
@@ -117,6 +141,10 @@ module Vec⁺ where
   lookup xs fzero = head xs
   lookup (x ∷ xs) (fsuc idx) = lookup xs idx
 
+  tabulate : (Fin (suc n) → T) → Vec⁺ T n
+  tabulate {n = 0} f = [ f fzero ]
+  tabulate {n = suc n} f = f fzero ∷ tabulate (f ∘ fsuc)
+
   take : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (toℕ k)
   take fzero xs = [ head xs ]
   take (fsuc k) (x ∷ xs) = x ∷ take k xs
@@ -125,12 +153,34 @@ module Vec⁺ where
   drop fzero xs = xs
   drop (fsuc k) (x ∷ xs) = drop k xs
 
+  drop' : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (-ᶠℕ k)
+  drop' fzero xs = xs
+  drop' (fsuc k) (x ∷ xs) = drop' k xs
+
   splice : Vec⁺ T n → Vec⁺ T m → Vec⁺ T (n + m)
   splice [ l ] rs = rs
   splice (l ∷ ls) rs = l ∷ splice ls rs
 
-  loop : (i j : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (toℕ i + (n ∸ toℕ j))
+  loopLength : Fin (suc n) → Fin (suc n) → ℕ
+  loopLength {n = n} i j = toℕ i + (n ∸ toℕ j)
+
+  loopLength' : Fin (suc n) → Fin (suc n) → ℕ
+  loopLength' i j = toℕ i + -ᶠℕ j
+
+  loop : (i j : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (loopLength i j)
   loop i j xs = splice (take i xs) (drop j xs)
+
+  headTabulate≡ap0 : (f : Fin (suc n) → T) → head (tabulate f) ≡ f fzero
+  headTabulate≡ap0 {n = 0} f = refl
+  headTabulate≡ap0 {n = suc n} f = refl
+
+  lookup-tabulate : (f : Fin (suc n) → T) (k : Fin (suc n)) → lookup (tabulate f) k ≡ f k
+  lookup-tabulate f fzero = headTabulate≡ap0 f
+  lookup-tabulate {n = suc n} f (fsuc k) = lookup-tabulate (f ∘ fsuc) k
+
+  tabulate-lookup : (xs : Vec⁺ T n) → tabulate (lookup xs) ≡ xs
+  tabulate-lookup [ x ] = refl
+  tabulate-lookup (x ∷ xs) = congS (x ∷_) $ tabulate-lookup xs
 
   head≡headTake : (xs : Vec⁺ T n) (k : Fin (suc n)) → head xs ≡ head (take k xs)
   head≡headTake xs fzero = refl
@@ -148,44 +198,43 @@ module Vec⁺ where
   head≡headSplice [ x ] ys lastxs≡headys = lastxs≡headys
   head≡headSplice (x ∷ xs) ys lastxs≡headys = refl
 
-module list where
-  open import Cubical.Data.List
+  loopout : (i j : Fin (suc n)) → Fin (suc n) → Fin (loopLength i j)
+  loopout i j k with Dichotomyℕ (toℕ k) (toℕ i)
+  ... | inl k≤i = Fin→SumFin (toℕ k , {!k≤i!})
+  ... | inr i<k = {!!} --fromℕ $ toℕ k ∸ toℕ j
 
-  private variable
-    n m : ℕ
-    T U : Type ℓ
+  loopback : (i j : Fin (suc n)) → Fin (loopLength i j) → Fin (suc n)
+  loopback i j k with Dichotomyℕ (toℕ k) (toℕ i)
+  ... | inl k≤i = fromℕ (toℕ k)
+  ... | inr i<k = fromℕ $ toℕ j + (toℕ k ∸ toℕ i)
 
-  loop : (i j : ℕ) → List T → List T
-  loop i j xs = take i xs ++ drop j xs
+  isEmbeddingLoopback : (i j : Fin (suc n)) → isEmbedding (loopback i j)
+  isEmbeddingLoopback i j = injEmbedding (isFinSet→isSet isFinSetFin) inj
+    where
+    inj' : (k l : Fin (loopLength i j)) → toℕ k < toℕ l → loopback i j k ≡ loopback i j l → ⊥
+    inj' k l k<l fk≡fl = {!!}
 
-  x : List ℕ
-  x = 0 ∷ 1 ∷ 2 ∷ 1 ∷ 4 ∷ []
+    inj : {k l : Fin (loopLength i j)} → loopback i j k ≡ loopback i j l → k ≡ l
+    inj {k} {l} fk≡fl with toℕ k ≟ toℕ l
+    ... | eq k≡l = toℕ-injective k≡l
+    ... | lt k<l = ⊥.rec $ inj' k l k<l fk≡fl
+    ... | gt l<k = ⊥.rec $ inj' l k l<k (sym fk≡fl)
 
-  _ : loop 1 3 x ≡ 0 ∷ 1 ∷ 4 ∷ []
-  _ = refl
+  module _ where
+    open Iso
 
-  decomp2 : (i : ℕ) → List T → List T × List T
-  decomp2 i xs = take i xs , drop i xs
+    Iso-Vec⁺-Finsuc→ : Iso (Vec⁺ T n) (Fin (suc n) → T)
+    Iso-Vec⁺-Finsuc→ .fun = lookup
+    Iso-Vec⁺-Finsuc→ .inv = tabulate
+    Iso-Vec⁺-Finsuc→ .rightInv f = funExt (lookup-tabulate f)
+    Iso-Vec⁺-Finsuc→ .leftInv = tabulate-lookup
 
-  decomp2→id : (i : ℕ) (xs : List T) → take i xs ++ drop i xs ≡ xs
-  decomp2→id zero xs = refl
-  decomp2→id (suc i) [] = refl
-  decomp2→id (suc i) (x ∷ xs) = congS (x ∷_) $ decomp2→id i xs
+    Vec⁺≃Finsuc→ : Vec⁺ T n ≃ (Fin (suc n) → T)
+    Vec⁺≃Finsuc→ = isoToEquiv Iso-Vec⁺-Finsuc→
 
-  decomp : (i j : ℕ) → List T → (List T × List T × List T)
-  decomp i j xs = take i xs , drop i (take j xs) , drop j xs
-
-  _ : decomp 1 3 x ≡ (0 ∷ [] , 1 ∷ 2 ∷ [] , 1 ∷ 4 ∷ [])
-  _ = refl
-
-  decomp→loop : (i j : ℕ) → (xs : List T) → decomp i j xs .fst ++ decomp i j xs .snd .snd ≡ loop i j xs
-  decomp→loop i j xs = refl
-
-  decomp→take : (i j : ℕ) → i < j → (xs : List T) → take i xs ++ drop i (take j xs) ≡ take j xs
-  decomp→take i j i<j xs = {!take++!}
-
-  decomp→id : (i j : ℕ) → (xs : List T) → decomp i j xs .fst ++ decomp i j xs .snd .fst ++ decomp i j xs .snd .snd ≡ xs
-  decomp→id i j xs = {!!}
+  module _ (T : FinSet ℓ) where
+    isFinSetVec⁺ : isFinSet (Vec⁺ (T .fst) n)
+    isFinSetVec⁺ = EquivPresIsFinSet (invEquiv Vec⁺≃Finsuc→) (isFinSet→ (_ , isFinSetFin) T)
 
 module Between where
   open SumFin
@@ -255,11 +304,7 @@ module Between where
   loop {xs = xs} between i j lookupi≡lookupj = splice (take i between) (drop j between) (sym (Vec⁺.lookup≡lastTake xs i) ∙∙ lookupi≡lookupj ∙∙ Vec⁺.lookup≡headDrop xs j)
 
   loop-< : (between : Between T R n xs) (i j : Fin (suc n)) → toℕ i < toℕ j → toℕ i + (n ∸ toℕ j) < n
-  loop-< {n = n} between i j = {!+induction!}
-    -- where
-    -- open <-Reasoning
-    -- lemma : toℕ i + n < n + toℕ j
-    -- lemma = toℕ i + n ≡<⟨ +-comm (toℕ i) n ⟩ <-k+ i<j
+  loop-< {n = n} between i j = {!!}
 
 record directedGraph : Type (ℓ-suc ℓ) where
   field
