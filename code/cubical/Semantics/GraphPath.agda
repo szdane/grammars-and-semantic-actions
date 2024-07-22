@@ -13,20 +13,14 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.Sum as Sum hiding (elim ; rec ; map)
-open import Cubical.Data.Bool hiding (_⊕_ ; elim ; _≤_ ; _≟_)
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as ⊥ hiding (elim ; rec)
 open import Cubical.Data.Unit
-open import Cubical.Data.Maybe hiding (elim ; rec)
 open import Cubical.Data.Nat as Nat hiding (elim)
-open import Cubical.Data.Nat.Order as Order
-import      Cubical.Data.Nat.Order.Recursive as Ord
-open import Cubical.Data.NatPlusOne
-import      Cubical.Data.Fin as Fin
+import      Cubical.Data.Nat.Order.Recursive as NatOrd
 open import Cubical.Data.SumFin as SumFin hiding (finj ; fsuc ; elim)
-import      Cubical.Data.FinData as FinData
-open import Cubical.Data.Vec.DepVec as DepVec'
-open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
+open import Cubical.Data.SumFin.More
+open import Cubical.Foundations.Equiv
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation as PT hiding (elim ; rec ; map)
 
@@ -43,34 +37,29 @@ private
     private variable
       n : ℕ
 
-    fin< : (k : Fin n) → toℕ k < n
-    fin< {n = suc n} fzero = n , +-comm n 1
-    fin< {n = suc n} (fsuc k) = fin< k .fst , +-suc _ _ ∙ congS suc (fin< k .snd)
+    -- fin< : (k : Fin n) → toℕ k NatOrd.< n
+    -- fin< {n = suc n} fzero = n , +-comm n 1
+    -- fin< {n = suc n} (fsuc k) = fin< k .fst , +-suc _ _ ∙ congS suc (fin< k .snd)
 
-    -- fin< : ∀ {n} → (k : Fin n) → toℕ k < n
-    -- fin< {n = suc n} fzero = tt
-    -- fin< {n = suc n} (fsuc k) = fin< k
+    fin< : ∀ {n} → (k : Fin n) → toℕ k NatOrd.< n
+    fin< {n = suc n} fzero = tt
+    fin< {n = suc n} (fsuc k) = fin< k
 
-    -- _-ᶠ_ : (a : Fin n) → Fin (suc (toℕ a)) → Fin n
-    -- _-ᶠ_ a fzero = a
-    -- _-ᶠ_ {n = suc n} (fsuc a) (fsuc b) = finj $ a -ᶠ b
+    _-ᶠ_ : (a : ℕ) → Fin a → ℕ
+    _-ᶠ_ (suc a) fzero = a
+    _-ᶠ_ (suc a) (fsuc b) = a -ᶠ b
 
-    -ᶠ_ : Fin n → Fin n
-    -ᶠ_ {n = suc n} fzero = flast
-    -ᶠ_ {n = suc n} (fsuc k) = finj $ -ᶠ k
+    -ᶠ_ : Fin n → ℕ
+    -ᶠ_ {n} k = n -ᶠ k
 
-    -ᶠℕ_ : Fin n → ℕ
-    -ᶠℕ_ {n = suc n} fzero = n
-    -ᶠℕ_ {n = suc n} (fsuc k) = -ᶠℕ k
+    -ᶠ+ : (a : Fin n) (b : Fin (toℕ a)) → 1 + toℕ b + (toℕ a -ᶠ b) ≡ toℕ a
+    -ᶠ+ {n = suc n} (fsuc a) fzero = refl
+    -ᶠ+ {n = suc n} (fsuc a) (fsuc b) = congS suc $ -ᶠ+ a b
 
-    -ᶠfinj : (k : Fin n) → -ᶠ (finj k) ≡ fsuc (-ᶠ k)
-    -ᶠfinj {n = suc n} fzero = refl
-    -ᶠfinj {n = suc n} (fsuc k) = congS finj $ -ᶠfinj k
-
-    -ᶠ-ᶠ : (k : Fin n) → -ᶠ (-ᶠ k) ≡ k
-    -ᶠ-ᶠ {n = 1} fzero = refl
-    -ᶠ-ᶠ {n = suc (suc n)} fzero = congS finj $ -ᶠ-ᶠ fzero
-    -ᶠ-ᶠ {n = suc n} (fsuc k) = -ᶠfinj (-ᶠ k) ∙ congS fsuc (-ᶠ-ᶠ k)
+    subNegᶠ : (a : ℕ) (b : Fin a) → a + (-ᶠ fromℕ {k = n} (toℕ b)) ≡ a -ᶠ b
+    subNegᶠ {n = zero} (suc a) fzero = {!!}
+    subNegᶠ {n = suc n} (suc a) fzero = {!!}
+    subNegᶠ {n = n} (suc a) (fsuc b) = {!!}
 
 module Vec where
   open SumFin
@@ -153,7 +142,7 @@ module Vec⁺ where
   drop fzero xs = xs
   drop (fsuc k) (x ∷ xs) = drop k xs
 
-  drop' : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (-ᶠℕ k)
+  drop' : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (-ᶠ k)
   drop' fzero xs = xs
   drop' (fsuc k) (x ∷ xs) = drop' k xs
 
@@ -161,11 +150,39 @@ module Vec⁺ where
   splice [ l ] rs = rs
   splice (l ∷ ls) rs = l ∷ splice ls rs
 
+  record Range (n : ℕ) : Type ℓ-zero where
+    constructor mk-range
+    field
+      i j : Fin (suc n)
+      i≤j : i ≤ j
+
+    lengthℕ : ℕ
+    lengthℕ = toℕ j ∸ toℕ i
+
+    length : Fin (suc n)
+    length = sub≤ j i i≤j
+
+    left : Range n
+    left = record { i   = fzero
+                  ; j   = i
+                  ; i≤j = tt }
+
+    right : Range n
+    right = record { i = j
+                   ; j = flast
+                   ; i≤j = ≤-flast j }
+
+    incl : Fin (suc (toℕ length)) → Fin (suc n)
+    incl k = {!fplus (toℕ i) k!}
+
+    complementSize : Fin (suc n)
+    complementSize = {!!} --left .length + right .length
+
   loopLength : Fin (suc n) → Fin (suc n) → ℕ
   loopLength {n = n} i j = toℕ i + (n ∸ toℕ j)
 
-  loopLength' : Fin (suc n) → Fin (suc n) → ℕ
-  loopLength' i j = toℕ i + -ᶠℕ j
+  loopLength' : (i : Fin (suc n)) → Fin (toℕ i) → ℕ
+  loopLength' i j = toℕ i -ᶠ j
 
   loop : (i j : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (loopLength i j)
   loop i j xs = splice (take i xs) (drop j xs)
@@ -198,27 +215,27 @@ module Vec⁺ where
   head≡headSplice [ x ] ys lastxs≡headys = lastxs≡headys
   head≡headSplice (x ∷ xs) ys lastxs≡headys = refl
 
-  loopout : (i j : Fin (suc n)) → Fin (suc n) → Fin (loopLength i j)
-  loopout i j k with Dichotomyℕ (toℕ k) (toℕ i)
-  ... | inl k≤i = Fin→SumFin (toℕ k , {!k≤i!})
-  ... | inr i<k = {!!} --fromℕ $ toℕ k ∸ toℕ j
+  -- loopout : (i j : Fin (suc n)) → Fin (suc n) → Fin (loopLength i j)
+  -- loopout i j k with Dichotomyℕ (toℕ k) (toℕ i)
+  -- ... | inl k≤i = Fin→SumFin (toℕ k , {!k≤i!})
+  -- ... | inr i<k = {!!} --fromℕ $ toℕ k ∸ toℕ j
 
-  loopback : (i j : Fin (suc n)) → Fin (loopLength i j) → Fin (suc n)
-  loopback i j k with Dichotomyℕ (toℕ k) (toℕ i)
-  ... | inl k≤i = fromℕ (toℕ k)
-  ... | inr i<k = fromℕ $ toℕ j + (toℕ k ∸ toℕ i)
+  -- loopback : (i j : Fin (suc n)) → Fin (loopLength i j) → Fin (suc n)
+  -- loopback i j k with Dichotomyℕ (toℕ k) (toℕ i)
+  -- ... | inl k≤i = fromℕ (toℕ k)
+  -- ... | inr i<k = fromℕ $ toℕ j + (toℕ k ∸ toℕ i)
 
-  isEmbeddingLoopback : (i j : Fin (suc n)) → isEmbedding (loopback i j)
-  isEmbeddingLoopback i j = injEmbedding (isFinSet→isSet isFinSetFin) inj
-    where
-    inj' : (k l : Fin (loopLength i j)) → toℕ k < toℕ l → loopback i j k ≡ loopback i j l → ⊥
-    inj' k l k<l fk≡fl = {!!}
+  -- isEmbeddingLoopback : (i j : Fin (suc n)) → isEmbedding (loopback i j)
+  -- isEmbeddingLoopback i j = injEmbedding (isFinSet→isSet isFinSetFin) inj
+  --   where
+  --   inj' : (k l : Fin (loopLength i j)) → toℕ k < toℕ l → loopback i j k ≡ loopback i j l → ⊥
+  --   inj' k l k<l fk≡fl = {!!}
 
-    inj : {k l : Fin (loopLength i j)} → loopback i j k ≡ loopback i j l → k ≡ l
-    inj {k} {l} fk≡fl with toℕ k ≟ toℕ l
-    ... | eq k≡l = toℕ-injective k≡l
-    ... | lt k<l = ⊥.rec $ inj' k l k<l fk≡fl
-    ... | gt l<k = ⊥.rec $ inj' l k l<k (sym fk≡fl)
+  --   inj : {k l : Fin (loopLength i j)} → loopback i j k ≡ loopback i j l → k ≡ l
+  --   inj {k} {l} fk≡fl with toℕ k ≟ toℕ l
+  --   ... | eq k≡l = toℕ-injective k≡l
+  --   ... | lt k<l = ⊥.rec $ inj' k l k<l fk≡fl
+  --   ... | gt l<k = ⊥.rec $ inj' l k l<k (sym fk≡fl)
 
   module _ where
     open Iso
@@ -303,8 +320,8 @@ module Between where
   loop : (between : Between T R n xs) (i j : Fin (suc n)) → lookupUnder between i ≡ lookupUnder between j → Loop between i j
   loop {xs = xs} between i j lookupi≡lookupj = splice (take i between) (drop j between) (sym (Vec⁺.lookup≡lastTake xs i) ∙∙ lookupi≡lookupj ∙∙ Vec⁺.lookup≡headDrop xs j)
 
-  loop-< : (between : Between T R n xs) (i j : Fin (suc n)) → toℕ i < toℕ j → toℕ i + (n ∸ toℕ j) < n
-  loop-< {n = n} between i j = {!!}
+  -- loop-< : (between : Between T R n xs) (i j : Fin (suc n)) → i < j → toℕ i + (n ∸ toℕ j) < n
+  -- loop-< {n = n} between i j = {!!}
 
 record directedGraph : Type (ℓ-suc ℓ) where
   field
@@ -363,9 +380,9 @@ record directedGraph : Type (ℓ-suc ℓ) where
       bound : ℕ
       bound = card states
 
-      opaque
-        statesPhp : (walk : Walk u v) → bound < length walk → Σ[ i ∈ _ ] Σ[ j ∈ _ ] (toℕ i < toℕ j) × (Vec⁺.lookup (statesAlong walk) i ≡ Vec⁺.lookup (statesAlong walk) j)
-        statesPhp walk bound<len = {!!}
+      -- opaque
+      --   statesPhp : (walk : Walk u v) → bound < length walk → Σ[ i ∈ _ ] Σ[ j ∈ _ ] (toℕ i < toℕ j) × (Vec⁺.lookup (statesAlong walk) i ≡ Vec⁺.lookup (statesAlong walk) j)
+      --   statesPhp walk bound<len = {!!}
 
       -- simplifyStep< : (walk : Walk u v) → bound < length walk → Σ[ walk' ∈ Walk u v ] length walk' < length walk
       -- simplifyStep< walk bound<len =
