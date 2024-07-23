@@ -1,6 +1,7 @@
-{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
+{-# OPTIONS -WnoUnsupportedIndexedMatch --no-require-unique-meta-solutions #-}
 module Semantics.GraphPath where
 
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
@@ -24,122 +25,15 @@ open import Cubical.Data.Nat as Nat hiding (elim)
 import      Cubical.Data.Nat.Order.Recursive as NatOrd
 open import Cubical.Data.SumFin as SumFin hiding (finj ; fsuc ; elim)
 open import Cubical.Data.SumFin.More
-open import Cubical.Foundations.Equiv
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation as PT hiding (elim ; rec ; map)
+
+import      Cubical.Data.Vec.Nonempty as Vec⁺
 
 open import Semantics.Helper
 private
   variable
     ℓ ℓ' : Level
-
-module Vec⁺ where
-  open SumFin
-
-  private variable
-    n m : ℕ
-    T U : Type ℓ
-
-  data Vec⁺ (T : Type ℓ) : ℕ → Type ℓ where
-    [_] : T → Vec⁺ T 0
-    _∷_ : {n : ℕ} → T → Vec⁺ T n → Vec⁺ T (suc n)
-  infixr 5 _∷_
-
-  private variable
-    xs ys : Vec⁺ T n
-
-  pure : T → Vec⁺ T 0
-  pure x = [ x ]
-
-  head : Vec⁺ T n → T
-  head [ x ] = x
-  head (x ∷ xs) = x
-
-  last : Vec⁺ T n → T
-  last [ x ] = x
-  last (x ∷ xs) = last xs
-
-  lookup : Vec⁺ T n → Fin (suc n) → T
-  lookup xs fzero = head xs
-  lookup (x ∷ xs) (fsuc idx) = lookup xs idx
-
-  tabulate : (Fin (suc n) → T) → Vec⁺ T n
-  tabulate {n = 0} f = [ f fzero ]
-  tabulate {n = suc n} f = f fzero ∷ tabulate (f ∘ fsuc)
-
-  split : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (toℕ k) × Vec⁺ T (n ∸ toℕ k)
-  split fzero xs = [ head xs ] , xs
-  split (fsuc k) (x ∷ xs) = map-fst (x ∷_) (split k xs)
-
-  Spliceable : Vec⁺ T n → Vec⁺ T m → Type _
-  Spliceable xs ys = last xs ≡ head ys
-
-  opaque
-    splice : (xs : Vec⁺ T n) (ys : Vec⁺ T m) → Spliceable xs ys → Vec⁺ T (n + m)
-    splice [ l ] rs _ = rs
-    splice (l ∷ ls) rs spliceable = l ∷ splice ls rs spliceable
-
-    splice-pure : {x : T} {xs : Vec⁺ T n} {spliceable : x ≡ head xs} →
-                  xs ≡ splice (pure x) xs spliceable
-    splice-pure = refl
-
-    splice-∷ : {x : T} {xs : Vec⁺ T n} {ys : Vec⁺ T m} {spliceable : Spliceable xs ys} →
-                x ∷ splice xs ys spliceable ≡ splice (x ∷ xs) ys spliceable
-    splice-∷ = refl
-
-    splice-head : {spliceable : Spliceable xs ys} → head xs ≡ head (splice xs ys spliceable)
-    splice-head {xs = [ x ]} {spliceable = spliceable} = spliceable
-    splice-head {xs = x ∷ xs} = refl
-
-  Split : (k : ℕ) → Vec⁺ T (k + n) → Type _
-  Split {T = T} {n = n} k xs =
-    Σ[ (ls , rs) ∈ Vec⁺ T k × Vec⁺ T n ] Σ[ spliceable ∈ Spliceable ls rs ]
-      xs ≡ splice ls rs spliceable
-
-  opaque
-    split' : (k : ℕ) → (xs : Vec⁺ T (k + n)) → Split k xs
-    split' 0 xs = (pure (head xs) , xs) , refl , splice-pure
-    split' (suc k) (x ∷ xs) =
-      let (xs' , spliceable , p) = split' k xs in
-      map-fst (x ∷_) xs' , spliceable , congS (x ∷_) p ∙ splice-∷
-
-  headTabulate≡ap0 : (f : Fin (suc n) → T) → head (tabulate f) ≡ f fzero
-  headTabulate≡ap0 {n = 0} f = refl
-  headTabulate≡ap0 {n = suc n} f = refl
-
-  lookup-tabulate : (f : Fin (suc n) → T) (k : Fin (suc n)) → lookup (tabulate f) k ≡ f k
-  lookup-tabulate f fzero = headTabulate≡ap0 f
-  lookup-tabulate {n = suc n} f (fsuc k) = lookup-tabulate (f ∘ fsuc) k
-
-  tabulate-lookup : (xs : Vec⁺ T n) → tabulate (lookup xs) ≡ xs
-  tabulate-lookup [ x ] = refl
-  tabulate-lookup (x ∷ xs) = congS (x ∷_) $ tabulate-lookup xs
-
-  head≡headSplitFst : (xs : Vec⁺ T n) (k : Fin (suc n)) → head xs ≡ head (split k xs .fst)
-  head≡headSplitFst xs fzero = refl
-  head≡headSplitFst (x ∷ xs) (fsuc k) = refl
-
-  opaque
-    unfolding splice
-    head≡headSplice : (xs : Vec⁺ T n) (ys : Vec⁺ T m) (spliceable : Spliceable xs ys) → head xs ≡ head (splice xs ys spliceable)
-    head≡headSplice [ x ] ys lastxs≡headys = lastxs≡headys
-    head≡headSplice (x ∷ xs) ys lastxs≡headys = refl
-
-  module _ where
-    open Iso
-
-    Iso-Vec⁺-Finsuc→ : Iso (Vec⁺ T n) (Fin (suc n) → T)
-    Iso-Vec⁺-Finsuc→ .fun = lookup
-    Iso-Vec⁺-Finsuc→ .inv = tabulate
-    Iso-Vec⁺-Finsuc→ .rightInv f = funExt (lookup-tabulate f)
-    Iso-Vec⁺-Finsuc→ .leftInv = tabulate-lookup
-
-    Vec⁺≃Finsuc→ : Vec⁺ T n ≃ (Fin (suc n) → T)
-    Vec⁺≃Finsuc→ = isoToEquiv Iso-Vec⁺-Finsuc→
-
-  module _ (T : FinSet ℓ) where
-    isFinSetVec⁺ : isFinSet (Vec⁺ (T .fst) n)
-    isFinSetVec⁺ = EquivPresIsFinSet (invEquiv Vec⁺≃Finsuc→) (isFinSet→ (_ , isFinSetFin) T)
 
 module Between where
   open SumFin
@@ -152,11 +46,11 @@ module Between where
     x y : T
     xs ys : Vec⁺ T n
 
-  data Between (T : Type ℓ) (R : T → T → Type ℓ') : (n : ℕ) → Vec⁺ T n → Type (ℓ-max ℓ ℓ') where
-    nil : (x : T) → Between T R 0 (pure x)
-    cons : R x (Vec⁺.head xs) → Between T R n xs → Between T R (suc n) (x ∷ xs)
+  data Between {T : Type ℓ} (R : T → T → Type ℓ') : {n : ℕ} → Vec⁺ T n → Type (ℓ-max ℓ ℓ') where
+    nil : (x : T) → Between R (pure x)
+    cons : {x hd : T} {xs : Vec⁺ T n} → R x hd → hd ≡ Vec⁺.head xs → Between R xs → Between R (x ∷ xs)
 
-  module _ {xs} (between : Between T R n xs) where
+  module _ {xs : Vec⁺ T n} (between : Between R xs) where
     headUnder = Vec⁺.head xs
     lastUnder = Vec⁺.last xs
 
@@ -164,100 +58,35 @@ module Between where
     lookupUnderL = lookupUnder ∘ finj
     lookupUnderR = lookupUnder ∘ fsuc
 
-    Lookup : Fin n → Type _
-    Lookup idx = R (lookupUnderL idx) (lookupUnderR idx)
-
-  lookup : (between : Between T R n xs) (idx : Fin n) → Lookup between idx
-  lookup (cons r between) fzero = r
-  lookup (cons r between) (fsuc idx) = lookup between idx
-
-  Head : Between T R (suc n) xs → Type _
-  Head between = Lookup between fzero
-
-  head : (between : Between T R (suc n) xs) → Head between
-  head between = lookup between fzero
-
-  split : (k : Fin (suc n)) → Between T R n xs → Between T R (toℕ k) (Vec⁺.split k xs .fst) × Between T R (n ∸ toℕ k) (Vec⁺.split k xs .snd)
-  split fzero between = nil (headUnder between) , between
-  split {R = R} (fsuc k) (cons {xs = xs} r between) = map-fst (cons (subst (R _) (Vec⁺.head≡headSplitFst xs k) r)) (split k between)
-
   module _
     {T : Type ℓ}
     {R : T → T → Type ℓ'}
-    where opaque
-    unfolding Vec⁺.splice
+    where
 
-    splice' : {n m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
-             (spliceable : Vec⁺.Spliceable xs ys) →
-             Between T R n xs → Between T R m ys →
-             Between T R (n + m) (Vec⁺.splice xs ys spliceable)
-    splice' spliceable (nil l) rs = rs
-    splice' spliceable (cons {xs = xs} r ls) rs =
-      let r' = subst (R _) Vec⁺.splice-head r in
-      cons r' (splice' spliceable ls rs)
+    open Vec⁺.Spliceable
 
-  private opaque
-    cast-vec : {xs ys : Vec⁺ T n} → xs ≡ ys → Between T R n xs → Between T R n ys
-    cast-vec p = subst (Between _ _ _) p
+    private BT = Between R
 
-    cast-vec-filler : {xs ys : Vec⁺ T n} → (p : xs ≡ ys) → (bt : Between T R n xs) →
-                      PathP (λ i → Between T R n (p i)) bt (cast-vec p bt)
-    cast-vec-filler p bt = subst-filler (Between _ _ _) p bt
+    splice : {n m : ℕ} (sp : Vec⁺.Spliceable T n m) →
+             BT (sp .l) → BT (sp .r) → BT (spliced sp)
+    splice sp (nil l) rs = rs
+    splice sp (cons r p ls) rs = cons r {!!} $ {!splice sp!} -- cons r (p ∙ Vec⁺.splice-head spliceable) $ splice spliceable ls rs
 
-  module _
-    {T : Type ℓ}
-    {R : T → T → Type ℓ'}
-    where opaque
+    -- split : (n : ℕ) {m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
+    --         (spliceable : Vec⁺.AreSpliceable xs ys)
+    --         (bt : BT (Vec⁺.splice xs ys spliceable)) →
+    --         Σ[ (ls , rs) ∈ BT xs × BT ys ] bt ≡ splice spliceable ls rs
+    -- split 0 {xs = Vec⁺.[ x ]} spliceable bt = ((nil x) , bt) , refl
+    -- split (suc n) {xs = x ∷ xs} spliceable (cons r p bt) =
+    --   let (bt' , splice-bt') = split n spliceable bt in
+    --   ( map-fst (cons r (p ∙ (sym $ Vec⁺.splice-head spliceable))) bt'
+    --   , cong₂ (cons r)
+    --       (Gpd.rUnit p ∙ congS (p ∙_) (sym ∘ Gpd.lCancel $ Vec⁺.splice-head spliceable) ∙ Gpd.assoc _ _ _)
+    --       splice-bt')
+    --   where open import Cubical.Foundations.GroupoidLaws as Gpd
 
-    splice : {n m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
-             (spliceable : Vec⁺.Spliceable xs ys) →
-             Between T R n xs → Between T R m ys →
-             Between T R (n + m) (Vec⁺.splice xs ys spliceable)
-    splice spliceable (nil l) rs = cast-vec Vec⁺.splice-pure rs
-    splice spliceable (cons {xs = xs} r ls) rs =
-      let r' = subst (R _) Vec⁺.splice-head r in
-      cast-vec Vec⁺.splice-∷ $ cons r' (splice spliceable ls rs)
-
-    splice-nil : {x : T} {n : ℕ} {xs : Vec⁺ T n}
-                 {spliceable : Vec⁺.Spliceable (Vec⁺.pure x) xs}
-                 {bt : Between T R n xs} →
-                 PathP (λ i → Between T R n (Vec⁺.splice-pure {x = x} {xs} {spliceable} i))
-                   bt (splice spliceable (nil x) bt)
-    splice-nil = cast-vec-filler Vec⁺.splice-pure _
-
-    splice-cons : {n m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
-                  {spliceable : Vec⁺.Spliceable xs ys}
-                  {x : T} {r : R x (Vec⁺.head xs)}
-                  {ls : Between T R n xs} {rs : Between T R m ys} →
-                  PathP (λ i → Between T R _ (Vec⁺.splice-∷ {x = x} {xs} {ys} {spliceable} i))
-                    (cons (subst (R _) Vec⁺.splice-head r) (splice spliceable ls rs))
-                    (splice spliceable (cons r ls) rs)
-    splice-cons = cast-vec-filler Vec⁺.splice-∷ _
-
-  opaque
-    unfolding Vec⁺.splice
-
-    split' : (n : ℕ) {m : ℕ}
-            {xs : Vec⁺ T n} {ys : Vec⁺ T m} {spliceable : Vec⁺.Spliceable xs ys} →
-            (bt : Between T R (n + m) (Vec⁺.splice xs ys spliceable)) →
-            Σ[ (ls , rs) ∈ Between T R n xs × Between T R m ys ] bt ≡ splice spliceable ls rs
-    split' 0 {xs = Vec⁺.[ x ]} bt = (nil x , bt) , splice-nil
-    split' {R = R} (suc n) {xs = x ∷ xs} {spliceable = spliceable} (cons r bt) =
-      let (bt' , p) = split' n {xs = xs} {spliceable = spliceable} bt in
-      map-fst (cons (subst⁻ (R _) (Vec⁺.head≡headSplice xs _ spliceable) r)) bt' , {!splice-cons!}
-
-  Tripartition : Range n → Between T R n xs → Type _
-  Tripartition {n = n} {T = T} {R = R} {xs = xs} range _ =
-    let open Range range in
-    let B = Between T R in
-    let (ls , cs , rs) = map-snd (Vec⁺.split j') (Vec⁺.split i xs) in
-    B (toℕ i) ls × B (toℕ j') cs × B (n ∸ toℕ i ∸ toℕ j') rs
-
-  tripartition : (range : Range n) → (between : Between T R n xs) → Tripartition range between
-  tripartition range between = map-snd (split j') (split i between)
-    where open Range range
-
-  -- simplify : (range : Range n) → lookup xs (range .Range.i) ≡ lookup xs (range .Range.j) → Between T R n xs → Between T R _
+    -- split' : (n : ℕ) {m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
+    --          (spliceable : Vec⁺.Spliceable xs ys)
 
 record directedGraph : Type (ℓ-suc ℓ) where
   field
@@ -293,25 +122,25 @@ record directedGraph : Type (ℓ-suc ℓ) where
       open Vec⁺
       open Between
 
-      WalkAlong : (n : ℕ) → Vec⁺ (states .fst) n → Type ℓ
-      WalkAlong = Between (states .fst) (flip Adj)
+      WalkAlong : Vec⁺ (states .fst) n → Type ℓ
+      WalkAlong = Between (flip Adj)
 
       statesAlong : (walk : Walk u v) → Vec⁺ (states .fst) (length walk)
       statesAlong {u = u} nil = [ u ]
       statesAlong {v = v} (cons walk adj) = v ∷ statesAlong walk
 
-      along : (walk : Walk u v) → WalkAlong (length walk) (statesAlong walk)
-      along nil = nil _
-      along (cons {u = u} nil adj) = cons adj (along nil)
-      along (cons {u = u} w@(cons walk x) adj) = cons adj (along w)
+      -- along : (walk : Walk u v) → WalkAlong (length walk) (statesAlong walk)
+      -- along nil = nil _
+      -- along (cons {u = u} nil adj) = cons adj (along nil)
+      -- along (cons {u = u} w@(cons walk x) adj) = cons adj (along w)
 
-      WalkAlong→Walk : (wa : WalkAlong n vs) → Walk (lastUnder wa) (headUnder wa)
-      WalkAlong→Walk (nil u) = nil
-      WalkAlong→Walk (cons adj wa) = cons (WalkAlong→Walk wa) adj
+      -- WalkAlong→Walk : (wa : WalkAlong n vs) → Walk (lastUnder wa) (headUnder wa)
+      -- WalkAlong→Walk (nil u) = nil
+      -- WalkAlong→Walk (cons adj wa) = cons (WalkAlong→Walk wa) adj
 
-      length-WalkAlong→Walk : (wa : WalkAlong n vs) → length (WalkAlong→Walk wa) ≡ n
-      length-WalkAlong→Walk (nil u) = refl
-      length-WalkAlong→Walk (cons adj wa) = cong suc (length-WalkAlong→Walk wa)
+      -- length-WalkAlong→Walk : (wa : WalkAlong n vs) → length (WalkAlong→Walk wa) ≡ n
+      -- length-WalkAlong→Walk (nil u) = refl
+      -- length-WalkAlong→Walk (cons adj wa) = cong suc (length-WalkAlong→Walk wa)
 
       bound : ℕ
       bound = card states
