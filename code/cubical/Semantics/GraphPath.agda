@@ -1,12 +1,16 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 module Semantics.GraphPath where
 
-open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Powerset
+open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Univalence
+
 open import Cubical.Functions.Embedding
+
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
@@ -29,76 +33,6 @@ private
   variable
     ℓ ℓ' : Level
 
--- should perhaps be in standard library, but doesn't seem to be
-private
-  module _ where
-    open SumFin
-
-    private variable
-      n : ℕ
-
-    -- fin< : (k : Fin n) → toℕ k NatOrd.< n
-    -- fin< {n = suc n} fzero = n , +-comm n 1
-    -- fin< {n = suc n} (fsuc k) = fin< k .fst , +-suc _ _ ∙ congS suc (fin< k .snd)
-
-    fin< : ∀ {n} → (k : Fin n) → toℕ k NatOrd.< n
-    fin< {n = suc n} fzero = tt
-    fin< {n = suc n} (fsuc k) = fin< k
-
-    _-ᶠ_ : (a : ℕ) → Fin a → ℕ
-    _-ᶠ_ (suc a) fzero = a
-    _-ᶠ_ (suc a) (fsuc b) = a -ᶠ b
-
-    -ᶠ_ : Fin n → ℕ
-    -ᶠ_ {n} k = n -ᶠ k
-
-    -ᶠ+ : (a : Fin n) (b : Fin (toℕ a)) → 1 + toℕ b + (toℕ a -ᶠ b) ≡ toℕ a
-    -ᶠ+ {n = suc n} (fsuc a) fzero = refl
-    -ᶠ+ {n = suc n} (fsuc a) (fsuc b) = congS suc $ -ᶠ+ a b
-
-    subNegᶠ : (a : ℕ) (b : Fin a) → a + (-ᶠ fromℕ {k = n} (toℕ b)) ≡ a -ᶠ b
-    subNegᶠ {n = zero} (suc a) fzero = {!!}
-    subNegᶠ {n = suc n} (suc a) fzero = {!!}
-    subNegᶠ {n = n} (suc a) (fsuc b) = {!!}
-
-module Vec where
-  open SumFin
-
-  open import Cubical.Data.Vec hiding (lookup) public
-
-  private variable
-    n : ℕ
-    T U : Type ℓ
-
-  pure : {T : Type ℓ} → T → Vec T 1
-  pure x = x ∷ []
-
-  -- There is a similar function defined in Vec, but using another definition of Fin
-  lookup : Vec T n → Fin n → T
-  lookup (x ∷ xs) fzero = x
-  lookup (x ∷ xs) (fsuc idx) = lookup xs idx
-
-  foldl : (U → T → U) → U → Vec T n → U
-  foldl f acc [] = acc
-  foldl f acc (x ∷ xs) = foldl f (f acc x) xs
-
-  take : (k : Fin (suc n)) → Vec T n → Vec T (toℕ k)
-  take fzero xs = []
-  take (fsuc k) (x ∷ xs) = x ∷ take k xs
-
-  drop : (k : Fin (suc n)) → Vec T n → Vec T (n ∸ toℕ k)
-  drop fzero xs = xs
-  drop (fsuc k) (x ∷ xs) = drop k xs
-
-open Vec using (Vec ; [] )
-
-module VecSyntax where
-  infixr 5 _∷_
-  _∷_ : ∀ {T : Type ℓ} {n} → T → Vec T n → Vec T (suc n)
-  _∷_ = Vec._∷_
-  pure = Vec.pure
-  _<$>_ = Vec.map
-
 module Vec⁺ where
   open SumFin
 
@@ -111,16 +45,15 @@ module Vec⁺ where
     _∷_ : {n : ℕ} → T → Vec⁺ T n → Vec⁺ T (suc n)
   infixr 5 _∷_
 
+  private variable
+    xs ys : Vec⁺ T n
+
   pure : T → Vec⁺ T 0
   pure x = [ x ]
 
   head : Vec⁺ T n → T
   head [ x ] = x
   head (x ∷ xs) = x
-
-  tail : Vec⁺ T n → Vec T n
-  tail [ x ] = Vec.[]
-  tail (x ∷ xs) = Vec._∷_ x (tail xs)
 
   last : Vec⁺ T n → T
   last [ x ] = x
@@ -134,58 +67,41 @@ module Vec⁺ where
   tabulate {n = 0} f = [ f fzero ]
   tabulate {n = suc n} f = f fzero ∷ tabulate (f ∘ fsuc)
 
-  take : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (toℕ k)
-  take fzero xs = [ head xs ]
-  take (fsuc k) (x ∷ xs) = x ∷ take k xs
+  split : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (toℕ k) × Vec⁺ T (n ∸ toℕ k)
+  split fzero xs = [ head xs ] , xs
+  split (fsuc k) (x ∷ xs) = map-fst (x ∷_) (split k xs)
 
-  drop : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (n ∸ toℕ k)
-  drop fzero xs = xs
-  drop (fsuc k) (x ∷ xs) = drop k xs
+  Spliceable : Vec⁺ T n → Vec⁺ T m → Type _
+  Spliceable xs ys = last xs ≡ head ys
 
-  drop' : (k : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (-ᶠ k)
-  drop' fzero xs = xs
-  drop' (fsuc k) (x ∷ xs) = drop' k xs
+  opaque
+    splice : (xs : Vec⁺ T n) (ys : Vec⁺ T m) → Spliceable xs ys → Vec⁺ T (n + m)
+    splice [ l ] rs _ = rs
+    splice (l ∷ ls) rs spliceable = l ∷ splice ls rs spliceable
 
-  splice : Vec⁺ T n → Vec⁺ T m → Vec⁺ T (n + m)
-  splice [ l ] rs = rs
-  splice (l ∷ ls) rs = l ∷ splice ls rs
+    splice-pure : {x : T} {xs : Vec⁺ T n} {spliceable : x ≡ head xs} →
+                  xs ≡ splice (pure x) xs spliceable
+    splice-pure = refl
 
-  record Range (n : ℕ) : Type ℓ-zero where
-    constructor mk-range
-    field
-      i j : Fin (suc n)
-      i≤j : i ≤ j
+    splice-∷ : {x : T} {xs : Vec⁺ T n} {ys : Vec⁺ T m} {spliceable : Spliceable xs ys} →
+                x ∷ splice xs ys spliceable ≡ splice (x ∷ xs) ys spliceable
+    splice-∷ = refl
 
-    lengthℕ : ℕ
-    lengthℕ = toℕ j ∸ toℕ i
+    splice-head : {spliceable : Spliceable xs ys} → head xs ≡ head (splice xs ys spliceable)
+    splice-head {xs = [ x ]} {spliceable = spliceable} = spliceable
+    splice-head {xs = x ∷ xs} = refl
 
-    length : Fin (suc n)
-    length = sub≤ j i i≤j
+  Split : (k : ℕ) → Vec⁺ T (k + n) → Type _
+  Split {T = T} {n = n} k xs =
+    Σ[ (ls , rs) ∈ Vec⁺ T k × Vec⁺ T n ] Σ[ spliceable ∈ Spliceable ls rs ]
+      xs ≡ splice ls rs spliceable
 
-    left : Range n
-    left = record { i   = fzero
-                  ; j   = i
-                  ; i≤j = tt }
-
-    right : Range n
-    right = record { i = j
-                   ; j = flast
-                   ; i≤j = ≤-flast j }
-
-    incl : Fin (suc (toℕ length)) → Fin (suc n)
-    incl k = {!fplus (toℕ i) k!}
-
-    complementSize : Fin (suc n)
-    complementSize = {!!} --left .length + right .length
-
-  loopLength : Fin (suc n) → Fin (suc n) → ℕ
-  loopLength {n = n} i j = toℕ i + (n ∸ toℕ j)
-
-  loopLength' : (i : Fin (suc n)) → Fin (toℕ i) → ℕ
-  loopLength' i j = toℕ i -ᶠ j
-
-  loop : (i j : Fin (suc n)) → Vec⁺ T n → Vec⁺ T (loopLength i j)
-  loop i j xs = splice (take i xs) (drop j xs)
+  opaque
+    split' : (k : ℕ) → (xs : Vec⁺ T (k + n)) → Split k xs
+    split' 0 xs = (pure (head xs) , xs) , refl , splice-pure
+    split' (suc k) (x ∷ xs) =
+      let (xs' , spliceable , p) = split' k xs in
+      map-fst (x ∷_) xs' , spliceable , congS (x ∷_) p ∙ splice-∷
 
   headTabulate≡ap0 : (f : Fin (suc n) → T) → head (tabulate f) ≡ f fzero
   headTabulate≡ap0 {n = 0} f = refl
@@ -199,43 +115,15 @@ module Vec⁺ where
   tabulate-lookup [ x ] = refl
   tabulate-lookup (x ∷ xs) = congS (x ∷_) $ tabulate-lookup xs
 
-  head≡headTake : (xs : Vec⁺ T n) (k : Fin (suc n)) → head xs ≡ head (take k xs)
-  head≡headTake xs fzero = refl
-  head≡headTake (x ∷ xs) (fsuc k) = refl
+  head≡headSplitFst : (xs : Vec⁺ T n) (k : Fin (suc n)) → head xs ≡ head (split k xs .fst)
+  head≡headSplitFst xs fzero = refl
+  head≡headSplitFst (x ∷ xs) (fsuc k) = refl
 
-  lookup≡lastTake : (xs : Vec⁺ T n) (k : Fin (suc n)) → lookup xs k ≡ last (take k xs)
-  lookup≡lastTake xs fzero = refl
-  lookup≡lastTake (x ∷ xs) (fsuc k) = lookup≡lastTake xs k
-
-  lookup≡headDrop : (xs : Vec⁺ T n) (k : Fin (suc n)) → lookup xs k ≡ head (drop k xs)
-  lookup≡headDrop xs fzero = refl
-  lookup≡headDrop (x ∷ xs) (fsuc k) = lookup≡headDrop xs k
-
-  head≡headSplice : (xs : Vec⁺ T n) (ys : Vec⁺ T m) (lastxs≡headys : last xs ≡ head ys) → head xs ≡ head (splice xs ys)
-  head≡headSplice [ x ] ys lastxs≡headys = lastxs≡headys
-  head≡headSplice (x ∷ xs) ys lastxs≡headys = refl
-
-  -- loopout : (i j : Fin (suc n)) → Fin (suc n) → Fin (loopLength i j)
-  -- loopout i j k with Dichotomyℕ (toℕ k) (toℕ i)
-  -- ... | inl k≤i = Fin→SumFin (toℕ k , {!k≤i!})
-  -- ... | inr i<k = {!!} --fromℕ $ toℕ k ∸ toℕ j
-
-  -- loopback : (i j : Fin (suc n)) → Fin (loopLength i j) → Fin (suc n)
-  -- loopback i j k with Dichotomyℕ (toℕ k) (toℕ i)
-  -- ... | inl k≤i = fromℕ (toℕ k)
-  -- ... | inr i<k = fromℕ $ toℕ j + (toℕ k ∸ toℕ i)
-
-  -- isEmbeddingLoopback : (i j : Fin (suc n)) → isEmbedding (loopback i j)
-  -- isEmbeddingLoopback i j = injEmbedding (isFinSet→isSet isFinSetFin) inj
-  --   where
-  --   inj' : (k l : Fin (loopLength i j)) → toℕ k < toℕ l → loopback i j k ≡ loopback i j l → ⊥
-  --   inj' k l k<l fk≡fl = {!!}
-
-  --   inj : {k l : Fin (loopLength i j)} → loopback i j k ≡ loopback i j l → k ≡ l
-  --   inj {k} {l} fk≡fl with toℕ k ≟ toℕ l
-  --   ... | eq k≡l = toℕ-injective k≡l
-  --   ... | lt k<l = ⊥.rec $ inj' k l k<l fk≡fl
-  --   ... | gt l<k = ⊥.rec $ inj' l k l<k (sym fk≡fl)
+  opaque
+    unfolding splice
+    head≡headSplice : (xs : Vec⁺ T n) (ys : Vec⁺ T m) (spliceable : Spliceable xs ys) → head xs ≡ head (splice xs ys spliceable)
+    head≡headSplice [ x ] ys lastxs≡headys = lastxs≡headys
+    head≡headSplice (x ∷ xs) ys lastxs≡headys = refl
 
   module _ where
     open Iso
@@ -289,39 +177,87 @@ module Between where
   head : (between : Between T R (suc n) xs) → Head between
   head between = lookup between fzero
 
-  Take : Fin (suc n) → Between T R n xs → Type _
-  Take {T = T} {R = R} {xs = xs} k between = Between T R (toℕ k) (Vec⁺.take k xs)
+  split : (k : Fin (suc n)) → Between T R n xs → Between T R (toℕ k) (Vec⁺.split k xs .fst) × Between T R (n ∸ toℕ k) (Vec⁺.split k xs .snd)
+  split fzero between = nil (headUnder between) , between
+  split {R = R} (fsuc k) (cons {xs = xs} r between) = map-fst (cons (subst (R _) (Vec⁺.head≡headSplitFst xs k) r)) (split k between)
 
-  take : (k : Fin (suc n)) → (between : Between T R n xs) → Take k between
-  take fzero between = nil (headUnder between)
-  take {R = R} (fsuc k) (cons {xs = xs} r between) =
-    let r' = subst (R _) (Vec⁺.head≡headTake xs k) r in
-    cons r' (take k between)
+  module _
+    {T : Type ℓ}
+    {R : T → T → Type ℓ'}
+    where opaque
+    unfolding Vec⁺.splice
 
-  Drop : Fin (suc n) → Between T R n xs → Type _
-  Drop {n = n} {T = T} {R = R} {xs = xs} k between = Between T R (n ∸ toℕ k) (Vec⁺.drop k xs)
+    splice' : {n m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
+             (spliceable : Vec⁺.Spliceable xs ys) →
+             Between T R n xs → Between T R m ys →
+             Between T R (n + m) (Vec⁺.splice xs ys spliceable)
+    splice' spliceable (nil l) rs = rs
+    splice' spliceable (cons {xs = xs} r ls) rs =
+      let r' = subst (R _) Vec⁺.splice-head r in
+      cons r' (splice' spliceable ls rs)
 
-  drop : (k : Fin (suc n)) → (between : Between T R n xs) → Drop k between
-  drop fzero between = between
-  drop (fsuc k) (cons r between) = drop k between
+  private opaque
+    cast-vec : {xs ys : Vec⁺ T n} → xs ≡ ys → Between T R n xs → Between T R n ys
+    cast-vec p = subst (Between _ _ _) p
 
-  Splice : (l : Between T R n xs) (r : Between T R m ys) → Type _
-  Splice {T = T} {R = R} {n = n} {xs = xs} {m = m} {ys = ys} l r = Between T R (n + m) (Vec⁺.splice xs ys)
+    cast-vec-filler : {xs ys : Vec⁺ T n} → (p : xs ≡ ys) → (bt : Between T R n xs) →
+                      PathP (λ i → Between T R n (p i)) bt (cast-vec p bt)
+    cast-vec-filler p bt = subst-filler (Between _ _ _) p bt
 
-  splice : (ls : Between T R n xs) (rs : Between T R m ys) → lastUnder ls ≡ headUnder rs → Splice ls rs
-  splice (nil l) rs lastl≡headr = rs
-  splice {R = R} {ys = ys} (cons {xs = xs} r ls) rs lastl≡headr =
-    let r' = subst (R _) (Vec⁺.head≡headSplice xs ys lastl≡headr) r in
-    cons r' (splice ls rs lastl≡headr)
+  module _
+    {T : Type ℓ}
+    {R : T → T → Type ℓ'}
+    where opaque
 
-  Loop : Between T R n xs → Fin (suc n) → Fin (suc n) → Type _
-  Loop {T = T} {R = R} {n = n} {xs = xs} between i j = Between T R (toℕ i + (n ∸ toℕ j)) (Vec⁺.splice (Vec⁺.take i xs) (Vec⁺.drop j xs))
+    splice : {n m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
+             (spliceable : Vec⁺.Spliceable xs ys) →
+             Between T R n xs → Between T R m ys →
+             Between T R (n + m) (Vec⁺.splice xs ys spliceable)
+    splice spliceable (nil l) rs = cast-vec Vec⁺.splice-pure rs
+    splice spliceable (cons {xs = xs} r ls) rs =
+      let r' = subst (R _) Vec⁺.splice-head r in
+      cast-vec Vec⁺.splice-∷ $ cons r' (splice spliceable ls rs)
 
-  loop : (between : Between T R n xs) (i j : Fin (suc n)) → lookupUnder between i ≡ lookupUnder between j → Loop between i j
-  loop {xs = xs} between i j lookupi≡lookupj = splice (take i between) (drop j between) (sym (Vec⁺.lookup≡lastTake xs i) ∙∙ lookupi≡lookupj ∙∙ Vec⁺.lookup≡headDrop xs j)
+    splice-nil : {x : T} {n : ℕ} {xs : Vec⁺ T n}
+                 {spliceable : Vec⁺.Spliceable (Vec⁺.pure x) xs}
+                 {bt : Between T R n xs} →
+                 PathP (λ i → Between T R n (Vec⁺.splice-pure {x = x} {xs} {spliceable} i))
+                   bt (splice spliceable (nil x) bt)
+    splice-nil = cast-vec-filler Vec⁺.splice-pure _
 
-  -- loop-< : (between : Between T R n xs) (i j : Fin (suc n)) → i < j → toℕ i + (n ∸ toℕ j) < n
-  -- loop-< {n = n} between i j = {!!}
+    splice-cons : {n m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
+                  {spliceable : Vec⁺.Spliceable xs ys}
+                  {x : T} {r : R x (Vec⁺.head xs)}
+                  {ls : Between T R n xs} {rs : Between T R m ys} →
+                  PathP (λ i → Between T R _ (Vec⁺.splice-∷ {x = x} {xs} {ys} {spliceable} i))
+                    (cons (subst (R _) Vec⁺.splice-head r) (splice spliceable ls rs))
+                    (splice spliceable (cons r ls) rs)
+    splice-cons = cast-vec-filler Vec⁺.splice-∷ _
+
+  opaque
+    unfolding Vec⁺.splice
+
+    split' : (n : ℕ) {m : ℕ}
+            {xs : Vec⁺ T n} {ys : Vec⁺ T m} {spliceable : Vec⁺.Spliceable xs ys} →
+            (bt : Between T R (n + m) (Vec⁺.splice xs ys spliceable)) →
+            Σ[ (ls , rs) ∈ Between T R n xs × Between T R m ys ] bt ≡ splice spliceable ls rs
+    split' 0 {xs = Vec⁺.[ x ]} bt = (nil x , bt) , splice-nil
+    split' {R = R} (suc n) {xs = x ∷ xs} {spliceable = spliceable} (cons r bt) =
+      let (bt' , p) = split' n {xs = xs} {spliceable = spliceable} bt in
+      map-fst (cons (subst⁻ (R _) (Vec⁺.head≡headSplice xs _ spliceable) r)) bt' , {!splice-cons!}
+
+  Tripartition : Range n → Between T R n xs → Type _
+  Tripartition {n = n} {T = T} {R = R} {xs = xs} range _ =
+    let open Range range in
+    let B = Between T R in
+    let (ls , cs , rs) = map-snd (Vec⁺.split j') (Vec⁺.split i xs) in
+    B (toℕ i) ls × B (toℕ j') cs × B (n ∸ toℕ i ∸ toℕ j') rs
+
+  tripartition : (range : Range n) → (between : Between T R n xs) → Tripartition range between
+  tripartition range between = map-snd (split j') (split i between)
+    where open Range range
+
+  -- simplify : (range : Range n) → lookup xs (range .Range.i) ≡ lookup xs (range .Range.j) → Between T R n xs → Between T R _
 
 record directedGraph : Type (ℓ-suc ℓ) where
   field
