@@ -16,7 +16,7 @@ private
   variable
     ℓ : Level
     T : Type ℓ
-    n m : ℕ
+    n m k : ℕ
 
 data Vec⁺ (T : Type ℓ) : ℕ → Type ℓ where
   [_] : T → Vec⁺ T 0
@@ -57,6 +57,9 @@ tabulate {n = suc n} f = f fzero ∷ tabulate (f ∘ fsuc)
 AreSpliceable : Vec⁺ T n → Vec⁺ T m → Type _
 AreSpliceable xs ys = last xs ≡ head ys
 
+AreSpliceable³ : Vec⁺ T k → Vec⁺ T n → Vec⁺ T m → Type _
+AreSpliceable³ xs ys zs = AreSpliceable xs ys × AreSpliceable ys zs
+
 record Spliceable (T : Type ℓ) (n m : ℕ) : Type ℓ where
   constructor mk-spliceable
   field
@@ -67,17 +70,36 @@ record Spliceable (T : Type ℓ) (n m : ℕ) : Type ℓ where
   spliced : Vec⁺ T (n + m)
   spliced = ifoldr {U = λ i → Vec⁺ T (i + m)} (λ i → _∷_) r l
 
-open Spliceable public using (are-spliceable ; spliced)
+open Spliceable public using (spliced)
 
 _∷l_ : T → Spliceable T n m → Spliceable T (suc n) m
-x ∷l sp = mk-spliceable (x ∷ l) r (sp .are-spliceable)
-  where open Spliceable sp
+x ∷l (mk-spliceable l r p) = mk-spliceable (x ∷ l) r p
 
--- splice-head : {xs : Vec⁺ T n} {ys : Vec⁺ T m}
---               (spliceable : AreSpliceable xs ys) →
---               head xs ≡ head (splice xs ys spliceable)
--- splice-head {xs = [ x ]} spliceable = spliceable
--- splice-head {xs = x ∷ xs} spliceable = refl
+unconsl : Spliceable T (suc n) m → Spliceable T n m
+unconsl (mk-spliceable (x ∷ l) r p) = mk-spliceable l r p
+
+head-spliced : (sp : Spliceable T n m) →
+               head (sp .Spliceable.l) ≡ head (spliced sp)
+head-spliced (mk-spliceable [ x ] r p) = p
+head-spliced (mk-spliceable (x ∷ l) r p) = refl
+
+record Spliceable³ (T : Type ℓ) (k n m : ℕ) : Type ℓ where
+  constructor mk-spliceable³
+  field
+    l : Vec⁺ T k
+    c : Vec⁺ T n
+    r : Vec⁺ T m
+    are-spliceable³ : AreSpliceable³ l c r
+
+  private
+    spliceable-cr : Spliceable T n m
+    spliceable-cr = mk-spliceable c r (are-spliceable³ .snd)
+
+    spliced-step : Vec⁺ T (n + m)
+    spliced-step = spliced spliceable-cr
+
+  spliced³ : Vec⁺ T (k + (n + m))
+  spliced³ = spliced $ mk-spliceable l spliced-step (are-spliceable³ .fst ∙ head-spliced spliceable-cr)
 
 split : (n : ℕ) {m : ℕ} (xs : Vec⁺ T (n + m)) → Σ[ sp ∈ Spliceable T n m ] xs ≡ spliced sp
 split 0 xs = mk-spliceable (pure $ head xs) xs refl , refl
@@ -88,15 +110,25 @@ split (suc n) (x ∷ xs) =
 split' : ∀ n {m} (xs : Vec⁺ T (n + m)) → Spliceable T n m
 split' n xs = split n xs .fst
 
--- split'³ : (k l : ℕ) {m : ℕ} (xs : Vec⁺ T (k + l + m)) → Vec⁺ T k × Vec⁺ T l × Vec⁺ T m
--- split'³ k l xs = Σ-assoc-Iso .Iso.fun $ map-fst (split' k) (split' (k + l) xs)
+head-split' : (n : ℕ) {m : ℕ} (xs : Vec⁺ T (n + m)) → head xs ≡ head (split' n xs .Spliceable.l)
+head-split' 0 xs = refl
+head-split' (suc n) (x ∷ xs) = refl
 
--- simplify : (k l : ℕ) {m : ℕ} (xs : Vec⁺ T (k + l + m)) →
---            AreSpliceable (split'³ k l xs .fst) (split'³ k l xs .snd .snd) →
---            Vec⁺ T (k + m)
--- simplify k l xs spliceable =
---   let (ls , _ , rs) = split'³ k l xs in
---   splice ls rs spliceable
+split'³ : ∀ k n {m} (xs : Vec⁺ T (k + (n + m))) → Spliceable³ T k n m
+split'³ k n xs =
+  let mk-spliceable l cr l-cr = split' k xs in
+  let mk-spliceable c r c-r = split' n cr in
+  mk-spliceable³ l c r ((l-cr ∙ head-split' n cr) , c-r)
+
+simplify : (k n : ℕ) {m : ℕ} (xs : Vec⁺ T (k + (n + m))) →
+           AreSpliceable (split'³ k n xs .Spliceable³.l) (split'³ k n xs .Spliceable³.r) →
+           Vec⁺ T (k + m)
+simplify k n xs are-sp =
+  let mk-spliceable³ ls _ rs _ = split'³ k n xs in
+  let sp = mk-spliceable ls rs are-sp in
+  spliced sp
+  -- let (ls , _ , rs) = split'³ k l xs in
+  -- splice ls rs spliceable
 
 headTabulate≡ap0 : (f : Fin (suc n) → T) → head (tabulate f) ≡ f fzero
 headTabulate≡ap0 {n = 0} f = refl
@@ -109,10 +141,6 @@ lookup-tabulate {n = suc n} f (fsuc k) = lookup-tabulate (f ∘ fsuc) k
 tabulate-lookup : (xs : Vec⁺ T n) → tabulate (lookup xs) ≡ xs
 tabulate-lookup [ x ] = refl
 tabulate-lookup (x ∷ xs) = congS (x ∷_) $ tabulate-lookup xs
-
--- head-split : (n : ℕ) {m : ℕ} (xs : Vec⁺ T (n + m)) → head xs ≡ head (split n xs .fst .fst)
--- head-split 0 xs = refl
--- head-split (suc n) (x ∷ xs) = refl
 
 -- head≡headSplice : (xs : Vec⁺ T n) (ys : Vec⁺ T m) (spliceable : AreSpliceable xs ys) → head xs ≡ head (splice xs ys spliceable)
 -- head≡headSplice [ x ] ys lastxs≡headys = lastxs≡headys
