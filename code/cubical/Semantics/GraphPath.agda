@@ -74,6 +74,10 @@ module Between where
       let sp' = Vec⁺.unconsl sp in
       cons r (p ∙ Vec⁺.head-spliced sp') $ splice sp' ls rs
 
+    split : (n : ℕ) {m : ℕ} (sp : Vec⁺.Spliceable T n m)
+            (bt : BT (Vec⁺.spliced sp)) →
+            Σ[ (ls , rs) ∈ BT () ]
+
     -- split : (n : ℕ) {m : ℕ} {xs : Vec⁺ T n} {ys : Vec⁺ T m}
     --         (spliceable : Vec⁺.AreSpliceable xs ys)
     --         (bt : BT (Vec⁺.splice xs ys spliceable)) →

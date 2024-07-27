@@ -2,6 +2,7 @@ module Cubical.Data.SumFin.More where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.HLevels
 
 open import Cubical.Data.SumFin
 open import Cubical.Data.Nat
@@ -9,7 +10,7 @@ import      Cubical.Data.Nat.Order.Recursive as NatOrd
 
 private
   variable
-    n : ℕ
+    m n : ℕ
 
 bounded : (a : Fin n) → toℕ a NatOrd.≤ n
 bounded {n = suc n} fzero = tt
@@ -20,6 +21,31 @@ a ≤ b = toℕ a NatOrd.≤ toℕ b
 
 _<_ : Fin n → Fin n → Type _
 a < b = toℕ a NatOrd.< toℕ b
+
+≤-isProp : {i j : Fin n} → isProp (i ≤ j)
+≤-isProp {i = i} {j} = NatOrd.isProp≤ {toℕ i} {toℕ j}
+
+≤-refl : (i : Fin n) → i ≤ i
+≤-refl = NatOrd.≤-refl ∘ toℕ
+
+finj-≤-finj : {i j : Fin n} → i ≤ j → finj i ≤ finj j
+finj-≤-finj {suc n} {fzero} {j} i≤j = tt
+finj-≤-finj {suc n} {fsuc i} {fsuc j} i≤j = finj-≤-finj {n} {i} {j} i≤j
+
+isMonotone : (Fin m → Fin n) → Type _
+isMonotone f = ∀ {i j} → i ≤ j → f i ≤ f j
+
+isPropIsMonotone : (f : Fin m → Fin n) → isProp (isMonotone f)
+isPropIsMonotone f = isPropImplicitΠ2 λ i j → isProp→ (≤-isProp {i = f i} {f j})
+
+isMonotoneId : isMonotone (idfun (Fin n))
+isMonotoneId i≤j = i≤j
+
+Monotone : (m n : ℕ) → Type _
+Monotone m n = Σ[ f ∈ (Fin m → Fin n) ] isMonotone f
+
+isSetMonotone : isSet (Monotone m n)
+isSetMonotone = isSetΣ (isSet→ isSetFin) (isProp→isSet ∘ isPropIsMonotone)
 
 ≤-flast : (a : Fin (suc n)) → a ≤ flast {k = n}
 ≤-flast fzero = tt
