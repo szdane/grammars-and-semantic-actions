@@ -39,9 +39,6 @@ module SimplicialSet (X : SimplicialSet ℓ) where
   face : {n : ℕ} → Fin (suc n) → Simplex (suc n) → Simplex n
   face i = X .F-hom (ΔCat.δ i)
 
-  Map : (m n : ℕ) → Type _
-  Map m n = Σ[ f ∈ Monotone n m ] X .F-hom f
-
   -- The collection of points, i.e. 1-simplices
   Point : Type ℓ
   Point = Simplex 1
@@ -52,4 +49,6 @@ module SimplicialSet (X : SimplicialSet ℓ) where
   points {1}           x fzero    = x
   points {suc (suc n)} x fzero    = points (face flast x) fzero
   points {suc (suc n)} x (fsuc i) = points (face fzero x) i
+
+  points-map : {m n : ℕ} → (f : Monotone n m) → 
 
