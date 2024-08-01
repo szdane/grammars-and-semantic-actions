@@ -1,4 +1,4 @@
-{-# OPTIONS -WnoUnsupportedIndexedMatch --no-require-unique-meta-solutions --allow-unsolved-metas #-}
+{-# OPTIONS -WnoUnsupportedIndexedMatch --no-require-unique-meta-solutions #-}
 module Semantics.GraphPath where
 
 open import Cubical.Foundations.Equiv
