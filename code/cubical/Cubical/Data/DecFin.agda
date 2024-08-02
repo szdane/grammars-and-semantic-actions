@@ -106,6 +106,9 @@ isFinSetΣ {B = B} isFinSetA isFinSetB =
         (subst (FinOrdOn ∘ B) (retIsEq (FinOrdOnA .snd .snd) _) ∘ FinOrdOnB ∘ equivFun (FinOrdOnA .snd))
         |> FinOrdOn→isFinSet))
 
+-- isFinSet→isSet : {A : Type ℓ} → isFinSet A → isSet A
+-- isFinSet→isSet isFinSetA = {!!}
+
 
 -- Dec
 instance
