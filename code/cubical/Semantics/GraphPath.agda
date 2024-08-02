@@ -54,7 +54,7 @@ record directedGraph : Type (ℓ-suc ℓ) where
       isVisited : ⟨ states ⟩ → DecProp ℓ'
 
     visited : FinSet (ℓ-max ℓ ℓ')
-    visited = Σ[ state ∈ ⟨ states ⟩ ] ⟨ isVisited state ⟩ , ?
+    visited = (Σ[ state ∈ ⟨ states ⟩ ] ⟨ isVisited state ⟩) , isFinSetΣ {!str states!} {!!} --Σ[ state ∈ ⟨ states ⟩ ] ⟨ isVisited state ⟩ , ?
 
     field
       vertices : Fin (suc length) ≃ ⟨ visited ⟩

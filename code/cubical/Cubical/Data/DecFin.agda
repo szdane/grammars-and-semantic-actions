@@ -64,38 +64,47 @@ module _ where
 FinOrdOnRespectEquiv : {A : Type ℓ} {B : Type ℓ'} → A ≃ B → FinOrdOn A → FinOrdOn B
 FinOrdOnRespectEquiv A≃B (n , e) = n , invEquiv A≃B ∙ₑ e
 
-instance
-  FinOrdOnFin : {n : ℕ} → FinOrdOn (Fin n)
-  FinOrdOnFin = _ , idEquiv _
+FinOrdOnFin : {n : ℕ} → FinOrdOn (Fin n)
+FinOrdOnFin = _ , idEquiv _
 
-  FinOrdOn⊥ : FinOrdOn ⊥
-  FinOrdOn⊥ = 0 , uninhabEquiv (idfun ⊥) Fin.¬Fin0
+FinOrdOn⊥ : FinOrdOn ⊥
+FinOrdOn⊥ = 0 , uninhabEquiv (idfun ⊥) Fin.¬Fin0
 
-  FinOrdOnUnit : FinOrdOn Unit
-  FinOrdOnUnit = 1 , invEquiv (isContr→≃Unit Fin.isContrFin1)
+FinOrdOnUnit : FinOrdOn Unit
+FinOrdOnUnit = 1 , invEquiv (isContr→≃Unit Fin.isContrFin1)
 
-  FinOrdOnΣ : {{FinOrdOn A}} → {{(a : A) → FinOrdOn (B a)}} → FinOrdOn (Σ A B)
-  FinOrdOnΣ {A = A} {B = B} {{nA , eA}} {{f}} =
-    FinOrdOnRespectEquiv (invEquiv ΣAB≃ΣFinFin) (_ , FinSigmaChar.Equiv nA nB)
-    where
-    nB = fst ∘ f ∘ invEq eA
-    eB = λ a → f a .snd ∙ₑ pathToEquiv (congS (Fin ∘ fst ∘ f) (sym (retEq eA a)))
-    ΣAB≃ΣFinFin = Σ-cong-equiv eA eB
+FinOrdOnΣ : FinOrdOn A → ((a : A) → FinOrdOn (B a)) → FinOrdOn (Σ A B)
+FinOrdOnΣ {A = A} {B = B} (nA , eA) f =
+  FinOrdOnRespectEquiv (invEquiv ΣAB≃ΣFinFin) (_ , FinΣ≃ nA nB)
+  where
+  nB = fst ∘ f ∘ invEq eA
+  eB = λ a → f a .snd ∙ₑ pathToEquiv (congS (Fin ∘ fst ∘ f) (sym (retEq eA a)))
+  ΣAB≃ΣFinFin = Σ-cong-equiv eA eB
+
 
 -- isFinSet
 isPropIsFinSet : {A : Type ℓ} → isProp (isFinSet A)
 isPropIsFinSet p q =
   Σ≡Prop (λ _ → PT.isPropPropTrunc)
     (PT.elim2 (λ _ _ → isSetℕ _ _)
-    (λ A≃Finp A≃Finq → {!!})
+    (λ A≃Finp A≃Finq → injFin (ua (invEquiv A≃Finp ∙ₑ A≃Finq)))
     (p .snd) (q .snd))
 
-instance
-  FinOrdOn→isFinSet : {A : Type ℓ} → {{FinOrdOn A}} → isFinSet A
-  FinOrdOn→isFinSet {{n , e}} = n , PT.∣ e ∣₁
+FinOrdOn→isFinSet : {A : Type ℓ} → FinOrdOn A → isFinSet A
+FinOrdOn→isFinSet (n , e) = n , PT.∣ e ∣₁
 
-  isFinSetΣ : {A : Type ℓ} {B : A → Type ℓ'} → {{isFinSet A}} → {{∀ a → isFinSet (B a)}} → isFinSet (Σ A B)
-  isFinSetΣ {{nA , ∣eA∣}} {{f}} = {!PT.rec2!}
+isFinSet→∥FinOrdOn∥ : {A : Type ℓ} → isFinSet A → PT.∥ FinOrdOn A ∥₁
+isFinSet→∥FinOrdOn∥ (n , ∣e∣) = PT.rec PT.isPropPropTrunc (λ e → PT.∣ n , e ∣₁) ∣e∣
+
+isFinSetΣ : {A : Type ℓ} {B : A → Type ℓ'} → isFinSet A → (∀ a → isFinSet (B a)) → isFinSet (Σ A B)
+isFinSetΣ {B = B} isFinSetA isFinSetB =
+  isFinSet→∥FinOrdOn∥ isFinSetA
+  |> PT.rec isPropIsFinSet
+    (λ FinOrdOnA → (isFinSet→∥FinOrdOn∥ ∘ isFinSetB ∘ invEq (FinOrdOnA .snd))
+    |> PT.recFin isPropIsFinSet
+      (λ FinOrdOnB → FinOrdOnΣ FinOrdOnA
+        (subst (FinOrdOn ∘ B) (retIsEq (FinOrdOnA .snd .snd) _) ∘ FinOrdOnB ∘ equivFun (FinOrdOnA .snd))
+        |> FinOrdOn→isFinSet))
 
 
 -- Dec
@@ -143,17 +152,17 @@ DecProp ℓ = TypeWithStr ℓ isDecProp
 
 module FinDec where
 
-  DecΣ : {n : ℕ} → (P : Fin n → Type ℓ) → {{∀ i → Dec (P i)}} → Dec (Σ[ i ∈ Fin n ] P i)
-  DecΣ {n = zero} P = no λ (i , Pi) → Fin.¬Fin0 i
-  DecΣ {n = suc n} P {{decP}} =
-    DecΣ (P ∘ suc) {{decP ∘ suc}} |> Dec.decRec (λ (i , Pi) → yes (suc i , Pi)) λ ¬Psuc →
-    decP zero |> Dec.decRec (yes ∘ (_ ,_)) λ ¬Pzero →
-    let ¬P = λ { (zero , Pzero) → ¬Pzero Pzero
-               ; (suc i , Psuci) → ¬Psuc (i , Psuci) } in
-    no ¬P
+  -- DecΣ : {n : ℕ} → (P : Fin n → Type ℓ) → {{∀ i → Dec (P i)}} → Dec (Σ[ i ∈ Fin n ] P i)
+  -- DecΣ {n = zero} P = no λ (i , Pi) → Fin.¬Fin0 i
+  -- DecΣ {n = suc n} P {{decP}} =
+  --   DecΣ (P ∘ suc) {{decP ∘ suc}} |> Dec.decRec (λ (i , Pi) → yes (suc i , Pi)) λ ¬Psuc →
+  --   decP zero |> Dec.decRec (yes ∘ (_ ,_)) λ ¬Pzero →
+  --   let ¬P = λ { (zero , Pzero) → ¬Pzero Pzero
+  --              ; (suc i , Psuci) → ¬Psuc (i , Psuci) } in
+  --   no ¬P
 
-  DecidableΣ : {n : ℕ} → (P : Fin n → Decidable ℓ) → Decidable ℓ
-  DecidableΣ {n = n} P = (Σ[ i ∈ Fin n ] ⟨ P i ⟩) , DecΣ (fst ∘ P) {{snd ∘ P}}
+  -- DecidableΣ : {n : ℕ} → (P : Fin n → Decidable ℓ) → Decidable ℓ
+  -- DecidableΣ {n = n} P = (Σ[ i ∈ Fin n ] ⟨ P i ⟩) , DecΣ (fst ∘ P) {{snd ∘ P}}
 
 -- -- DecProp
 -- record isDecProp (A : Type ℓ) : Type ℓ where
