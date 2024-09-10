@@ -44,3 +44,9 @@ module _ {A : Type ℓS} {h : A → Grammar ℓH} where
 
   LinΣ-intro : ∀ a → h a ⊢ LinΣ[ a ∈ A ] h a
   LinΣ-intro = λ a w → _,_ a
+
+  LinΠ-map :
+    {g : A → Grammar ℓG} →
+    (∀ a → h a ⊢ g a) →
+    LinΠ[ a ∈ A ] h a ⊢ LinΠ[ a ∈ A ] g a
+  LinΠ-map f = LinΠ-intro (λ a → f a ∘g LinΠ-app a)
