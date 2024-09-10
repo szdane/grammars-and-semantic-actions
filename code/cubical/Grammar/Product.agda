@@ -6,6 +6,7 @@ module Grammar.Product (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
+open import Grammar.LinearProduct Alphabet
 open import Term.Base Alphabet
 
 private
@@ -60,3 +61,24 @@ infixr 5 _&_
   ≡
   e
 &-η e = refl
+
+&-swap :
+  g & h ⊢ h & g
+&-swap = &-intro &-π₂ &-π₁
+
+&-assoc :
+  g & (h & k) ⊢ (g & h) & k
+&-assoc = &-intro (&-intro &-π₁ (&-π₁ ∘g &-π₂)) (&-π₂ ∘g &-π₂)
+
+&-assoc⁻ :
+  (g & h) & k ⊢ g & (h & k)
+&-assoc⁻ = &-intro (&-π₁ ∘g &-π₁) (&-intro (&-π₂ ∘g &-π₁) &-π₂)
+
+&-par :
+  g ⊢ h → k ⊢ l →
+  g & k ⊢ h & l
+&-par e e' = &-intro (e ∘g &-π₁) (e' ∘g &-π₂)
+
+⊗-dist-over-& :
+  g ⊗ (h & k) ⊢ (g ⊗ h) & (g ⊗ k)
+⊗-dist-over-& = &-intro (⊗-intro id &-π₁) (⊗-intro id &-π₂)

@@ -5,6 +5,7 @@ module Grammar.Function (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Product Alphabet
+open import Grammar.Top Alphabet
 open import Term.Base Alphabet
 
 private
@@ -31,3 +32,20 @@ _⇒_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
   g ⊢ h ⇒ k
   → g & h ⊢ k
 ⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
+
+⇒-comp :
+  (g ⇒ h) & (h ⇒ k) ⊢ g ⇒ k
+⇒-comp =
+  ⇒-intro
+    (⇒-app ∘g
+    &-par id ⇒-app ∘g
+    &-assoc⁻ ∘g
+    &-par &-swap id)
+
+term⇒ : -- TODO naming?
+  g ⊢ h →
+  ⊤-grammar {ℓh} ⊢ g ⇒ h
+term⇒ f = ⇒-intro (f ∘g &-π₂)
+
+id⇒ : ⊤-grammar {ℓh} ⊢ g ⇒ g
+id⇒ = term⇒ id
