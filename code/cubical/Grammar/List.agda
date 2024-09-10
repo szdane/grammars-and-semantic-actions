@@ -79,4 +79,4 @@ ListLeftStrongMonad {ℓg} .leftStrength {g = g}{h = h} =
   ⊸-intro⁻
     (ListElim h {ℓk = ℓg}
       (⊸-intro (nil ∘g ⊤-intro))
-      (⊸-intro (cons ∘g &-par id ⊸-app ∘g ⊗-dist-over-&)))
+      (⊸-intro (cons ∘g &-par id ⊸-app ∘g ⊗&-distL)))

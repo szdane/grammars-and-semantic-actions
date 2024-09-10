@@ -79,6 +79,11 @@ infixr 5 _&_
   g & k ⊢ h & l
 &-par e e' = &-intro (e ∘g &-π₁) (e' ∘g &-π₂)
 
-⊗-dist-over-& :
+⊗&-distL :
   g ⊗ (h & k) ⊢ (g ⊗ h) & (g ⊗ k)
-⊗-dist-over-& = &-intro (⊗-intro id &-π₁) (⊗-intro id &-π₂)
+⊗&-distL = &-intro (⊗-intro id &-π₁) (⊗-intro id &-π₂)
+
+⊗&-distR :
+  (g & h) ⊗ k ⊢ (g ⊗ k) & (h ⊗ k)
+⊗&-distR = &-intro (⊗-intro &-π₁ id) (⊗-intro &-π₂ id)
+

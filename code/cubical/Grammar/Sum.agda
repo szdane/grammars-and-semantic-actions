@@ -7,6 +7,8 @@ open import Cubical.Data.Sum as Sum
 
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
+open import Grammar.Product Alphabet
+open import Grammar.Function Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Term.Base Alphabet
 
@@ -77,10 +79,35 @@ infixr 5 _⊕_
 ⊕-η e i _ (inl x) = e _ (inl x)
 ⊕-η e i _ (inr x) = e _ (inr x)
 
-⊗-dist-over-⊕ :
+⊗⊕-distL :
   g ⊗ (h ⊕ k) ⊢ (g ⊗ h) ⊕ (g ⊗ k)
-⊗-dist-over-⊕ {g = g}{h = h}{k = k} =
+⊗⊕-distL {g = g}{h = h}{k = k} =
   ⊸-intro⁻ {g = h ⊕ k}{h = g}{k = (g ⊗ h) ⊕ (g ⊗ k)}
     (⊕-elim {g = h}{h = g ⊸ ((g ⊗ h) ⊕ (g ⊗ k))}{k = k}
       (⊸-intro {g = g}{h = h}{k = (g ⊗ h) ⊕ (g ⊗ k)} ⊕-inl)
       (⊸-intro {g = g}{h = k}{k = (g ⊗ h) ⊕ (g ⊗ k)} ⊕-inr))
+
+⊗⊕-distR :
+  (g ⊕ h) ⊗ k ⊢ (g ⊗ k) ⊕ (h ⊗ k)
+⊗⊕-distR {g = g}{h = h}{k = k} =
+  ⟜-intro⁻
+    (⊕-elim (⟜-intro (⊕-inl {h = h ⊗ k}))
+    (⟜-intro (⊕-inr {h = g ⊗ k})))
+
+&⊕-distR :
+  (g ⊕ h) & k ⊢ (g & k) ⊕ (h & k)
+&⊕-distR =
+  ⇒-intro⁻
+    (⊕-elim
+      (⇒-intro ⊕-inl)
+      (⇒-intro ⊕-inr))
+
+&⊕-distL :
+  g & (h ⊕ k) ⊢ (g & h) ⊕ (g & k)
+&⊕-distL =
+  ⇒-intro⁻
+    (⊕-elim
+      (⇒-intro (⊕-inl ∘g &-swap))
+      (⇒-intro (⊕-inr ∘g &-swap))) ∘g
+  &-swap
+
