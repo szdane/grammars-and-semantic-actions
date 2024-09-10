@@ -54,3 +54,7 @@ _∘g_ e e' = seq e' e
 
 infixr 9 _∘g_
 syntax seq e e' = e ⋆ e'
+
+module _ (gram≡ : g ≡ h) where
+  SubstTerm : g ⊢ h
+  SubstTerm w pg = subst (λ a → a w) gram≡ pg

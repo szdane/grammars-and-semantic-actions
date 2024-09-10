@@ -1,4 +1,4 @@
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --guardedness --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Data.Sum
@@ -20,82 +20,92 @@ record Search (g : Grammar ℓG) (w : String) : Type ℓG where
   coinductive
   field
     viewSearch :
-      -- done, no more results
-      ( ⊤-grammar {ℓ-zero}
-      -- here's one more result and there may be more
-      ⊕ ((g & Search g)
-      -- still searching
-      ⊕ Search g)) w
+      -- found one thing
+      (g ⊕
+      -- found nothing
+      (⊤-grammar {ℓ-zero} ⊕
+      -- split into two parallel searches
+      ((Search g & Search g) ⊕
+      -- delay
+      Search g))) w
 
 open Search
 
-view : Search g ⊢ ⊤-grammar {ℓ-zero} ⊕ ((g & Search g) ⊕ Search g)
+view : Search g ⊢ g ⊕ ⊤-grammar {ℓ-zero} ⊕ (Search g & Search g) ⊕ Search g
 view _ = viewSearch
 
 unfold :
-  (h ⊢ ⊤-grammar {ℓ-zero} ⊕ ((g & h) ⊕ h))
+  h ⊢ g ⊕ (⊤-grammar {ℓ-zero} ⊕ ((h & h) ⊕ h))
   → h ⊢ Search g
 unfold f w x .viewSearch with f w x
-... | inl _ = inl _
-... | inr (inl (g-p , h-p)) = inr (inl (g-p , unfold f _ h-p))
-... | inr (inr h-p) = inr (inr (unfold f _ h-p))
+... | inl pg = inl pg
+... | inr (inl _) = inr (inl _)
+... | inr (inr (inl (ph , ph'))) =
+        inr (inr (inl ((unfold f _ ph) , unfold f _ ph')))
+... | inr (inr (inr ph)) = inr (inr (inr (unfold f _ ph)))
 
-nil : ⊤-grammar {ℓ-zero} ⊢ Search g
-nil = unfold ⊕-inl
-
-cons : (g & Search g) ⊢ Search g
-cons = unfold (⊕-inr ∘g ⊕-inl ∘g &-intro &-π₁ id)
-
-wait : Search g ⊢ Search g
-wait = unfold (⊕-inr ∘g ⊕-inr)
-
--- TODO test that these are right
--- The below seems like the only definition that could work
--- but I don't think I have good intuition on this to be sure
-open Monad
-SearchMonad : Monad Search
-SearchMonad .return = unfold (⊕-inr ∘g ⊕-inl ∘g &-intro id id)
-SearchMonad .μ =
+search-fmap : g ⊢ h → Search g ⊢ Search h
+search-fmap f =
   unfold
     (⊕-elim
-      ⊕-inl
+      (⊕-inl ∘g f)
       (⊕-elim
+        (⊕-inr ∘g ⊕-inl)
         (⊕-elim
-          (⊕-inl ∘g &-π₁)
-          (⊕-elim
-            (⊕-inr ∘g ⊕-inl ∘g &-par &-π₁ id)
-            (⊕-inr ∘g ⊕-inr ∘g &-π₂) ∘g
-          &⊕-distR) ∘g
-        &⊕-distR ∘g
-        &-par view id)
-        (⊕-inr ∘g ⊕-inr))
-    ∘g view)
-SearchMonad .fmap f =
-  unfold
-    (⊕-elim ⊕-inl (⊕-elim (⊕-inr ∘g ⊕-inl ∘g &-par f id) (⊕-inr ∘g ⊕-inr)) ∘g
-    view)
+          (⊕-inr ∘g ⊕-inr ∘g ⊕-inl)
+          (⊕-inr ∘g ⊕-inr ∘g ⊕-inr))) ∘g view)
+
+search-return : g ⊢ Search g
+search-return = unfold ⊕-inl
+
+nil : ⊤-grammar {ℓ-zero} ⊢ Search g
+nil = unfold (⊕-inr ∘g ⊕-inl)
+
+append : Search g & Search g ⊢ Search g
+append = {!!}
+
+wait : Search g ⊢ Search g
+wait = unfold (⊕-inr ∘g ⊕-inr ∘g ⊕-inr)
+
+open Monad
+
+SearchMonad : Monad Search
+SearchMonad .return = search-return
+SearchMonad .μ =
+  {!!}
+SearchMonad .fmap f = search-fmap f
+
+-- This uses the old defs and might be wrong, but it type checks
+-- open Monad
+-- SearchMonad : Monad Search
+-- SearchMonad .return = unfold (⊕-inr ∘g ⊕-inl ∘g &-intro id id)
+-- SearchMonad .μ =
+--   unfold
+--     (⊕-elim
+--       ⊕-inl
+--       (⊕-elim
+--         (⊕-elim
+--           (⊕-inl ∘g &-π₁)
+--           (⊕-elim
+--             (⊕-inr ∘g ⊕-inl ∘g &-par &-π₁ id)
+--             (⊕-inr ∘g ⊕-inr ∘g &-π₂) ∘g
+--           &⊕-distR) ∘g
+--         &⊕-distR ∘g
+--         &-par view id)
+--         (⊕-inr ∘g ⊕-inr))
+--     ∘g view)
+-- SearchMonad .fmap f =
+--   unfold
+--     (⊕-elim ⊕-inl (⊕-elim (⊕-inr ∘g ⊕-inl ∘g &-par f id) (⊕-inr ∘g ⊕-inr)) ∘g
+--     view)
 
 open LeftStrongMonad
 
 SearchLeftStrongMonad : LeftStrongMonad Search
 SearchLeftStrongMonad .monad = SearchMonad
 SearchLeftStrongMonad .leftStrength =
-  ?
-  -- ⊸-intro⁻
-  --   (⊕-elim
-  --     (⊸-intro (nil ∘g ⊤-intro))
-  --     (⊕-elim
-  --       (⊸-intro {!!})
-  --       (⊸-intro (⊕-inr ∘g {!!})))
-  --   ∘g view)
+  {!!}
 
-
--- -- left biased search: we exhaustively search the left before
--- -- moving to the right
--- append : Search g & Search g ⊢ Search g
--- append = {!!}
-
--- state := (Search g & Search h) ⊕ Search h
 ext : g ⊢ Search h
   → Search g ⊢ Search h
 ext {h = h} f = SearchMonad .μ ∘g SearchMonad .fmap f
