@@ -18,6 +18,7 @@ private
 
 record Search (g : Grammar ℓG) (w : String) : Type ℓG where
   coinductive
+  constructor mkSearch
   field
     viewSearch :
       -- found one thing
@@ -62,7 +63,7 @@ nil : ⊤-grammar {ℓ-zero} ⊢ Search g
 nil = unfold (⊕-inr ∘g ⊕-inl)
 
 append : Search g & Search g ⊢ Search g
-append = {!!}
+append w (pg , pg') = mkSearch (inr (inr (inl (pg , pg'))))
 
 wait : Search g ⊢ Search g
 wait = unfold (⊕-inr ∘g ⊕-inr ∘g ⊕-inr)
@@ -72,39 +73,42 @@ open Monad
 SearchMonad : Monad Search
 SearchMonad .return = search-return
 SearchMonad .μ =
-  {!!}
+  unfold
+    (⊕-elim
+      (⊕-elim
+        ⊕-inl
+        (⊕-elim
+          (⊕-inr ∘g ⊕-inl)
+          (⊕-elim
+            (⊕-inr ∘g ⊕-inr ∘g ⊕-inl ∘g
+              &-par (SearchMonad .return) (SearchMonad .return))
+            (⊕-inr ∘g ⊕-inr ∘g ⊕-inr ∘g SearchMonad .return))) ∘g
+      view)
+      (⊕-elim
+        (⊕-inr ∘g ⊕-inl)
+        (⊕-elim
+          (⊕-inr ∘g ⊕-inr ∘g ⊕-inl)
+          (⊕-inr ∘g ⊕-inr ∘g ⊕-inr))) ∘g
+    view)
 SearchMonad .fmap f = search-fmap f
-
--- This uses the old defs and might be wrong, but it type checks
--- open Monad
--- SearchMonad : Monad Search
--- SearchMonad .return = unfold (⊕-inr ∘g ⊕-inl ∘g &-intro id id)
--- SearchMonad .μ =
---   unfold
---     (⊕-elim
---       ⊕-inl
---       (⊕-elim
---         (⊕-elim
---           (⊕-inl ∘g &-π₁)
---           (⊕-elim
---             (⊕-inr ∘g ⊕-inl ∘g &-par &-π₁ id)
---             (⊕-inr ∘g ⊕-inr ∘g &-π₂) ∘g
---           &⊕-distR) ∘g
---         &⊕-distR ∘g
---         &-par view id)
---         (⊕-inr ∘g ⊕-inr))
---     ∘g view)
--- SearchMonad .fmap f =
---   unfold
---     (⊕-elim ⊕-inl (⊕-elim (⊕-inr ∘g ⊕-inl ∘g &-par f id) (⊕-inr ∘g ⊕-inr)) ∘g
---     view)
 
 open LeftStrongMonad
 
 SearchLeftStrongMonad : LeftStrongMonad Search
 SearchLeftStrongMonad .monad = SearchMonad
 SearchLeftStrongMonad .leftStrength =
-  {!!}
+  unfold
+    (⊕-elim
+      ⊕-inl 
+      (⊕-elim
+        (⊕-inr ∘g ⊕-inl ∘g ⊤-intro)
+        (⊕-elim
+          (⊕-inr ∘g ⊕-inr ∘g ⊕-inl ∘g ⊗&-distL ∘g ⊗-intro id (&-par view view))
+          (⊕-inr ∘g ⊕-inr ∘g ⊕-inr ∘g ⊗-intro id view) ∘g
+        ⊗⊕-distL) ∘g
+      ⊗⊕-distL) ∘g
+    ⊗⊕-distL) ∘g
+  ⊗-intro id view
 
 ext : g ⊢ Search h
   → Search g ⊢ Search h

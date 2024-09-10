@@ -52,6 +52,7 @@ e then e' =
     SearchLeftStrongMonad .leftStrength ∘g
     ⊗-intro id e') ∘g
   e
+infixr 9 _then_
 
 _or_ : Parser g → Parser g → Parser g
 e or e' =
