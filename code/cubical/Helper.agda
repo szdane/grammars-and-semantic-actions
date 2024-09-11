@@ -391,10 +391,10 @@ rightInv (DecℙIso A) b =
 leftInv (DecℙIso A) a =
   funExt (λ x → DecPropIso .leftInv _)
 
-inDecℙ :
+_∈ℙ_ :
   ∀ {ℓ} → {A : Type ℓ} →
   (a : A) → Decℙ A → Type ℓ
-inDecℙ a X = X a .fst .fst
+a ∈ℙ X = X a .fst .fst
 
 isFinSetDecℙ : ∀ {ℓ} → (A : FinSet ℓ) → isFinSet (Decℙ (A .fst))
 isFinSetDecℙ {ℓ} A = isFinSet→ A (DecProp ℓ , isFinSetDecProp)

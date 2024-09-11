@@ -1,18 +1,22 @@
 {-# OPTIONS --guardedness --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Structure
 open import Cubical.Data.Sum
 
 module Grammar.Search (Alphabet : hSet ℓ-zero) where
+
+open import Cubical.Data.FinSet
 
 open import Grammar Alphabet
 open import Grammar.Maybe Alphabet as Maybe using (Maybe)
 open import Term Alphabet
 open import Monad Alphabet
+open import Helper
 
 private
   variable
-    ℓG ℓH : Level
+    ℓG ℓH ℓS : Level
     g : Grammar ℓG
     h : Grammar ℓH
 
@@ -121,3 +125,19 @@ SearchLeftStrongMonad .leftStrength =
 ext : g ⊢ Search h
   → Search g ⊢ Search h
 ext {h = h} f = SearchMonad .μ ∘g SearchMonad .fmap f
+
+module _
+  {A : FinSet ℓS} -- ⟨ Q ⟩
+  {B : ⟨ A ⟩ → FinSet ℓS} -- ε-transitions out of each state
+  {g : ⟨ A ⟩ → Grammar ℓG} -- Parse q
+  {h : (a : ⟨ A ⟩) → ⟨ B a ⟩ → Grammar ℓG} -- Parse q
+  (f : (a : ⟨ A ⟩) → ⟨ FinSetDecℙ (B a) ⟩) -- state to set of ε-transitions
+  (e :
+    ∀ (a : ⟨ A ⟩) ((b , b∈fa) : Σ[ b ∈ ⟨ B a ⟩ ] (b ∈ℙ f a)) →
+    h a b ⊢ g a)
+  where
+  DecFinSearch :
+    (a : ⟨ A ⟩) →
+    {!!} ⊢ {!!}
+    -- g a ⊢ LinΠ[ (b , b∈fa) ∈ (Σ[ b ∈ ⟨ B ⟩ ] (b ∈ℙ f a)) ] {!!}
+  DecFinSearch a = {!!}

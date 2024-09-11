@@ -29,6 +29,20 @@ module _ (N : NFA {ℓN}) where
   open Monad
   open LeftStrongMonad
 
+  run-ε : ε-grammar ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] Search (Parse q)
+  run-ε =
+    LinΠ-intro (λ q →
+      append ∘g
+      &-intro
+        -- parses terminating at q
+        (decRec
+          (λ qAcc → SearchMonad .return ∘g Parse.nil qAcc)
+          (λ _ → Search.nil ∘g ⊤-intro)
+          (isAcc q .snd))
+        -- parses resulting from a ε-cons out of q
+        {!!}
+    )
+
   runNFA : string-grammar ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] Search (Parse q)
   runNFA = foldKL*r char the-alg
     where
@@ -38,10 +52,12 @@ module _ (N : NFA {ℓN}) where
     the-alg .nil-case =
       LinΠ-intro
         (λ q →
-          decRec
-            (λ qAcc → SearchMonad .return ∘g Parse.nil qAcc)
-            (λ _ → Search.nil ∘g ⊤-intro)
-            (isAcc q .snd))
+          {!!}
+          -- decRec
+          --   (λ qAcc → SearchMonad .return ∘g Parse.nil qAcc)
+          --   (λ _ → Search.nil ∘g ⊤-intro)
+          --   (isAcc q .snd)
+        )
     the-alg .cons-case =
       ⟜-intro⁻ (LinΣ-elim (λ c →
         ⟜-intro (LinΠ-intro {h = λ q' → Search (Parse q')}(λ q →
