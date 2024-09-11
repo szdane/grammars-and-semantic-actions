@@ -29,6 +29,9 @@ infixr 5 _&_
 &-intro e e' _ p =
   e _ p , e' _ p
 
+_,&_ = &-intro
+infixr 20 _,&_
+
 &-π₁ :
   g & h ⊢ g
 &-π₁ _ p = p .fst

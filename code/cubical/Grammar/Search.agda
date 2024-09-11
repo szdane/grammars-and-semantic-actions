@@ -45,6 +45,14 @@ unfold f w x .viewSearch with f w x
         inr (inr (inl ((unfold f _ ph) , unfold f _ ph')))
 ... | inr (inr (inr ph)) = inr (inr (inr (unfold f _ ph)))
 
+-- Lambek's lemma
+construct : g ⊕ (⊤-grammar {ℓ-zero} ⊕ ((Search g & Search g) ⊕ Search g)) ⊢ Search g
+construct = unfold (⊕-elim
+  ⊕-inl (⊕-elim
+  (⊕-inr ∘g ⊕-inl) (⊕-elim
+  (⊕-inr ∘g ⊕-inr ∘g ⊕-inl ∘g (view ∘g &-π₁) ,& (view ∘g &-π₂))
+  (⊕-inr ∘g ⊕-inr ∘g ⊕-inr ∘g view))))
+
 search-fmap : g ⊢ h → Search g ⊢ Search h
 search-fmap f =
   unfold
@@ -57,16 +65,16 @@ search-fmap f =
           (⊕-inr ∘g ⊕-inr ∘g ⊕-inr))) ∘g view)
 
 search-return : g ⊢ Search g
-search-return = unfold ⊕-inl
+search-return = construct ∘g ⊕-inl
 
 nil : ⊤-grammar {ℓ-zero} ⊢ Search g
-nil = unfold (⊕-inr ∘g ⊕-inl)
+nil = construct ∘g ⊕-inr ∘g ⊕-inl
 
 append : Search g & Search g ⊢ Search g
-append w (pg , pg') = mkSearch (inr (inr (inl (pg , pg'))))
+append = construct ∘g ⊕-inr ∘g ⊕-inr ∘g ⊕-inl
 
 wait : Search g ⊢ Search g
-wait = unfold (⊕-inr ∘g ⊕-inr ∘g ⊕-inr)
+wait = construct ∘g ⊕-inr ∘g ⊕-inr ∘g ⊕-inr
 
 open Monad
 
