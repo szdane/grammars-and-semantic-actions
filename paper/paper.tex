@@ -1,4 +1,3 @@
-
 % -*- fill-column: 80; -*-
 \documentclass[sigconf,review,anonymous,screen,acmsmall]{acmart}
 \usepackage{mathpartir}
@@ -77,7 +76,7 @@
 
 \pagebreak
 
-\title{Formal Grammars as Types in Non-Commutative Linear-Non-Linear Type Theory}
+\title{A Dependent Lambek Calculus for Intrinsic Verification of Parsers and Formal Grammar Theory}
 
 \author{Steven Schaefer}
 \affiliation{\department{Electrical Engineering and Computer Science}
@@ -149,6 +148,40 @@
 \section{Introduction}
 \label{sec:intro}
 
+Parsing is central to computing. Verification of parsers is a crucial
+task in many verified applications....There is a great deal of
+literature on specific parsing formalisms and proving them correct,
+but of course each formalism is restrictive and must be given a new
+formal treatement of its correctness.
+
+% TODO: more about why a *framework* is useful
+
+To address these issues with verified parsing, we have designed a
+\emph{domain-specific type theory} which supports the definition of grammar
+formalisms and \emph{intrinsic verification} of parser implementations. The type
+theory is based on a \emph{dependent non-commutative linear type theory}, which
+we call the \emph{dependent Lambek calculus}. In this type theory, the linear
+types are interpreted as \emph{formal grammars}, with the values being the
+\emph{parses} of the grammar. The terms are a kind of \emph{intrinsically
+verified} parse transformer: that is a term $x: A \vdash M : B$ implements a
+function that takes any $A$-parse of a string $w$ and returns a $B$-parse of the
+same string. As a special case, if $A$ is the trivial grammar of all strings,
+then $M$ is an \emph{intrinsically verified total parser} a function that
+returns a $B$ parse for every string. The benefit of this intrinsic approach to
+constructing parsers is that the terms in our Lambek calculus look like ordinary
+functional programs that obey an ordered linear typing discipline, yet this
+discipline ensures by construction that the grammatical structure is respected.
+
+To demonstrate that this is a \emph{practical} language for implementing grammar
+formalisms and intrinsically verified parsers, we demonstrate several examples: ...
+
+We have additionally implemented a proof of concept \emph{domain-specific proof
+assistant} via a shallow embedding of our type theory in Agda.
+
+
+intrinsically verified parsers for regular expressions and finite
+automata, as well as some example LL(1) grammars.
+
 Parsing data from a serialized format is one of the most common tasks
 in all of computing. Accordingly, this is a quite well-studied problem
 spanning theoretical computer science and linguistics with such
@@ -185,17 +218,17 @@ the field is lacking a unifying theory across these different formalisms, even
 though many of the same
 compositional reason principles appear across distinct grammar formalisms.
 
-In this work, we aim to elucidate these similarities and
-provide a mathematical theory of formal grammars for constructing verified
-parsers. Our approach can be summarized with the
-Curry-Howard-style slogan: ``grammars as types''; and the addendum: ``parsers as
-terms''. That is, we develop a type theory with a novel
-denotational semantics in a category with abstract formal grammars as
-objects and \emph{parse transformers} as morphisms. We say these are
+In this work, we aim to elucidate these similarities and provide a
+mathematical theory of formal grammars for constructing verified
+parsers. Our approach can be summarized with the Curry-Howard-style
+slogan: ``grammars as types''; and the addendum: ``parsers as
+terms''. That is, we develop a type theory with a novel denotational
+semantics in a category with abstract formal grammars as objects and
+\emph{parse transformers} as morphisms. We say these are
 \emph{abstract} formal grammars because they are not tied to any
 particular syntactic formalism such as Chomskyan grammars, regular
-expressions, Lambek calculus etc. The category we choose is a rich
-in structure: it is a topos as well as being monoidal closed, and these
+expressions, Lambek calculus etc. The category we choose is a rich in
+structure: it is a topos as well as being monoidal closed, and these
 universal properties serve as the inspiration for our type theory.
 
 The type theory itself is a form of dependent linear-non-linear type
@@ -2426,6 +2459,5 @@ Backtracking parsing: via (delimited) continuations? effect handlers?
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}
-
 
 \end{document}
