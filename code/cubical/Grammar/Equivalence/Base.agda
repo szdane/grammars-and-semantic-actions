@@ -4,6 +4,8 @@ open import Cubical.Foundations.HLevels
 module Grammar.Equivalence.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Univalence
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.Data.Sigma

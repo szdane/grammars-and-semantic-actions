@@ -8,6 +8,7 @@ open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
 open import Grammar.Epsilon Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
 
@@ -269,6 +270,9 @@ opaque
       refl ,
       (⊗PathP (≡-× refl refl)
         (ΣPathP (refl , refl)))))
+
+⊗-assoc-StrEq : StrongEquivalence ((g ⊗ h) ⊗ k) (g ⊗ (h ⊗ k))
+⊗-assoc-StrEq = mkStrEq ⊗-assoc⁻ ⊗-assoc ⊗-assoc⁻∘⊗-assoc≡id ⊗-assoc∘⊗-assoc⁻≡id
 
 ⊗-assoc⁻⊗-intro :
   ∀ {f : g ⊢ h}{f' : g' ⊢ h'}{f'' : g'' ⊢ h''}
