@@ -37,9 +37,15 @@ open import Term Σ₀
 ⟦ Syntax.id ⟧subst = λ z → z
 ⟦ δ Syntax.∘ δ₁ ⟧subst = λ z → ⟦ δ ⟧subst (⟦ δ₁ ⟧subst z)
 ⟦ Syntax.π₁ ⟧subst = fst
+⟦ Syntax.∘∘ δ δ' δ'' i ⟧subst = λ z → ⟦ δ'' ⟧subst (⟦ δ' ⟧subst (⟦ δ ⟧subst z))
+⟦ Syntax.id∘ δ i ⟧subst = λ z → ⟦ δ ⟧subst z
+⟦ Syntax.∘id δ i ⟧subst = λ z → ⟦ δ ⟧subst z
+⟦ Syntax.·-uniq δ δ' i ⟧subst = λ _ → tt
 
 ⟦ Syntax.bit ⟧ty δ = Bool
 ⟦ X Syntax.[ γ ] ⟧ty δ = ⟦ X ⟧ty (⟦ γ ⟧subst δ)
+⟦ Syntax.subst-∘ A δ' δ'' i ⟧ty δ = ⟦ A ⟧ty (⟦ δ' ⟧subst (⟦ δ'' ⟧subst δ))
+⟦ Syntax.subst-id A i ⟧ty δ = ⟦ A ⟧ty δ
 
 ⟦ Syntax.var ⟧tm = λ δ → δ .snd
 ⟦ M Syntax.[ γ ] ⟧tm = λ δ → ⟦ M ⟧tm (⟦ γ ⟧subst δ)
@@ -67,29 +73,31 @@ open import Term Σ₀
 ⟦ A Syntax.[ δ' ] ⟧gty δ = ⟦ A ⟧gty (⟦ δ' ⟧subst δ)
 ⟦ A Syntax.⊸ B ⟧gty δ = ⟦ A ⟧gty δ ⊸ ⟦ B ⟧gty δ
 ⟦ A Syntax.⟜ B ⟧gty δ = ⟦ A ⟧gty δ ⟜ ⟦ B ⟧gty δ
+⟦ Syntax.subst-id A i ⟧gty δ = λ z → ⟦ A ⟧gty δ z
 
 ⟦ Syntax.var ⟧gtm δ = id
-⟦ M Syntax.,⊗ N ⟧gtm δ = ⟦ M ⟧gtm δ ,⊗ ⟦ N ⟧gtm δ
+-- ⟦ M Syntax.,⊗ N ⟧gtm δ = ⟦ M ⟧gtm δ ,⊗ ⟦ N ⟧gtm δ
 ⟦ M Syntax.[ γ ]l ⟧gtm δ = ⟦ M ⟧gtm δ ∘g ⟦ γ ⟧gsubst δ
-⟦ Syntax.⊗-L M ⟧gtm δ = ⟦ M ⟧gtm δ ∘g id ,⊗ ⊗-assoc
+-- ⟦ Syntax.⊗-L M ⟧gtm δ = ⟦ M ⟧gtm δ ∘g id ,⊗ ⊗-assoc
 ⟦ M Syntax.[ δ₁ ] ⟧gtm δ = ⟦ M ⟧gtm (⟦ δ₁ ⟧subst δ)
 ⟦ Syntax.ε-L M ⟧gtm δ = ⟦ M ⟧gtm δ ∘g id ,⊗ ⊗-unit-l⁻
-⟦ Syntax.⊸-app ⟧gtm δ = ⊸-app
-⟦ Syntax.⊸-intro M ⟧gtm δ = ⊸-intro (⟦ M ⟧gtm δ)
-⟦ Syntax.⟜-app ⟧gtm δ = ⟜-app
-⟦ Syntax.⟜-intro M ⟧gtm δ = ⟜-intro (⟦ M ⟧gtm δ)
-⟦ Syntax.⊥-L ⟧gtm δ = ⊸-intro⁻ (⟜-intro⁻ ⊥-elim)
-⟦ Syntax.inl ⟧gtm δ = ⊕-inl
-⟦ Syntax.inr ⟧gtm δ = ⊕-inr
-⟦ Syntax.⊕-L M N ⟧gtm δ = ⊸-intro⁻ (⟜-intro⁻ (⊕-elim
-  (⟜-intro (⊸-intro (⟦ M ⟧gtm δ)))
-  (⟜-intro (⊸-intro (⟦ N ⟧gtm δ)))))
-⟦ Syntax.nil ⟧gtm δ = nil
-⟦ Syntax.cons ⟧gtm δ = cons
-⟦ Syntax.fold Mn Mc ⟧gtm δ =
-  foldKL*r _ (record { the-ℓ = _ ; G = _
-    ; nil-case = ⟦ Mn ⟧gtm δ
-    ; cons-case = ⟦ Mc ⟧gtm δ })
+⟦ Syntax.⟨⟩ ⟧gtm δ = λ w z → z
+-- ⟦ Syntax.⊸-app ⟧gtm δ = ⊸-app
+-- ⟦ Syntax.⊸-intro M ⟧gtm δ = ⊸-intro (⟦ M ⟧gtm δ)
+-- ⟦ Syntax.⟜-app ⟧gtm δ = ⟜-app
+-- ⟦ Syntax.⟜-intro M ⟧gtm δ = ⟜-intro (⟦ M ⟧gtm δ)
+-- ⟦ Syntax.⊥-L ⟧gtm δ = ⊸-intro⁻ (⟜-intro⁻ ⊥-elim)
+-- ⟦ Syntax.inl ⟧gtm δ = ⊕-inl
+-- ⟦ Syntax.inr ⟧gtm δ = ⊕-inr
+-- ⟦ Syntax.⊕-L M N ⟧gtm δ = ⊸-intro⁻ (⟜-intro⁻ (⊕-elim
+--   (⟜-intro (⊸-intro (⟦ M ⟧gtm δ)))
+--   (⟜-intro (⊸-intro (⟦ N ⟧gtm δ)))))
+-- ⟦ Syntax.nil ⟧gtm δ = nil
+-- ⟦ Syntax.cons ⟧gtm δ = cons
+-- ⟦ Syntax.fold Mn Mc ⟧gtm δ =
+--   foldKL*r _ (record { the-ℓ = _ ; G = _
+--     ; nil-case = ⟦ Mn ⟧gtm δ
+--     ; cons-case = ⟦ Mc ⟧gtm δ })
 
 ⟦ Syntax.id ⟧gsubst δ = id
 ⟦ γ' Syntax.∘ γ ⟧gsubst δ = ⟦ γ' ⟧gsubst δ ∘g ⟦ γ ⟧gsubst δ
