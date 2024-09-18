@@ -85,3 +85,5 @@ open import String.Base Σ₀ public
 ⌈++⌉ [] w2 = sym εc⊗c
 ⌈++⌉ (c ∷ w1) w2 = cong (ty (lit c) ⊗c_) (⌈++⌉ w1 w2) ∙ sym ⊗c⊗c
   
+⌈++⌉-subst : ∀ w1 w2 → Subst ⌈ w1 ++ w2 ⌉ (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)
+⌈++⌉-subst w1 w2 = subst (λ w1w2 → Subst w1w2 (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)) (sym (⌈++⌉ w1 w2)) ids

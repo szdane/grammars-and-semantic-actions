@@ -56,43 +56,33 @@ open import Term Σ₀
 ⟦ Syntax.⊗cεc i ⟧ctx = {!!}
 ⟦ Syntax.⊗c⊗c i ⟧ctx = {!!}
 
-⟦ Syntax.lit c ⟧ty-π w w≡[c] = J (λ w _ → ⟦ Syntax.lit c ⟧ty' w)
-  (subst (λ Γ → Syntax.Tm Γ (Syntax.lit c)) (sym Syntax.⊗cεc) Syntax.var)
-  (sym w≡[c])
+⟦ Syntax.lit c ⟧ty-π =
+  literal-elim ((subst (λ Γ → Syntax.Tm Γ (Syntax.lit c)) (sym Syntax.⊗cεc) Syntax.var))
+  -- J (λ w _ → ⟦ Syntax.lit c ⟧ty' w)
+  -- (subst (λ Γ → Syntax.Tm Γ (Syntax.lit c)) (sym Syntax.⊗cεc) Syntax.var)
+  -- (sym w≡[c])
 ⟦ Syntax.⊥ ⟧ty-π = ⊥-elim
-⟦ Syntax.ε ⟧ty-π w w≡[] = J (λ w _ → ⟦ Syntax.ε ⟧ty' w)
-  Syntax.⟨⟩
-  (sym w≡[])
-⟦ A₁ Syntax.⊗ A₂ ⟧ty-π w (((w1 , w2) , w≡w1w2) , p1 , p2) =
-  J (λ w _ → ⟦ A₁ Syntax.⊗ A₂ ⟧ty' w)
-  (subst (λ Γ → Syntax.Tm Γ _)
-    (sym (Syntax.⌈++⌉ w1 w2))
-    (⟦ A₁ ⟧ty-π w1 p1 Syntax.,⊗ ⟦ A₂ ⟧ty-π w2 p2))
-  (sym w≡w1w2)
+⟦ Syntax.ε ⟧ty-π = ε-elim Syntax.⟨⟩
+⟦ A₁ Syntax.⊗ A₂ ⟧ty-π =
+  ⊗-elim (λ w1 w2 M₁ M₂ → (M₁ Syntax.,⊗ M₂) Syntax.[ Syntax.⌈++⌉-subst w1 w2 ])
+  ∘g ⟦ A₁ ⟧ty-π ,⊗ ⟦ A₂ ⟧ty-π
 ⟦ A Syntax.⊸ B ⟧ty-π = {!!}
 ⟦ B Syntax.⟜ A ⟧ty-π = {!!}
 ⟦ A Syntax.⊕ B ⟧ty-π = ⊕-elim
   (λ w a → Syntax.inl Syntax.[ Syntax.tys (⟦ A ⟧ty-π w a) ])
   (λ w b → Syntax.inr Syntax.[ Syntax.tys (⟦ B ⟧ty-π w b) ])
 ⟦ Syntax.Star A ⟧ty-π = foldKL*r _ (record { the-ℓ = _ ; G = _
-  ; nil-case = λ w w≡[] → J (λ w _ → ⟦ Syntax.Star A ⟧ty' w)
-    Syntax.nil
-    (sym w≡[])
-  ; cons-case = λ w (((w1 , w2) , w≡w1w2) , p1 , p2) → J (λ w _ → ⟦ Syntax.Star A ⟧ty' w)
-    (subst (λ Γ → Syntax.Tm Γ _)
-     ((sym (Syntax.⌈++⌉ w1 w2)))
-     (Syntax.cons Syntax.[ Syntax.tys (⟦ A ⟧ty-π w1 p1) Syntax.,⊗s Syntax.tys p2 ]))
-    (sym w≡w1w2) })
+  ; nil-case = ε-elim Syntax.nil
+  ; cons-case =
+    ⊗-elim (λ w1 w2 M₁ M₂ → Syntax.cons Syntax.[ (Syntax.tys M₁ Syntax.,⊗s Syntax.tys M₂) Syntax.∘s Syntax.⌈++⌉-subst w1 w2 ])
+    ∘g ⟦ A ⟧ty-π ,⊗ id
+  })
 
 ⟦ Syntax.ty A ⟧ctx-π w M~ = Syntax.tys (⟦ A ⟧ty-π w M~)
-⟦ Syntax.Ctx.εc ⟧ctx-π w w≡[] = J (λ w _ → ⟦ Syntax.εc ⟧ctx' w)
-  Syntax.ids
-  (sym w≡[])
-⟦ Γ₁ Syntax.⊗c Γ₂ ⟧ctx-π w (((w1 , w2) , w≡w1w2) , p1 , p2) =
-  J (λ w _ → ⟦ Γ₁ Syntax.⊗c Γ₂ ⟧ctx' w)
-  (subst (λ ⌈w⌉ → Syntax.Subst ⌈w⌉ _) (sym (Syntax.⌈++⌉ w1 w2))
-    (⟦ Γ₁ ⟧ctx-π w1 p1 Syntax.,⊗s ⟦ Γ₂ ⟧ctx-π w2 p2))
-  (sym w≡w1w2)
+⟦ Syntax.Ctx.εc ⟧ctx-π = ε-elim Syntax.ids
+⟦ Γ₁ Syntax.⊗c Γ₂ ⟧ctx-π =
+  ⊗-elim (λ w1 w2 γ1 γ2 → (γ1 Syntax.,⊗s γ2) Syntax.∘s Syntax.⌈++⌉-subst w1 w2)
+  ∘g (⟦ Γ₁ ⟧ctx-π ,⊗ ⟦ Γ₂ ⟧ctx-π)
 ⟦ Syntax.Ctx.εc⊗c i ⟧ctx-π = {!!}
 ⟦ Syntax.Ctx.⊗cεc i ⟧ctx-π = {!!}
 ⟦ Syntax.Ctx.⊗c⊗c i ⟧ctx-π = {!!}
@@ -126,10 +116,11 @@ open import Term Σ₀
   (λ i → ⟦ M ⟧tm-π i ∘g ⟦ γ ⟧subst)
   ∙ (λ i → ⟦ M ⟧tm' ∘g ⟦ γ ⟧subst-π i)
   ∙ funExt λ w → funExt λ p → Syntax.subst-∘ M γ (⟦ _ ⟧ctx-π w p)
-⟦ M₁ Syntax.,⊗ M₂ ⟧tm-π =
-  {!!} ∙ {!!}
 ⟦ Syntax.⟨⟩ ⟧tm-π = {!!}
 ⟦ Syntax.ε-L M ⟧tm-π = {!!}
+⟦ M₁ Syntax.,⊗ M₂ ⟧tm-π =
+  (λ i → ⊗-elim (λ w1 w2 M₃ M₄ → (M₃ Syntax.,⊗ M₄) Syntax.[ Syntax.⌈++⌉-subst w1 w2 ]) ∘g ⟦ M₁ ⟧tm-π i ,⊗ ⟦ M₂ ⟧tm-π i)
+  ∙ {!!}
 ⟦ Syntax.⊗-L M ⟧tm-π = {!!}
 ⟦ Syntax.inl ⟧tm-π = {!!}
 ⟦ Syntax.inr ⟧tm-π = {!!}
@@ -151,12 +142,16 @@ open import Term Σ₀
 
 
 ⟦string⟧ : ∀ w → ⟦ Syntax.⌈ w ⌉ ⟧ctx w
-⟦string⟧ = List.elim (refl {x = []}) λ {c}{w'} ⟦w'⟧ → (splitChar c w') , (refl , ⟦w'⟧)
-
+⟦string⟧ = List.elim
+  ε-intro
+  λ {c}{w} ⟦⌈w⌉⟧ → ⊗-intro' [ c ] w refl ⟦⌈w⌉⟧ 
 ⟦string⟧-id : ∀ w → ⟦ Syntax.⌈ w ⌉ ⟧ctx-π w (⟦string⟧ w) ≡ Syntax.ids
 ⟦string⟧-id = List.elim
-  ((JRefl {x = []} (λ w _ → ⟦ Syntax.εc ⟧ctx' w) _))
-  λ {c}{w'} ⟦string⟧⟨w'⟩≡ids → {!!}
+  (ε-β {g = ⟦ Syntax.⌈ [] ⌉ ⟧ctx'} Syntax.ids)
+  -- (ε-β {g = {!!}} Syntax.ids)
+  {!!}
+  -- ((JRefl {x = []} (λ w _ → ⟦ Syntax.εc ⟧ctx' w) _))
+  -- λ {c}{w'} ⟦string⟧⟨w'⟩≡ids → {!!}
 
 -- these are the "canonicalization" functions: they take in terms of type ⌈ w ⌉ ⊢ M : A and output ⟦ A ⟧ty w
 ⟦ A ⟧ty-π⁻ w M = ⟦ M ⟧tm w (⟦string⟧ w)
@@ -168,4 +163,4 @@ tm-canonicity A = mkStrEq ⟦ A ⟧ty-π ⟦ A ⟧ty-π⁻
     (λ i → ⟦ M ⟧tm-π i w (⟦string⟧ w))
     ∙ (λ i → M Syntax.[ ⟦string⟧-id w i ])
     ∙ Syntax.subst-id M))
-  (funExt λ w → funExt λ p → {!!}) -- this will require another proof by induction, methinks
+  (funExt λ w → funExt λ p → {!!}) -- this would require another proof by induction, methinks
