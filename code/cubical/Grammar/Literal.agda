@@ -23,3 +23,6 @@ opaque
   literal-elim : g [ c ] → literal c ⊢ g
   literal-elim {g = g} gc w w≡[c] =
     subst g (sym w≡[c]) gc
+
+  literal-intro : (literal c) [ c ]
+  literal-intro = refl

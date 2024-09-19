@@ -4,6 +4,7 @@ open import Cubical.Foundations.HLevels
 module Term.Bilinear (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
+open import Cubical.Data.Sigma
 open import Grammar.Base Alphabet
 open import Term.Base Alphabet
 open import Term.Nullary Alphabet
@@ -11,8 +12,8 @@ open import Term.Nullary Alphabet
 private
   variable
     ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
+    g g' : Grammar ℓg
+    h h' : Grammar ℓh
     k : Grammar ℓk
     l : Grammar ℓl
 
@@ -29,11 +30,14 @@ _,,_⊢_ = Bilinear
 _∘b_ : k ⊢ l → g ,, h ⊢ k → g ,, h ⊢ l
 _∘b_ f f' = λ w1 w2 gp hp → f (w1 ++ w2) (f' w1 w2 gp hp)
 
-_b∘l_ : g ,, h ⊢ k → l ⊢ g → l ,, h ⊢ k
+_b∘l_ : g ,, h ⊢ k → g' ⊢ g → g' ,, h ⊢ k
 (f b∘l f') w1 w2 lp hp = f w1 w2 (f' w1 lp) hp
 
-_b∘r_ : g ,, h ⊢ k → l ⊢ h → g ,, l ⊢ k
+_b∘r_ : g ,, h ⊢ k → h' ⊢ h → g ,, h' ⊢ k
 (f b∘r f') w1 w2 gp lp = f w1 w2 gp (f' w2 lp)
+
+_b∘lr_ : g ,, h ⊢ k → (g' ⊢ g) × (h' ⊢ h) → g' ,, h' ⊢ k
+(f b∘lr f') _ _ g'p h'p = f _ _ (f' .fst _ g'p) (f' .snd _ h'p)
 
 -- Does the fact that this is refl make anything easier?
 -- TODO: should these be opaque?

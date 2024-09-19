@@ -40,6 +40,7 @@ opaque
     J (λ w []≡w → f w (sym []≡w) ≡ subst g []≡w (f [] ε-intro))
       (sym (substRefl {B = g} (f [] ε-intro)))
       (sym w≡[])
+
   ε-elim-l : g ⊢ h → ε ,, g ⊢ h
   ε-elim-l {h = h} f w1 w2 (w1≡[]) gp =
     subst h
@@ -51,3 +52,9 @@ opaque
     subst h
       (sym (++-unit-r _) ∙ cong (w1 ++_) (sym w2≡[]))
       (f w1 gp)
+
+ε-ind :
+  ∀ (f f' : ε ⊢ g)
+  → (f ∘ε ε-intro ≡ f' ∘ε ε-intro)
+  → f ≡ f'
+ε-ind f f' fε≡f'ε = ε-η f ∙ cong ε-elim fε≡f'ε ∙ sym (ε-η f')
