@@ -170,3 +170,10 @@ Mono∘g : {e : g ⊢ h} {e' : h ⊢ k} →
   isMono e' → isMono e → isMono (e' ∘g e)
 Mono∘g {e = e} {e' = e'} mon-e mon-e' f f' e'ef≡e'ef' =
   mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
+
+opaque
+  StrongEquivalence→Path : StrongEquivalence g h → g ≡ h
+  StrongEquivalence→Path g≅h = funExt λ w → ua (isoToEquiv (iso (g≅h .fun w) (g≅h .inv w)
+      (funExt⁻ (funExt⁻ (g≅h .sec) w))
+      (funExt⁻ (funExt⁻ (g≅h .ret) w))))
+    where open StrongEquivalence

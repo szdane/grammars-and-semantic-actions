@@ -129,23 +129,6 @@ opaque
   ⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
     subst g (sym w≡w'++w'') (f _ inp)
 
-  ⟜-intro' :
-    g ,, h ⊢ k
-    → g ⊢ k ⟜ h
-  ⟜-intro' f w x w' x₁ = f w w' x x₁
-  ⟜-app' :
-    (g ⟜ h) ,, h ⊢ g
-  ⟜-app' w w' fp hp = fp w' hp
-  ⟜-β' :
-    ∀ (f : g ,, h ⊢ k) →
-    _b∘l_ {g = k ⟜ h}{k = k} ⟜-app' (⟜-intro' f) ≡ f
-  ⟜-β' f = refl
-
-  ⟜-η' :
-    ∀ (f : g ⊢ k ⟜ h) →
-    f ≡ ⟜-intro' (_b∘l_ {g = k ⟜ h}{k = k} ⟜-app' f)
-  ⟜-η' f = refl
-
 ⟜-intro⁻ :
   g ⊢ h ⟜ k →
   g ⊗ k ⊢ h

@@ -17,7 +17,8 @@ infixr 9 _∘s_
 data Ty : Type ℓ-zero where
   lit : ⟨ Σ₀ ⟩ → Ty
   ⊥ ε : Ty
-  _⊗_ _⊸_ _⟜_ _⊕_ : Ty → Ty → Ty
+  _⊗_ _⊕_ : Ty → Ty → Ty
+  --  _⊸_ _⟜_ : Ty → Ty → Ty
   Star : Ty → Ty
 
 data Ctx : Type ℓ-zero where
@@ -81,9 +82,11 @@ data Tm where
 open import String.Base Σ₀ public
 ⌈_⌉ : String → Ctx
 ⌈ w ⌉ = List.rec εc (λ c ⌈w'⌉ → ty (lit c) ⊗c ⌈w'⌉) w
+
 ⌈++⌉ : ∀ w1 w2 → ⌈ w1 ++ w2 ⌉ ≡ ⌈ w1 ⌉ ⊗c ⌈ w2 ⌉
 ⌈++⌉ [] w2 = sym εc⊗c
 ⌈++⌉ (c ∷ w1) w2 = cong (ty (lit c) ⊗c_) (⌈++⌉ w1 w2) ∙ sym ⊗c⊗c
-  
-⌈++⌉-subst : ∀ w1 w2 → Subst ⌈ w1 ++ w2 ⌉ (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)
-⌈++⌉-subst w1 w2 = subst (λ w1w2 → Subst w1w2 (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)) (sym (⌈++⌉ w1 w2)) ids
+
+opaque
+  ⌈++⌉-subst : ∀ w1 w2 → Subst ⌈ w1 ++ w2 ⌉ (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)
+  ⌈++⌉-subst w1 w2 = subst (λ w1w2 → Subst w1w2 (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)) (sym (⌈++⌉ w1 w2)) ids

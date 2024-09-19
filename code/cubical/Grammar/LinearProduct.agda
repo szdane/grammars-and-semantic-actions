@@ -24,22 +24,6 @@ _⊗_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
 (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
 infixr 5 _⊗_
 
-opaque
-  ⊗-elim : g ,, h ⊢ k → g ⊗ h ⊢ k
-  ⊗-elim {k = k} f w (((w1 , w2) , w≡w1++w2) , gp , hp) =
-    subst k (sym w≡w1++w2) (f w1 w2 gp hp)
-
-  ⊗-intro' : g ,, h ⊢ (g ⊗ h)
-  ⊗-intro' w1 w2 gp hp = splitting++ w1 w2 , gp , hp
-
-  ⊗-β : ∀ (f : g ,, h ⊢ k)
-    → (⊗-elim {k = k} f ∘b ⊗-intro') ≡ f
-  ⊗-β {k = k} f i w1 w2 gp hp = substRefl {B = k} (f w1 w2 gp hp) i
-
-  -- ⊗-η : ∀ (f : g ⊗ h ⊢ k)
-  --   → f ≡ ⊗-elim {k = k} (f ∘b ⊗-intro')
-  -- ⊗-η f i w x = {!!}
-
 ⊗PathP : {g : I → Grammar ℓg}{h : I → Grammar ℓh}
   {w : I → String}
   → {p : (g i0 ⊗ h i0) (w i0)}
@@ -211,12 +195,11 @@ opaque
   ⊗-unit-rl⁻ = funExt λ w → funExt λ p →
     isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε} w p)
 
-⊗-unit-r' :
-  g ⊗ ε ⊢ g
-⊗-unit-r' = ⊗-elim (ε-elim-r id)
+⊗-unit-l-StrEq : StrongEquivalence (ε ⊗ g) g
+⊗-unit-l-StrEq = mkStrEq ⊗-unit-l ⊗-unit-l⁻ ⊗-unit-l⁻l ⊗-unit-ll⁻
 
-⊗-unit-r'⁻ : g ⊢ g ⊗ ε
-⊗-unit-r'⁻ = ⊗-intro' b∘εr ε-intro
+⊗-unit-r-StrEq : StrongEquivalence (g ⊗ ε) g
+⊗-unit-r-StrEq = mkStrEq ⊗-unit-r ⊗-unit-r⁻ ⊗-unit-r⁻r ⊗-unit-rr⁻
 
 ⊗-assoc :
   g ⊗ (h ⊗ k) ⊢ (g ⊗ h) ⊗ k
