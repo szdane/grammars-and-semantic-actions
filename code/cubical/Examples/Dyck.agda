@@ -1,6 +1,7 @@
 {- Some presentations of the Dyck grammar of balanced parentheses,
    and hopefully some parsers? -}
 
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 module Examples.Dyck where
 
 open import Cubical.Foundations.Prelude
@@ -158,6 +159,83 @@ data BalancedStkTr : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero where
   leftovers : ∀ {n} → ε ⊢ BalancedStkTr (suc n) false
   unexpected] : literal ] ⊗ ⊤ ⊢ BalancedStkTr 0 false
 
+module BALANCEDSTKTR where
+  record Algebra ℓ : Type (ℓ-suc ℓ) where
+    field
+      U : ℕ → Bool → Grammar ℓ
+      [eof] : ε ⊢ U zero true
+      [open] : ∀ {n b} → literal [ ⊗ U (suc n) b ⊢ U n b
+      [close] : ∀ {n b} → literal ] ⊗ U n b ⊢ U (suc n) b
+      [leftovers] : ∀ {n} → ε ⊢ U (suc n) false
+      [unexpected] : literal ] ⊗ ⊤ ⊢ U zero false
+
+  open Algebra public
+  InitialAlgebra : Algebra _
+  InitialAlgebra .U = BalancedStkTr
+  InitialAlgebra .[eof] = eof
+  InitialAlgebra .[open] = open[
+  InitialAlgebra .[close] = close]
+  InitialAlgebra .[leftovers] = leftovers
+  InitialAlgebra .[unexpected] = unexpected]
+
+  record Hom {ℓ}{ℓ'} (G : Algebra ℓ)(H : Algebra ℓ') : Type (ℓ-max ℓ ℓ') where
+    field
+      fun : ∀ {n b} → G .U n b ⊢ H .U n b
+      fun-eof : fun ∘g G .[eof] ≡ H .[eof]
+      fun-open[ : ∀ {n b} →
+        fun {n = n} ∘g (G .[open] {n = n}{b = b}) ≡
+          H .[open] ∘g id ,⊗ fun {n = suc n}
+      fun-close] : ∀ {n b} →
+        fun {n = suc n} ∘g G .[close] {n = n}{b = b} ≡ H .[close] ∘g id ,⊗ fun {n = n}
+      fun-leftovers : ∀ {n} →
+        fun ∘g (G .[leftovers] {n = n}) ≡ H .[leftovers]
+      fun-unexpected] :
+        fun ∘g (G .[unexpected]) ≡ H .[unexpected]
+  open Hom public
+
+  idHom : {G : Algebra ℓg} → Hom G G
+  idHom .fun = id
+  idHom .fun-eof = refl
+  idHom .fun-open[ = refl
+  idHom .fun-close] = refl
+  idHom .fun-leftovers = refl
+  idHom .fun-unexpected] = refl
+
+  _∘hom_ : ∀ {ℓ ℓ' ℓ''} {G : Algebra ℓ}{G' : Algebra ℓ'}{G'' : Algebra ℓ''}
+    → Hom G' G'' → Hom G G' → Hom G G''
+  (ϕ ∘hom ψ) .fun = ϕ .fun ∘g ψ .fun
+  (ϕ ∘hom ψ) .fun-eof = cong (ϕ .fun ∘g_) (ψ .fun-eof) ∙ ϕ .fun-eof
+  (ϕ ∘hom ψ) .fun-open[ =
+    cong (ϕ .fun ∘g_) (ψ .fun-open[) ∙
+    cong (_∘g id ,⊗ ψ .fun) (ϕ .fun-open[)
+  (ϕ ∘hom ψ) .fun-close] =
+    cong (ϕ .fun ∘g_) (ψ .fun-close]) ∙
+    cong (_∘g id ,⊗ ψ .fun) (ϕ .fun-close])
+  (ϕ ∘hom ψ) .fun-leftovers =
+    cong (ϕ .fun ∘g_) (ψ .fun-leftovers) ∙
+    ϕ .fun-leftovers
+  (ϕ ∘hom ψ) .fun-unexpected] =
+    cong (ϕ .fun ∘g_) (ψ .fun-unexpected]) ∙
+    ϕ .fun-unexpected]
+
+  {-# TERMINATING #-}
+  rec' : ∀ (G : Algebra ℓg) {n b} → BalancedStkTr n b ⊢ G .U n b
+  rec' G w (eof .w x) = G .[eof] w x
+  rec' G w (open[ .w x) =
+    (G .[open] ∘g id ,⊗ rec' G) w x
+  rec' G w (close] .w x) =
+    (G .[close] ∘g id ,⊗ rec' G) w x
+  rec' G w (leftovers .w x) = G .[leftovers] w x
+  rec' G w (unexpected] .w x) = G .[unexpected] w x
+
+  rec : ∀ (G : Algebra ℓg) → Hom InitialAlgebra G
+  rec G .fun = rec' G
+  rec G .fun-eof = refl
+  rec G .fun-open[ = refl
+  rec G .fun-close] = refl
+  rec G .fun-leftovers = refl
+  rec G .fun-unexpected] = refl
+
 parseStkTr : string ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
 parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
   ; nil-case = LinΠ-intro (λ
@@ -209,29 +287,61 @@ exhibitTrace =
 -- We can define this as an alternating sequence of S and ] with n ]'s in it:
 --     S (] S)^n
 -- We can view this as a "stack" of parses marked by ] "delimiters"
--- mkParseTree : BalancedStkTr zero true ⊢ Balanced
--- mkParseTree = {!!} where
---   Stk : ℕ → Grammar _
---   Stk = Nat.elim ε-grammar λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
---   -- our state is a "current" Balanced expr that we are building, as
---   -- well as a stack of ]-separated balanced exprs that are waiting to
---   -- be completed
---   Motive : ℕ → Grammar _
---   Motive n = Balanced ⊗ Stk n
---   -- we initialize the current expression to be the empty parse
---   [eof] : ε-grammar ⊢ Motive zero
---   [eof] = ⊗-intro nil id ∘g ⊗-unit-l⁻
---   -- when we see a close paren, we push it and the current expression
---   -- onto the stack and initialize the new current exp to be empty
---   [close] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
---   [close] {n} = ⊗-intro nil id ∘g ⊗-unit-l⁻
---   -- when we see an open paren, we combine the current balanced exp
---   -- with the top frame which we pop off of the stack
---   [open] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
---   [open] = ⊗-intro balanced id ∘g ⊗-assoc ∘g
---     ⊗-intro id (⊗-assoc ∘g ⊗-intro id ⊗-assoc)
+mkParseTree : BalancedStkTr zero true ⊢ Balanced
+mkParseTree =
+  done ∘g
+  BALANCEDSTKTR.rec
+    (record
+      { U = Motive'
+      ; [eof] = [eof]
+      ; [open] = λ {n} → λ {
+          {false} → ⊤-intro
+        ; {true} → [open] {n} }
+      ; [close] = λ {n} → λ {
+          {false} → ⊤-intro
+        ; {true} → [close] {n} }
+      ; [leftovers] = ⊤-intro
+      ; [unexpected] = ⊤-intro
+      })
+    .BALANCEDSTKTR.Hom.fun
+  -- done ∘g
+  -- BALANCEDSTKTR.rec
+  -- (record
+  --   { U = λ n b → Motive n
+  --   ; [eof] = [eof]
+  --   ; [open] = λ {n} → [open] {n}
+  --   ; [close] = λ {n} → [close] {n}
+  --   ; [leftovers] = {!!}
+  --   ; [unexpected] = {!!}
+  --   })
+  -- .BALANCEDSTKTR.Hom.fun where
+  where
+  Stk : ℕ → Grammar _
+  Stk = Nat.elim ε λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
+  -- our state is a "current" Balanced expr that we are building, as
+  -- well as a stack of ]-separated balanced exprs that are waiting to
+  -- be completed
+  Motive : ℕ → Grammar _
+  Motive n = Balanced ⊗ Stk n
 
---   done : Motive 0 ⊢ Balanced
---   done = ⊗-unit-r
+  Motive' : ℕ → Bool → Grammar _
+  Motive' n false = ⊤
+  Motive' n true = Motive n
 
--- -- TODO: show this is a *strong* equivalence!
+  -- we initialize the current expression to be the empty parse
+  [eof] : ε ⊢ Motive zero
+  [eof] = ⊗-intro nil id ∘g ⊗-unit-l⁻
+  -- when we see a close paren, we push it and the current expression
+  -- onto the stack and initialize the new current exp to be empty
+  [close] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
+  [close] {n} = ⊗-intro nil id ∘g ⊗-unit-l⁻
+  -- when we see an open paren, we combine the current balanced exp
+  -- with the top frame which we pop off of the stack
+  [open] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
+  [open] = ⊗-intro balanced id ∘g ⊗-assoc ∘g
+    ⊗-intro id (⊗-assoc ∘g ⊗-intro id ⊗-assoc)
+
+  done : Motive 0 ⊢ Balanced
+  done = ⊗-unit-r
+
+-- TODO: show this is a *strong* equivalence!
