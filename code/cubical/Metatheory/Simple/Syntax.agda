@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -81,51 +82,13 @@ data Tm where
       → (M [ γ ∘s γ' ]) ≡ (M [ γ ] [ γ' ])
     var-tys : ∀ {Γ A} (M : Tm Γ A) → var [ tys M ] ≡ M
 
--- monoidal lemmas
-λ≡ρ : ⊗cεc ≡ εc⊗c
+
+-- Some monoidal lemmas we need later that should follow from general principles
+λ≡ρ : Path (εc ⊗c εc ≡ εc) ⊗cεc εc⊗c
 λ≡ρ = {!!}
 
 mon-lem' : ∀ Γ Γ' →
   Path (((Γ ⊗c Γ') ⊗c εc) ≡ (Γ ⊗c Γ')) ⊗cεc (⊗c⊗c ∙ (λ i → Γ ⊗c ⊗cεc {Γ = Γ'} i))
 mon-lem' = {!!}
-open import String.Base Σ₀ public
-⌈_⌉ : String → Ctx
-⌈ w ⌉ = List.rec εc (λ c ⌈w'⌉ → ty (lit c) ⊗c ⌈w'⌉) w
 
-⌈ε⌉ : εc ≡ ⌈ [] ⌉
-⌈ε⌉ = refl
-
-⌈++⌉ : ∀ w1 w2 → ⌈ w1 ⌉ ⊗c ⌈ w2 ⌉ ≡ ⌈ w1 ++ w2 ⌉
-⌈++⌉ [] w2 = εc⊗c
-⌈++⌉ (c ∷ w1) w2 = ⊗c⊗c ∙ cong (ty (lit c) ⊗c_) (⌈++⌉ w1 w2)
-
--- Claim: this is a *strong monoidal functor*
--- all this means here is that it
-str-mon-unit-l : ∀ w → Path (εc ⊗c ⌈ w ⌉ ≡ ⌈ w ⌉) εc⊗c (⌈++⌉ [] w)
-str-mon-unit-l w = refl
-
-str-mon-unit-r : ∀ w → Path (⌈ w ⌉ ⊗c εc ≡  ⌈ w ⌉) ⊗cεc (⌈++⌉ w [] ∙ cong ⌈_⌉ (++-unit-r w))
-str-mon-unit-r [] = λ≡ρ ∙ rUnit εc⊗c
-str-mon-unit-r (c ∷ w) =
-  ⊗cεc
-    ≡⟨ mon-lem' (ty (lit c)) ⌈ w ⌉ ⟩
-  (⊗c⊗c ∙ cong (ty (lit c) ⊗c_) ⊗cεc)
-    ≡⟨ cong (⊗c⊗c ∙_) (cong (cong (ty (lit c) ⊗c_)) (str-mon-unit-r w)) ⟩
-  (⊗c⊗c ∙ (cong (ty (lit c) ⊗c_) ((⌈++⌉ w [] ∙ cong ⌈_⌉ (++-unit-r w)))))
-    ≡⟨ (λ i → ⊗c⊗c ∙ cong-∙ (ty (lit c) ⊗c_) (⌈++⌉ w []) (cong ⌈_⌉ (++-unit-r w)) i) ⟩
-  (⊗c⊗c ∙ (cong (ty (lit c) ⊗c_) (⌈++⌉ w []) ∙ cong (ty (lit c) ⊗c_) (cong ⌈_⌉ (++-unit-r w))))
-    ≡⟨ assoc _ _ _ ⟩
-  ((⊗c⊗c ∙ cong (ty (lit c) ⊗c_) (⌈++⌉ w [])) ∙ cong (ty (lit c) ⊗c_) (cong ⌈_⌉ (++-unit-r w)))
-  ∎
-
-str-mon-assoc : ∀ w1 w2 w3
-  → Path ((⌈ w1 ⌉ ⊗c ⌈ w2 ⌉) ⊗c ⌈ w3 ⌉ ≡ ⌈ w1 ++ (w2 ++ w3) ⌉)
-         ((λ i → ⌈++⌉ w1 w2 i ⊗c ⌈ w3 ⌉) ∙ ⌈++⌉ (w1 ++ w2) w3 ∙ cong ⌈_⌉ (++-assoc w1 w2 w3))
-         (⊗c⊗c ∙ (λ i → ⌈ w1 ⌉ ⊗c ⌈++⌉ w2 w3 i) ∙ ⌈++⌉ w1 (w2 ++ w3))
-str-mon-assoc [] w2 w3 = {!!}
-str-mon-assoc (c ∷ w1) w2 w3 = {!!}
-
--- opaque
---   ⌈++⌉-subst : ∀ w1 w2 → Subst ⌈ w1 ++ w2 ⌉ (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)
---   ⌈++⌉-subst w1 w2 = subst (λ w1w2 → Subst w1w2 (⌈ w1 ⌉ ⊗c ⌈ w2 ⌉)) (sym (⌈++⌉ w1 w2)) ids
 

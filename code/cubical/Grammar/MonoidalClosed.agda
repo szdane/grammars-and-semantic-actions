@@ -7,6 +7,7 @@ open import Cubical.Data.List
 
 open import Helper
 open import Grammar.Base Alphabet
+open import Grammar.Equivalence Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
@@ -120,3 +121,12 @@ opaque
 ⊗-unit-r'⁻ : g ⊢ g ⊗ ε
 ⊗-unit-r'⁻ = ⊗-intro' b∘εr ε-intro
 
+-- Here we show that grammars are a monoidal groupoid
+mon-unit-l : ε ⊗ g ≡ g
+mon-unit-l = StrongEquivalence→Path ⊗-unit-l-StrEq
+
+mon-unit-r : g ⊗ ε ≡ g
+mon-unit-r = StrongEquivalence→Path ⊗-unit-r-StrEq
+
+mon-assoc : (g ⊗ h) ⊗ k ≡ g ⊗ h ⊗ k
+mon-assoc = StrongEquivalence→Path ⊗-assoc-StrEq
