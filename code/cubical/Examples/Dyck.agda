@@ -304,17 +304,6 @@ mkParseTree =
       ; [unexpected] = ⊤-intro
       })
     .BALANCEDSTKTR.Hom.fun
-  -- done ∘g
-  -- BALANCEDSTKTR.rec
-  -- (record
-  --   { U = λ n b → Motive n
-  --   ; [eof] = [eof]
-  --   ; [open] = λ {n} → [open] {n}
-  --   ; [close] = λ {n} → [close] {n}
-  --   ; [leftovers] = {!!}
-  --   ; [unexpected] = {!!}
-  --   })
-  -- .BALANCEDSTKTR.Hom.fun where
   where
   Stk : ℕ → Grammar _
   Stk = Nat.elim ε λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
@@ -344,4 +333,38 @@ mkParseTree =
   done : Motive 0 ⊢ Balanced
   done = ⊗-unit-r
 
+open StrongEquivalence
+BalancedStkTr≅string :
+  ∀ n →
+  StrongEquivalence
+    (LinΣ[ b ∈ Bool ] BalancedStkTr n b)
+    string
+BalancedStkTr≅string n .fun =
+  LinΣ-elim (λ b →
+    BALANCEDSTKTR.rec
+      (record
+        { U = λ _ _ → string
+        ; [eof] = KL*.nil
+        ; [open] = KL*.cons ∘g LinΣ-intro [ ,⊗ id
+        ; [close] = KL*.cons ∘g LinΣ-intro ] ,⊗ id
+        ; [leftovers] = KL*.nil
+        ; [unexpected] = KL*.cons ∘g LinΣ-intro ] ,⊗ ⊤→string
+        })
+      .BALANCEDSTKTR.Hom.fun)
+BalancedStkTr≅string n .inv = LinΠ-app n ∘g parseStkTr
+BalancedStkTr≅string n .sec = {!!} -- string to string
+BalancedStkTr≅string n .ret = {!!}
+
+unambiguous-BalancedStkTr : ∀ n → unambiguous (LinΣ[ b ∈ Bool ] BalancedStkTr n b)
+unambiguous-BalancedStkTr n = unambiguous≅ (sym-strong-equivalence (BalancedStkTr≅string n)) unambiguous-string
+
+module _ {ℓS}{ℓH}{A : Type ℓS} {h : A → Grammar ℓH} where
+  unambiguousΣ : unambiguous (LinΣ[ a ∈ A ] h a) → (a : A) → unambiguous (h a)
+  unambiguousΣ unambigΣ a e e' p = {!!}
+
 -- TODO: show this is a *strong* equivalence!
+Balanced≅ : StrongEquivalence Balanced (BalancedStkTr zero true)
+Balanced≅ .fun = exhibitTrace
+Balanced≅ .inv = mkParseTree
+Balanced≅ .sec = unambiguousΣ (unambiguous-BalancedStkTr zero) true _ _ {!!}
+Balanced≅ .ret = {!!} -- use ind

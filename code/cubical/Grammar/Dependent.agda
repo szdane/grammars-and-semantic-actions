@@ -44,3 +44,7 @@ module _ {A : Type ℓS} {h : A → Grammar ℓH} where
 
   LinΣ-intro : ∀ a → h a ⊢ LinΣ[ a ∈ A ] h a
   LinΣ-intro = λ a w → _,_ a
+
+  -- isMono-LinΣ-intro : (a : A) → isMono (LinΣ-intro a)
+  -- isMono-LinΣ-intro a e e' !∘e=!∘e' =
+  --   funExt (λ w → funExt λ p → {!(cong (λ z → snd (z w p)) !∘e=!∘e')!})

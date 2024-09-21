@@ -5,6 +5,8 @@ open import Cubical.Foundations.Structure
 
 module Grammar.Properties (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Foundations.Cubes.Base
+
 open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.DecidablePropositions
 
@@ -17,6 +19,8 @@ open import Grammar.Base Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Bottom Alphabet
+open import Grammar.Literal Alphabet
+open import Grammar.Epsilon Alphabet
 open import Grammar.Negation Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.KleeneStar Alphabet
@@ -35,26 +39,45 @@ private
 
 open isStrongEquivalence
 
+-- A grammar is unambiguous if it is subterminal --- i.e.
+-- if the unique map to the terminal object (⊤) is a
+-- monomorphism
 unambiguous : Grammar ℓg → Typeω
 unambiguous {ℓg = ℓg} g = isMono {g = g}{h = ⊤} (⊤-intro {g = g})
 
-module _ where
+-- Follows from being subterminal: a grammar is unambiguous
+-- if there is at most one morhpism from any
+-- other fixed object into it
+-- This definition is likely easier to invoke in proofs
+unambiguous' : Grammar ℓg → Typeω
+unambiguous' g = ∀ {ℓh} {h : Grammar ℓh} → (e e' : h ⊢ g) → e ≡ e'
+
+unambiguous→unambiguous' : unambiguous g → unambiguous' g
+unambiguous→unambiguous' unambig e e' =
+  unambig e e'
+    (sym (is-terminal-⊤ .snd (⊤-intro ∘g e)) ∙
+         is-terminal-⊤ .snd (⊤-intro ∘g e') )
+
+unambiguous'→unambiguous : unambiguous' g → unambiguous g
+unambiguous'→unambiguous unambig' e e' ≡! = unambig' e e'
+
+module EXTERNAL where
   -- This is not intended to be used in the library
   -- This is the external notion of what we'd expected an unambiguous
   -- grammar to be, that each input string is parsed uniquely
 
-  unambiguous' : Grammar ℓg → Type ℓg
-  unambiguous' g = ∀ w → isProp (g w)
+  unambiguous-ext : Grammar ℓg → Type ℓg
+  unambiguous-ext g = ∀ w → isProp (g w)
 
-  unambiguous'→unambiguous : unambiguous' g → unambiguous g
-  unambiguous'→unambiguous {g = g} unambig' e e' _ =
+  unambiguous-ext→unambiguous : unambiguous-ext g → unambiguous g
+  unambiguous-ext→unambiguous {g = g} unambig' e e' _ =
     funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
 
   module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     opaque
       unfolding uniquely-supported-⌈w⌉ internalize ⊤
-      unambiguous→unambiguous' : unambiguous g → unambiguous' g
-      unambiguous→unambiguous' {g = g} unambig w pg pg' =
+      unambiguous→unambiguous-ext : unambiguous g → unambiguous-ext g
+      unambiguous→unambiguous-ext {g = g} unambig w pg pg' =
         isMono→injective unambig w pg pg' refl
         where
         pick-parse : ∀ w' (h : Grammar ℓh) → h w' → ⌈ w' ⌉ ⊢ h
@@ -115,43 +138,103 @@ unambiguous⊥ : unambiguous ⊥
 unambiguous⊥ {k = k} e e' !∘e≡!∘e' =
   is-initial→propHoms (g⊢⊥→is-initial e) _ _
 
--- Breaking abstractions to prove this.
--- Should be justified because the axiom we are adding
--- is "string ≅ ⊤", not just the existence of a map ⊤ ⊢ string
+opaque
+  unfolding ε literal
+  unambiguous-ext-string : EXTERNAL.unambiguous-ext string
+  unambiguous-ext-string [] (nil .[] x) (nil .[] y) =
+    cong (nil []) (isSetString _ _ _ _)
+  unambiguous-ext-string [] (nil .[] _) (cons .[] x) =
+    Empty.rec
+      (¬nil≡cons
+        (x .fst .snd ∙
+          cong (_++ x .fst .fst .snd)
+            (x .snd .fst .snd)))
+  unambiguous-ext-string [] (cons .[] x) _ =
+    Empty.rec
+      (¬nil≡cons
+        (x .fst .snd ∙
+          cong (_++ x .fst .fst .snd)
+            (x .snd .fst .snd)))
+  unambiguous-ext-string (c ∷ w) (nil .(c ∷ w) x) (nil .(c ∷ w) y) =
+    Empty.rec (¬nil≡cons (sym x))
+  unambiguous-ext-string (c ∷ w) (nil .(c ∷ w) x) (cons .(c ∷ w) y) =
+    Empty.rec (¬nil≡cons (sym x))
+  unambiguous-ext-string (c ∷ w) (cons .(c ∷ w) x) (nil .(c ∷ w) y) =
+    Empty.rec (¬nil≡cons (sym y))
+  unambiguous-ext-string (c ∷ w) (cons .(c ∷ w) x) (cons .(c ∷ w) y) =
+    cong (cons (c ∷ w))
+      (⊗≡ x y
+        (≡-× (x .snd .fst .snd ∙
+             cong ([_]) (sym c≡x₂₁₁ ∙ c≡y₂₁₁) ∙
+             sym (y .snd .fst .snd))
+             (sym w≡x₁₁₂ ∙ w≡y₁₁₂))
+        (ΣPathP ((ΣPathP
+          ((sym c≡x₂₁₁ ∙ c≡y₂₁₁) ,
+          isProp→PathP (λ i → isSetString _ _) _ _)) ,
+          isProp→PathP
+            (λ i → isProp-at-w'i i)
+            (x .snd .snd) (y .snd .snd))))
+    where
+      c≡x₂₁₁ : c ≡ x .snd .fst .fst
+      c≡x₂₁₁ =
+        cons-inj₁
+            (x .fst .snd ∙ cong (_++ x .fst .fst .snd) (x .snd .fst .snd))
+
+      c≡y₂₁₁ : c ≡ y .snd .fst .fst
+      c≡y₂₁₁ =
+        cons-inj₁
+            (y .fst .snd ∙ cong (_++ y .fst .fst .snd) (y .snd .fst .snd))
+
+      w≡x₁₁₂ : w ≡ x .fst .fst .snd
+      w≡x₁₁₂ =
+        cons-inj₂ (x .fst .snd ∙ (cong (_++ x .fst .fst .snd) (x .snd .fst .snd)) )
+
+      w≡y₁₁₂ : w ≡ y .fst .fst .snd
+      w≡y₁₁₂ =
+        cons-inj₂ (y .fst .snd ∙ (cong (_++ y .fst .fst .snd) (y .snd .fst .snd)) )
+
+      w' : x .fst .fst .snd ≡ y .fst .fst .snd
+      w' =
+        (λ i →
+        (≡-×
+        (x .snd .fst .snd ∙
+         (λ i₁ → [ ((λ i₂ → c≡x₂₁₁ (~ i₂)) ∙ c≡y₂₁₁) i₁ ]) ∙
+         (λ i₁ → y .snd .fst .snd (~ i₁)))
+        ((λ i₁ → w≡x₁₁₂ (~ i₁)) ∙ w≡y₁₁₂) i .snd))
+
+      isProp-at-w : isProp (KL* char w)
+      isProp-at-w = unambiguous-ext-string w
+
+      -- There has to be a nicer way to extract this goal out
+      -- from isProp (KL* char w) because w is equal to each of
+      -- the endpoints of w'
+      -- I guessed at what the path variables need to be below
+      -- and somehow it worked
+      isProp-at-w'i : (i : I) → isProp (KL* char (w' i))
+      isProp-at-w'i i =
+        transport
+        (cong (λ z → isProp (KL* char z))
+          (w≡x₁₁₂ ∙ (λ j → (w') (i ∧ j))))
+        isProp-at-w
+
+unambiguous-string : unambiguous string
+unambiguous-string =
+  EXTERNAL.unambiguous-ext→unambiguous unambiguous-ext-string
+
 string≅⊤ : StrongEquivalence string ⊤
 string≅⊤ .fun = ⊤-intro
 string≅⊤ .inv = ⊤→string
-string≅⊤ .sec = unambiguous⊤ _ _ {!!}
-string≅⊤ .ret = {!!}
-  -- funExt λ {
-  --   [] → funExt λ {
-  --     (KL*.nil .[] x) → cong (KL*.nil []) (isSetString [] [] refl x)
-  --   ; (KL*.cons .[] x) →
-  --     Empty.rec (¬nil≡cons (x .fst .snd ∙
-  --                          cong (_++ x .fst .fst .snd) (x .snd .fst .snd))) }
-  -- ; (c ∷ w) → funExt (λ {
-  --   (KL*.nil .(c ∷ w) x) → Empty.rec (¬cons≡nil x)
-  -- ; (KL*.cons .(c ∷ w) x) →
-  --   cong (KL*.cons (c ∷ w))
-  --     {!!}
-      -- (⊗≡ (((c ∷ [] , w) , (λ _ → c ∷ w)) , (c , (λ _ → c ∷ [])) , ⌈ w ⌉)
-      --   x
-      --   (≡-× (cong (_∷ [])
-      --     (cons-inj₁ (x .fst .snd ∙
-      --       cong (_++ x .fst .fst .snd) (x .snd .fst .snd))) ∙
-      --     sym (x .snd .fst .snd))
-      --     (cons-inj₂ (x .fst .snd ∙
-      --       cong (_++ x .fst .fst .snd) (x .snd .fst .snd))))
-      --     (isProp→PathP (λ _ → {!isSetString!}) ((c , (λ _ → c ∷ [])) , ⌈ w ⌉) (x .snd)))
-  -- }) }
+string≅⊤ .sec =
+  unambiguous→unambiguous' unambiguous⊤ _ _
+string≅⊤ .ret = unambiguous→unambiguous' unambiguous-string _ _
 
--- open isStrongEquivalence
--- unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
--- unambiguous≅ eq unambig-g =
---   Mono∘g {e = eq .inv} unambig-g
---     (isStrongEquivalence→isMono
---       (eq .inv) (isStrEq (eq .fun) (eq .ret) (eq .sec)))
-
--- unabmiguous-string : unambiguous string
--- unabmiguous-string =
---   unambiguous≅ (sym-strong-equivalence string≅⊤) unambiguous⊤
+open isStrongEquivalence
+opaque
+  unfolding ⊤-intro
+  unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
+  unambiguous≅ {g = g}{h = h} eq unambig-g e e' !≡ =
+    Mono∘g {h = g} {e = eq .inv} {e' = ⊤-intro {g = g}}
+      unambig-g
+      (isStrongEquivalence→isMono
+        (eq .inv) (isStrEq (eq .fun) (eq .ret) (eq .sec)))
+      e e' refl
