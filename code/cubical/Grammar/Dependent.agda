@@ -4,6 +4,8 @@ open import Cubical.Foundations.HLevels
 module Grammar.Dependent (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
+open import Cubical.Data.Sigma
+open import Cubical.Data.FinSet
 
 open import Cubical.Foundations.Structure
 
@@ -45,6 +47,15 @@ module _ {A : Type ℓS} {h : A → Grammar ℓH} where
   LinΣ-intro : ∀ a → h a ⊢ LinΣ[ a ∈ A ] h a
   LinΣ-intro = λ a w → _,_ a
 
-  -- isMono-LinΣ-intro : (a : A) → isMono (LinΣ-intro a)
-  -- isMono-LinΣ-intro a e e' !∘e=!∘e' =
-  --   funExt (λ w → funExt λ p → {!(cong (λ z → snd (z w p)) !∘e=!∘e')!})
+
+  module _
+    {isSetA : isSet A}
+    (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
+    where
+    isMono-LinΣ-intro : (a : A) → isMono (LinΣ-intro a)
+    isMono-LinΣ-intro a e e' !∘e=!∘e' =
+      funExt λ w → funExt λ p →
+        sym (transportRefl (e w p)) ∙
+        Σ-contractFst (refl , (isSetA _ _ _)) .fst
+          (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ !∘e=!∘e' w) p))
+

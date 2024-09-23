@@ -25,12 +25,13 @@ open import Grammar.Negation Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.KleeneStar Alphabet
 open import Grammar.String Alphabet
+open import Grammar.Dependent Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
+    ℓg ℓh ℓk ℓl ℓS : Level
     g : Grammar ℓg
     h : Grammar ℓh
     k : Grammar ℓk
@@ -111,7 +112,7 @@ opaque
   totallyParseable→unambiguous :
     totallyParseable g → unambiguous g
   totallyParseable→unambiguous parseable =
-    Mono∘g {e = ⊕-inl}
+    Mono∘g ⊕-inl _
       (isStrongEquivalence→isMono
         (parseable .snd .fun)
         (StrongEquivalence→isStrongEquivalence _ _ (parseable .snd)))
@@ -233,8 +234,27 @@ opaque
   unfolding ⊤-intro
   unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
   unambiguous≅ {g = g}{h = h} eq unambig-g e e' !≡ =
-    Mono∘g {h = g} {e = eq .inv} {e' = ⊤-intro {g = g}}
+    Mono∘g {h = g} (eq .inv) (⊤-intro {g = g})
       unambig-g
       (isStrongEquivalence→isMono
         (eq .inv) (isStrEq (eq .fun) (eq .ret) (eq .sec)))
       e e' refl
+
+module _
+  {A : Type ℓS} {h : A → Grammar ℓh}
+  {isSetA : isSet A}
+  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
+  where
+  unambiguousΣ :
+    unambiguous (LinΣ[ a ∈ A ] h a) →
+      (a : A)  → unambiguous (h a)
+  unambiguousΣ unambigΣ a f f' !≡ =
+    isMono-LinΣ-intro {A = A}{h = h}{isSetA = isSetA}
+      isFinSetAlphabet a
+      f f'
+      (unambigΣ (LinΣ-intro a ∘g f) (LinΣ-intro a ∘g f')
+        -- Need to change the endpoints of !≡ to line up with the
+        -- ⊤-intro at the proper domain
+        (unambiguous→unambiguous' unambiguous⊤ _ _ ∙
+        !≡ ∙
+        sym (unambiguous→unambiguous' unambiguous⊤ _ _)))

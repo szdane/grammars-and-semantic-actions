@@ -114,6 +114,12 @@ module BALANCED where
        x .snd .snd .snd .snd .snd .fst ,
        go (x .snd .snd .snd .snd .snd .snd) i)
 
+  ind' : ∀ {G : Algebra ℓg} →
+    (ϕ Ψ : Hom InitialAlgebra G) →
+    ϕ .fun  ≡ Ψ .fun
+  ind' ϕ Ψ = ind ϕ ∙ sym (ind Ψ)
+
+
 data RR1 : Grammar ℓ-zero where
   nil : ε ⊢ RR1
   balanced : RR1 ⊗ literal [ ⊗ RR1 ⊗ literal ] ⊢ RR1
@@ -236,6 +242,30 @@ module BALANCEDSTKTR where
   rec G .fun-leftovers = refl
   rec G .fun-unexpected] = refl
 
+  ind : ∀ {G : Algebra ℓg}{n}{b} →
+    (ϕ : Hom InitialAlgebra G) →
+    ϕ .fun {n = n}{b = b} ≡ rec G .fun {n = n}{b = b}
+  ind {G = G} ϕ = funExt λ w → funExt go
+    where
+    go : ∀ {w}{n}{b} → (x : BalancedStkTr n b w) →
+       ϕ .fun w x ≡ rec G .fun {n = n}{b = b} w x
+    go (eof _ x) = funExt⁻ (funExt⁻ (ϕ .fun-eof) _) _
+    go (open[ _ x) =
+      funExt⁻ (funExt⁻ (ϕ .fun-open[) _) _ ∙
+      λ i → G .[open] _ ((x .fst) , ((x .snd .fst) ,
+        (go (x .snd .snd) i)))
+    go (close] _ x) =
+      funExt⁻ (funExt⁻ (ϕ .fun-close]) _) _ ∙
+      λ i → G .[close] _ ((x .fst) , ((x .snd .fst) ,
+        (go (x .snd .snd) i)))
+    go (leftovers _ x) = funExt⁻ (funExt⁻ (ϕ .fun-leftovers) _) _
+    go (unexpected] _ x) = funExt⁻ (funExt⁻ (ϕ .fun-unexpected]) _) _
+
+  ind' : ∀ {G : Algebra ℓg}{n}{b} →
+    (ϕ Ψ : Hom InitialAlgebra G) →
+    ϕ .fun {n = n}{b = b} ≡ Ψ .fun {n = n}{b = b}
+  ind' ϕ Ψ = ind ϕ ∙ sym (ind Ψ)
+
 parseStkTr : string ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
 parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
   ; nil-case = LinΠ-intro (λ
@@ -264,21 +294,40 @@ parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
 -- decide : ∀ n → BalancedStk n ⊢ LinΣ[ b ∈ Bool ] BalancedStkTr n b
 -- decide = {!!}
 
+
+balanced-alg : BALANCED.Algebra _
+balanced-alg .BALANCED.U = LinΠ[ n ∈ ℕ ] (BalancedStkTr n true ⟜ BalancedStkTr n true)
+balanced-alg .BALANCED.[nil] = LinΠ-intro λ n → ⟜-intro-ε id
+balanced-alg .BALANCED.[balanced] = LinΠ-intro λ n → ⟜-intro {k = BalancedStkTr n true}
+  ((open[ ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app (suc n)) (close]
+    ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app n) id) ∘g ⊗-assoc⁻) ∘g ⊗-assoc⁻))
+    ∘g ⊗-assoc⁻)
+
 -- to turn an LL(0) tree of balanced parens into a trace, turn each
 -- subtree into a function that appends onto a balanced stack trace of
 -- arbitrary state without changing it.
 exhibitTrace : Balanced ⊢ BalancedStkTr zero true
 exhibitTrace =
   (((⟜-app ∘g id ,⊗ eof) ∘g ⊗-unit-r⁻) ∘g LinΠ-app zero)
-  ∘g BALANCED.fun (BALANCED.rec alg)
-  where
-  alg : BALANCED.Algebra _
-  alg .BALANCED.U = LinΠ[ n ∈ ℕ ] (BalancedStkTr n true ⟜ BalancedStkTr n true)
-  alg .BALANCED.[nil] = LinΠ-intro λ n → ⟜-intro-ε id
-  alg .BALANCED.[balanced] = LinΠ-intro λ n → ⟜-intro {k = BalancedStkTr n true}
-    ((open[ ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app (suc n)) (close]
-    ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app n) id) ∘g ⊗-assoc⁻) ∘g ⊗-assoc⁻))
-    ∘g ⊗-assoc⁻)
+  ∘g BALANCED.fun (BALANCED.rec balanced-alg)
+
+Stk : ℕ → Grammar _
+Stk = Nat.elim ε λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
+
+stk-tr-alg : BALANCEDSTKTR.Algebra _
+stk-tr-alg .BALANCEDSTKTR.U =
+  λ n → λ {
+    false → ⊤
+  ; true → Balanced ⊗ Stk n }
+stk-tr-alg .BALANCEDSTKTR.[eof] = nil ,⊗ id ∘g ⊗-unit-l⁻
+stk-tr-alg .BALANCEDSTKTR.[open] {n} {true} =
+  balanced ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ (⊗-assoc ∘g id ,⊗ ⊗-assoc)
+stk-tr-alg .BALANCEDSTKTR.[open] {n} {false} = ⊤-intro
+stk-tr-alg .BALANCEDSTKTR.[close] {n} {true} = nil ,⊗ id ∘g ⊗-unit-l⁻
+stk-tr-alg .BALANCEDSTKTR.[close] {n} {false} = ⊤-intro
+stk-tr-alg .BALANCEDSTKTR.[leftovers] = ⊤-intro
+stk-tr-alg .BALANCEDSTKTR.[unexpected] = ⊤-intro
+
 
 -- to translate from BST(0) to S we need to generalize the inductive hypothesis
 -- and pick a motive for BST(n) such that we can extract an S from a BST(0).
@@ -289,49 +338,8 @@ exhibitTrace =
 -- We can view this as a "stack" of parses marked by ] "delimiters"
 mkParseTree : BalancedStkTr zero true ⊢ Balanced
 mkParseTree =
-  done ∘g
-  BALANCEDSTKTR.rec
-    (record
-      { U = Motive'
-      ; [eof] = [eof]
-      ; [open] = λ {n} → λ {
-          {false} → ⊤-intro
-        ; {true} → [open] {n} }
-      ; [close] = λ {n} → λ {
-          {false} → ⊤-intro
-        ; {true} → [close] {n} }
-      ; [leftovers] = ⊤-intro
-      ; [unexpected] = ⊤-intro
-      })
-    .BALANCEDSTKTR.Hom.fun
-  where
-  Stk : ℕ → Grammar _
-  Stk = Nat.elim ε λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
-  -- our state is a "current" Balanced expr that we are building, as
-  -- well as a stack of ]-separated balanced exprs that are waiting to
-  -- be completed
-  Motive : ℕ → Grammar _
-  Motive n = Balanced ⊗ Stk n
-
-  Motive' : ℕ → Bool → Grammar _
-  Motive' n false = ⊤
-  Motive' n true = Motive n
-
-  -- we initialize the current expression to be the empty parse
-  [eof] : ε ⊢ Motive zero
-  [eof] = ⊗-intro nil id ∘g ⊗-unit-l⁻
-  -- when we see a close paren, we push it and the current expression
-  -- onto the stack and initialize the new current exp to be empty
-  [close] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
-  [close] {n} = ⊗-intro nil id ∘g ⊗-unit-l⁻
-  -- when we see an open paren, we combine the current balanced exp
-  -- with the top frame which we pop off of the stack
-  [open] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
-  [open] = ⊗-intro balanced id ∘g ⊗-assoc ∘g
-    ⊗-intro id (⊗-assoc ∘g ⊗-intro id ⊗-assoc)
-
-  done : Motive 0 ⊢ Balanced
-  done = ⊗-unit-r
+  ⊗-unit-r ∘g
+  BALANCEDSTKTR.rec stk-tr-alg .BALANCEDSTKTR.Hom.fun
 
 open StrongEquivalence
 BalancedStkTr≅string :
@@ -352,19 +360,71 @@ BalancedStkTr≅string n .fun =
         })
       .BALANCEDSTKTR.Hom.fun)
 BalancedStkTr≅string n .inv = LinΠ-app n ∘g parseStkTr
-BalancedStkTr≅string n .sec = {!!} -- string to string
-BalancedStkTr≅string n .ret = {!!}
+BalancedStkTr≅string n .sec =
+  unambiguous→unambiguous' unambiguous-string _ _
+-- Goal: (LinΠ-app n ∘g parseStkTr) ∘g
+--       LinΣ-elim
+--       (λ b →
+--          BALANCEDSTKTR.rec'
+--          (record
+--           { U = λ _ _ → string
+--           ; [eof] = KL*.nil
+--           ; [open] = KL*.cons ∘g LinΣ-intro [ ,⊗ id
+--           ; [close] = KL*.cons ∘g LinΣ-intro ] ,⊗ id
+--           ; [leftovers] = KL*.nil
+--           ; [unexpected] = KL*.cons ∘g LinΣ-intro ] ,⊗ ⊤→string
+--           }))
+--       ≡ id
+BalancedStkTr≅string n .ret =
+  {!!}
+  -- (λ i →
+  --   LinΠ-app n ∘g
+  --   parseStkTr ∘g
+  --   LinΣ-elim (λ b → {!BALANCEDSTKTR.ind' {G = }!})) ∙
+  -- {!!}
 
-unambiguous-BalancedStkTr : ∀ n → unambiguous (LinΣ[ b ∈ Bool ] BalancedStkTr n b)
-unambiguous-BalancedStkTr n = unambiguous≅ (sym-strong-equivalence (BalancedStkTr≅string n)) unambiguous-string
+unambiguous-BalancedStkTr : ∀ n →
+  unambiguous (LinΣ[ b ∈ Bool ] BalancedStkTr n b)
+unambiguous-BalancedStkTr n =
+  unambiguous≅
+    (sym-strong-equivalence
+      (BalancedStkTr≅string n))
+    unambiguous-string
 
-module _ {ℓS}{ℓH}{A : Type ℓS} {h : A → Grammar ℓH} where
-  unambiguousΣ : unambiguous (LinΣ[ a ∈ A ] h a) → (a : A) → unambiguous (h a)
-  unambiguousΣ unambigΣ a e e' p = {!!}
-
--- TODO: show this is a *strong* equivalence!
 Balanced≅ : StrongEquivalence Balanced (BalancedStkTr zero true)
 Balanced≅ .fun = exhibitTrace
 Balanced≅ .inv = mkParseTree
-Balanced≅ .sec = unambiguousΣ (unambiguous-BalancedStkTr zero) true _ _ {!!}
-Balanced≅ .ret = {!!} -- use ind
+Balanced≅ .sec =
+  unambiguous→unambiguous'
+    (unambiguousΣ {isSetA = isSetBool} isFinBracket (unambiguous-BalancedStkTr zero) true)
+    _
+    _
+Balanced≅ .ret =
+  BALANCED.ind'
+    {!record
+     { fun =
+         λ w →
+           (Grammar.Equivalence.Base.StrongEquivalence.inv Balanced≅ ∘g
+            Grammar.Equivalence.Base.StrongEquivalence.fun Balanced≅)
+           w
+     ; fun-nil = _
+     ; fun-balanced = _
+     }!}
+    (record { fun = λ w → id w ; fun-nil = _ ; fun-balanced = _ })
+  --   (record {
+  --   fun = mkParseTree ∘g
+  --     ⟜-app ∘g id ,⊗ eof ∘g
+  --     ⊗-unit-r⁻ ∘g LinΠ-app zero
+  -- ; fun-nil =
+  --   ⊗-unit-r ∘g
+  --   BALANCEDSTKTR.rec stk-tr-alg .BALANCEDSTKTR.Hom.fun ∘g
+  --   ⟜-app ∘g
+  --   id ,⊗ eof ∘g ⊗-unit-r⁻ ∘g
+  --   -- nil ,⊗ id ∘g ⊗-unit-l⁻
+  --   ⟜-intro-ε id
+  --     ≡⟨ {!!} ⟩
+  --   BALANCED.InitialAlgebra .BALANCED.[nil] ∎
+  -- ; fun-balanced = {!!} }
+  -- BALANCED.∘hom
+  --   BALANCED.rec balanced-alg)
+  --   BALANCED.idHom
