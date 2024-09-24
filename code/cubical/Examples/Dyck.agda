@@ -244,7 +244,7 @@ module BALANCEDSTKTR where
 
   ind : ∀ {G : Algebra ℓg}{n}{b} →
     (ϕ : Hom InitialAlgebra G) →
-    ϕ .fun {n = n}{b = b} ≡ rec G .fun {n = n}{b = b}
+    ϕ .fun {n = n}{b = b} ≡ rec' G {n = n}{b = b}
   ind {G = G} ϕ = funExt λ w → funExt go
     where
     go : ∀ {w}{n}{b} → (x : BalancedStkTr n b w) →
@@ -377,11 +377,14 @@ BalancedStkTr≅string n .sec =
 --       ≡ id
 BalancedStkTr≅string n .ret =
   {!!}
-  -- (λ i →
-  --   LinΠ-app n ∘g
-  --   parseStkTr ∘g
-  --   LinΣ-elim (λ b → {!BALANCEDSTKTR.ind' {G = }!})) ∙
-  -- {!!}
+  where
+  ΣUMP : ∀ {ℓS}{ℓG}{ℓH} →
+    {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} →
+    Iso (∀ (a : A) → h a ⊢ g) (LinΣ[ a ∈ A ] h a ⊢ g)
+  ΣUMP =
+    iso LinΣ-elim (λ f a → f ∘g LinΣ-intro a)
+    (λ _ → refl)
+    (λ _ → refl)
 
 unambiguous-BalancedStkTr : ∀ n →
   unambiguous (LinΣ[ b ∈ Bool ] BalancedStkTr n b)
@@ -401,30 +404,70 @@ Balanced≅ .sec =
     _
 Balanced≅ .ret =
   BALANCED.ind'
-    {!record
-     { fun =
-         λ w →
-           (Grammar.Equivalence.Base.StrongEquivalence.inv Balanced≅ ∘g
-            Grammar.Equivalence.Base.StrongEquivalence.fun Balanced≅)
-           w
-     ; fun-nil = _
-     ; fun-balanced = _
-     }!}
-    (record { fun = λ w → id w ; fun-nil = _ ; fun-balanced = _ })
-  --   (record {
-  --   fun = mkParseTree ∘g
-  --     ⟜-app ∘g id ,⊗ eof ∘g
-  --     ⊗-unit-r⁻ ∘g LinΠ-app zero
-  -- ; fun-nil =
-  --   ⊗-unit-r ∘g
-  --   BALANCEDSTKTR.rec stk-tr-alg .BALANCEDSTKTR.Hom.fun ∘g
-  --   ⟜-app ∘g
-  --   id ,⊗ eof ∘g ⊗-unit-r⁻ ∘g
-  --   -- nil ,⊗ id ∘g ⊗-unit-l⁻
-  --   ⟜-intro-ε id
-  --     ≡⟨ {!!} ⟩
-  --   BALANCED.InitialAlgebra .BALANCED.[nil] ∎
-  -- ; fun-balanced = {!!} }
-  -- BALANCED.∘hom
-  --   BALANCED.rec balanced-alg)
-  --   BALANCED.idHom
+    (record {
+      fun =
+        mkParseTree ∘g
+        ⟜-app ∘g
+        id ,⊗ eof ∘g
+        ⊗-unit-r⁻ ∘g
+        LinΠ-app zero
+    ; fun-nil =
+      ⊗-unit-r ∘g
+      BALANCEDSTKTR.rec stk-tr-alg .BALANCEDSTKTR.Hom.fun ∘g
+      ⟜-app ∘g
+      id ,⊗ BalancedStkTr.eof ∘g
+      ⊗-unit-r⁻ ∘g
+      ⟜-intro-ε {g = BalancedStkTr zero true} id
+        ≡⟨ cong
+          ((⊗-unit-r ∘g
+            BALANCEDSTKTR.rec stk-tr-alg .BALANCEDSTKTR.Hom.fun) ∘g_) p ⟩
+      ⊗-unit-r ∘g
+      BALANCEDSTKTR.rec stk-tr-alg .BALANCEDSTKTR.Hom.fun ∘g
+      eof
+        ≡⟨ refl ⟩
+      ⊗-unit-r ∘g
+      nil ,⊗ id ∘g
+      ⊗-unit-l⁻
+        ≡⟨ q ⟩
+      nil
+      ∎
+    ; fun-balanced =
+      ⊗-unit-r ∘g
+      BALANCEDSTKTR.rec stk-tr-alg .BALANCEDSTKTR.Hom.fun ∘g
+       ⟜-app ∘g id ,⊗ eof ∘g ⊗-unit-r⁻ ∘g
+        ⟜-intro
+        (BalancedStkTr.open[
+        ∘g
+        ⊗-intro id
+          (⟜-app ∘g
+            ⊗-intro
+              (LinΠ-app (suc zero))
+              (BalancedStkTr.close] ∘g
+                ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app zero) id) ∘g ⊗-assoc⁻)
+            ∘g ⊗-assoc⁻)
+          ∘g ⊗-assoc⁻)
+        ≡⟨ {!!} ⟩
+      balanced ∘g
+       id ,⊗
+       (mkParseTree ∘g ⟜-app ∘g id ,⊗ eof ∘g ⊗-unit-r⁻ ∘g LinΠ-app zero)
+       ,⊗
+       id ,⊗
+       (mkParseTree ∘g ⟜-app ∘g id ,⊗ eof ∘g ⊗-unit-r⁻ ∘g LinΠ-app zero)
+      ∎
+    }
+      BALANCED.∘hom
+    BALANCED.rec balanced-alg)
+    BALANCED.idHom
+  where
+  p :
+    ⟜-app ∘g
+    id ,⊗ BalancedStkTr.eof ∘g
+    ⊗-unit-r⁻ ∘g
+    ⟜-intro-ε {g = BalancedStkTr zero true} id
+      ≡
+    eof
+  p = {!!}
+
+  -- s
+  q : ⊗-unit-r ∘g nil ,⊗ id ∘g ⊗-unit-l⁻ ≡ nil
+  q = {!!}
