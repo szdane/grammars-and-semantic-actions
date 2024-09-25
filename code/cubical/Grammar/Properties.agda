@@ -17,8 +17,12 @@ open import Grammar.Base Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Bottom Alphabet
+open import Grammar.Epsilon Alphabet
 open import Grammar.Negation Alphabet
+open import Grammar.Literal Alphabet
 open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.KleeneStar Alphabet
 open import Grammar.String Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -115,6 +119,16 @@ unambiguous⊥ : unambiguous ⊥
 unambiguous⊥ {k = k} e e' !∘e≡!∘e' =
   is-initial→propHoms (g⊢⊥→is-initial e) _ _
 
+-- TODO this changes to unambiguous-ext
+opaque
+  unfolding ε
+  unambiguousε : unambiguous ε
+  unambiguousε = unambiguous'→unambiguous (λ w → isSetString w [])
+opaque
+  unfolding literal
+  unambiguous-literal : (c : ⟨ Alphabet ⟩) → unambiguous (literal c)
+  unambiguous-literal c = unambiguous'→unambiguous (λ w → isSetString w [ c ])
+
 -- Breaking abstractions to prove this.
 -- Should be justified because the axiom we are adding
 -- is "string ≅ ⊤", not just the existence of a map ⊤ ⊢ string
@@ -155,3 +169,44 @@ string≅⊤ .ret = {!!}
 -- unabmiguous-string : unambiguous string
 -- unabmiguous-string =
 --   unambiguous≅ (sym-strong-equivalence string≅⊤) unambiguous⊤
+
+_∉first_ : (c : ⟨ Alphabet ⟩) → (g : Grammar ℓg) → Type ℓg
+c ∉first g = (literal c ⊗ ⊤) & g ⊢ ⊥
+
+_∉last_ : (c : ⟨ Alphabet ⟩) → (g : Grammar ℓg) → Type ℓg
+c ∉last g = (⊤ ⊗ literal c) & g ⊢ ⊥
+
+nonempty : Grammar ℓg → Grammar ℓg
+nonempty g = (char ⊗ ⊤) & g
+
+first : Grammar ℓg → Grammar ℓg
+first g = g ⟜ (char ⊸ g)
+
+opaque
+  unfolding _⊸_ _⟜_ literal
+  get-first : (c : ⟨ Alphabet ⟩) (w : String) → g (c ∷ w) → (first g) [ c ]
+  get-first c w p w' p⊸ = p⊸ (c ∷ []) (c , refl)
+
+last : Grammar ℓg → Grammar ℓg
+last g = (g ⟜ char) ⊸ g
+
+followlast : Grammar ℓg → Grammar ℓg
+followlast g = (nonempty g ⊸ g) ⟜ g
+
+disjoint : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
+disjoint g h = g & h ⊢ ⊥
+
+nullable : Grammar ℓg → Type ℓg
+nullable g = ε ⊢ g
+
+¬nullable : Grammar ℓg → Type ℓg
+¬nullable g = disjoint g ε
+
+opaque
+  unfolding literal ε _&_
+  literal¬nullable : (c : ⟨ Alphabet ⟩) → ¬nullable (literal c)
+  literal¬nullable c w x = Empty.rec (¬cons≡nil (sym (x .fst) ∙ x .snd))
+
+_∉followlast_ : (c : ⟨ Alphabet ⟩) → (g : Grammar ℓg) → Type ℓg
+c ∉followlast g = (nonempty g) ⊗ literal c ⊗ g ⊢ ⊥
+
