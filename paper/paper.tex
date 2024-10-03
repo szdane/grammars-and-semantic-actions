@@ -21,6 +21,8 @@
 \newcommand{\Var}{\mathsf{Var}}
 \newcommand{\K}{\mathsf{K}}
 \newcommand{\map}{\mathsf{map}}
+\newcommand{\roll}{\mathsf{roll}}
+\newcommand{\fold}{\mathsf{fold}}
 \newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
@@ -494,8 +496,23 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     {\Gamma; \Delta \vdash \mathsf{roll}\, e : \mu\,A\, M}
 
     \inferrule*[right=IndElim]
+    {\Gamma;\Delta \vdash e : \mu A M\and
+     \Gamma,x:X;b:\el(A\,x)\,B \vdash f : B\,x
+    }
+    {\Gamma; \Delta \vdash \mathsf{fold}(A)(x.b.f)(M, e) : B\,M}
+
+    \inferrule*[right=Ind$\beta$]
     {}
-    {\Gamma; \Delta \vdash \mathsf{fold}(x.b.f)(M, e) : B\,M}
+    {\fold(A)(x.b.f)(M, \roll(e)) =
+      f[M/x][\map(A\,M)\,(y.a.\fold(A)(x.b.f)(y,a))\,e/b]}
+
+    \inferrule*[right=Ind$\eta$]
+    {\Gamma,x:X; a:\mu\,A\,x \vdash e' : B\,x
+      \and \Gamma;\Delta \vdash e : \mu A M\\\\
+      \Gamma,x:X; a':\el(A x)(\mu A) \vdash
+      e'[x/x][\roll(a')/a] = f[x/x][\map(A\,x)\,(y.a.e'[y/x][a/a])\,a/b] : B\,x
+    }
+    {\Gamma; \Delta \vdash \fold(A)(x.b.f)(M,e) = e'[M/x][e/a] : B\,M}
   \end{mathpar}
   \caption{Indexed Inductive Linear Types}
 \end{figure}

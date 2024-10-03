@@ -20,12 +20,14 @@ module _ where
     &e ⊕e : ∀ (B : Type ℓ) → (F : B → Functor A) → Functor A
     ⊗e : (F : Functor A) → (F' : Functor A) → Functor A
 
+  _⊗e'_ : {A : Type ℓ} → Functor A → Functor A → Functor A
+  _⊗e'_ = ⊗e
   ⟦_⟧ : {A : Type ℓ} → Functor A → (A → Grammar ℓ) → Grammar ℓ
   ⟦ k h ⟧ g = h
   ⟦ Var a ⟧ g = g a
   ⟦ &e B F ⟧ g = &[ b ∈ B ] ⟦ F b ⟧ g
   ⟦ ⊕e B F ⟧ g = ⊕[ b ∈ B ] ⟦ F b ⟧ g
-  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗' ⟦ F' ⟧ g
+  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
 
   module _ {A : Type ℓ} where
     opaque
@@ -55,6 +57,7 @@ module _ where
       map-∘ (⊕e B F) f f' i = LinΣ-elim (λ a → LinΣ-intro a ∘g map-∘ (F a) f f' i)
       map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
+    {-# NO_POSITIVITY_CHECK #-}
     data μ (F : A → Functor A) a : Grammar ℓ where
       roll : ⟦ F a ⟧ (μ F) ⊢ μ F a
 
@@ -89,6 +92,10 @@ module _ where
 
     rec : ∀ {g} → (α : Algebra g) → ∀ a → (μ F a) ⊢ g a
     rec α = recHomo α .fst
+
+    rec-β : ∀ {g} → (α : Algebra g) → ∀ a →
+      rec α a ∘g roll ≡ α a ∘g map (F a) (rec α)
+    rec-β α a = refl
 
     module _ {g} (α : Algebra g) (ϕ : Homomorphism initialAlgebra α) where
       private
