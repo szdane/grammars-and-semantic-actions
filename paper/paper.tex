@@ -517,20 +517,6 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
   \caption{Indexed Inductive Linear Types}
 \end{figure}
 
-\begin{figure}
-  \begin{mathpar}
-    \begin{array}{rcl}
-      \textrm{non-linear types} X,Y,Z & ::= & \textrm{Empty}\pipe\textrm{Unit}\pipe\textrm{Bool}\pipe\textrm{Nat}
-      \pipe \sum_{x:X} Y \pipe \prod_{x:X}Y\pipe \textrm{SPF}\,X \pipe \cdots \max{also eliminators...}\\
-      \textrm{linear types} A,B,C & ::= & c \pipe I \pipe A \otimes B \pipe A \lto B \pipe B \tol A
-      \pipe \bigoplus_{x:X} A \pipe \bigamp_{x:X} A \pipe \mu e e'\\
-      \textrm{non-linear terms} M,N,O & ::= & \cdots\\
-      \textrm{linear terms} 
-    \end{array}
-  \end{mathpar}
-  \caption{Syntax of Types and Terms}
-\end{figure}
-
 Omission of the structural rules of a deductive system, such as in
 linear logic \cite{GIRARD19871}, offers precise control over how a value is used
 in a derivation. Linear logic omits the weakening and contraction rules
@@ -766,6 +752,8 @@ types is standard, so below we focus on the linear syntax.
   \inferrule{\Gamma \vdash e \equiv e' : X}{\Gamma \vdash \mathsf{refl} : e =_X e'}
   \and
   \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash \mathsf G e : \mathsf G A}
+
+  \textrm{TODO: inductive types (boolean, nat) with their eliminators allowed in }
   \end{mathpar}
   \caption{Intuitionistic typing}
   \label{fig:inttyping}
