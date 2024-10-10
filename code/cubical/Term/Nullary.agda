@@ -5,7 +5,7 @@ module Term.Nullary (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
 open import Grammar.Base Alphabet
-open import Term.Base Alphabet
+-- open import Term.Base Alphabet
 
 private
   variable
@@ -24,5 +24,5 @@ Element g = g []
 ε⊢ : Grammar ℓg → Type _
 ε⊢ = Element
 
-_∘ε_ : g ⊢ h → ε⊢ g → ε⊢ h
+_∘ε_ : [ g ] ⊢ h → ε⊢ g → ε⊢ h
 (f ∘ε gp) = f [] gp

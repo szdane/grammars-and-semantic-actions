@@ -34,201 +34,200 @@ opaque
   infixl 2 _⟜_
 
   ⊸-intro :
-    g ⊗ h ⊢ k →
-    h ⊢ g ⊸ k
-  ⊸-intro e _ p w' q =
-    e _ ((_ , refl) , (q , p))
+    g ∷ h ∷ []  ⊢ k →
+    [ h ] ⊢ g ⊸ k
+  ⊸-intro e w p w' q = e (w' , w) (q , p)
 
   ⊸-app :
-    g ⊗ (g ⊸ h) ⊢ h
-  ⊸-app {h = h} _ p = subst h (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
+     g ∷ g ⊸ h ∷ [] ⊢ h
+  ⊸-app (w , w') (pg , pf) = pf w pg
 
-  ⊸-intro' :
-    g ,, h ⊢ k →
-    h ⊢ g ⊸ k
-  ⊸-intro' f w' p w q = f w w' q p
+  ⊸-intro⁻ :
+    [ g ] ⊢ h ⊸ k →
+    h ∷ g ∷ [] ⊢ k
+  ⊸-intro⁻ {h = h}{k = k} f = {!⊸-app!} ∘g {!!}
+  -- ⊸-app ∘g (⊗-intro (id {g = h}) f)
 
-  ⊸-app' :
-    g ,, (g ⊸ k) ⊢ k
-  ⊸-app' w1 w2 gp f = f w1 gp
+--   ⊸-intro' :
+--     g ,, h ⊢ k →
+--     h ⊢ g ⊸ k
+--   ⊸-intro' f w' p w q = f w w' q p
 
-  -- this makes me think we don't want ⊸-app' and ⊸-intro' to be opaque...
-  ⊸-β' :
-    ∀ (f : g ,, h ⊢ k) →
-    _b∘r_ {h = g ⊸ k}{k = k} ⊸-app' (⊸-intro' f) ≡ f
-  ⊸-β' f = refl
+--   ⊸-app' :
+--     g ,, (g ⊸ k) ⊢ k
+--   ⊸-app' w1 w2 gp f = f w1 gp
 
-  ⊸-η' :
-    ∀ (f : h ⊢ g ⊸ k) →
-    f ≡ ⊸-intro' (_b∘r_ {h = g ⊸ k}{k = k} ⊸-app' f)
-  ⊸-η' f = refl
+--   -- this makes me think we don't want ⊸-app' and ⊸-intro' to be opaque...
+--   ⊸-β' :
+--     ∀ (f : g ,, h ⊢ k) →
+--     _b∘r_ {h = g ⊸ k}{k = k} ⊸-app' (⊸-intro' f) ≡ f
+--   ⊸-β' f = refl
 
+--   ⊸-η' :
+--     ∀ (f : h ⊢ g ⊸ k) →
+--     f ≡ ⊸-intro' (_b∘r_ {h = g ⊸ k}{k = k} ⊸-app' f)
+--   ⊸-η' f = refl
 
-⊸-intro-ε :
-  g ⊢ k → ε ⊢ g ⊸ k
-⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
-
-⊸-intro⁻ :
-  g ⊢ h ⊸ k →
-  h ⊗ g ⊢ k
-⊸-intro⁻ {h = h}{k = k} f =
-  ⊸-app ∘g (⊗-intro (id {g = h}) f)
-
-opaque
-  unfolding _⊸_ _⊗_ ⊗-intro
-  ⊸-intro∘⊸-intro⁻≡id :
-    (e : g ⊢ h ⊸ k) →
-    ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
-  ⊸-intro∘⊸-intro⁻≡id e = funExt λ w → funExt λ pg →
-    funExt λ w' → funExt λ ph → transportRefl _
-
-  ⊸-intro⁻∘⊸-intro≡id :
-    (e : g ⊗ h ⊢ k) →
-    ⊸-intro⁻ {g = h}{h = g}{k = k}(⊸-intro e) ≡ e
-  ⊸-intro⁻∘⊸-intro≡id {k = k} e = funExt λ w → funExt λ p⊗ →
-    fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-      (⊗PathP (≡-× refl refl) (≡-× refl refl)))
+-- ⊸-intro-ε :
+--   g ⊢ k → ε ⊢ g ⊸ k
+-- ⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
 
 
-  ⊸-strength :
-    (g ⊸ h) ⊗ k ⊢ g ⊸ (h ⊗ k)
-  ⊸-strength {g = g}{h = h}{k = k} =
-    ⊸-intro {g = g}{h = (g ⊸ h) ⊗ k}{k = h ⊗ k}
-      (⊗-assoc ⋆ ⊗-intro ⊸-app id)
+-- opaque
+--   unfolding _⊸_ _⊗_ ⊗-intro
+--   ⊸-intro∘⊸-intro⁻≡id :
+--     (e : g ⊢ h ⊸ k) →
+--     ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
+--   ⊸-intro∘⊸-intro⁻≡id e = funExt λ w → funExt λ pg →
+--     funExt λ w' → funExt λ ph → transportRefl _
 
-  -- THE ORDER SWAPS!
-  ⊸-curry :
-    (g ⊗ h) ⊸ k ⊢ h ⊸ (g ⊸ k)
-  ⊸-curry {g = g}{k = k} =
-    ⊸-intro {k = g ⊸ k} (⊸-intro {k = k} (⊸-app ∘g ⊗-assoc))
-
-  ⊸-β :
-    (m : (g ⊗ h) ⊢ k) →
-    (⊸-intro⁻ {g = h}{h = g}{k = k} (⊸-intro {g = g}{h = h}{k = k} m))
-      ≡
-    m
-  ⊸-β {k = k} m = funExt (λ w → funExt (λ p⊗ →
-    fromPathP {A = λ i → k (p⊗ .fst .snd (~ i))}
-      (congP (λ _ → m _) (⊗PathP refl refl))))
-
-  ⊸-η :
-    (f : g ⊢ h ⊸ k) →
-    f
-      ≡
-    (⊸-intro {g = h}{h = g}{k = k} (⊸-intro⁻ {g = g}{h = h}{k = k} f))
-  ⊸-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
-    (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
+--   ⊸-intro⁻∘⊸-intro≡id :
+--     (e : g ⊗ h ⊢ k) →
+--     ⊸-intro⁻ {g = h}{h = g}{k = k}(⊸-intro e) ≡ e
+--   ⊸-intro⁻∘⊸-intro≡id {k = k} e = funExt λ w → funExt λ p⊗ →
+--     fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
+--       (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
 
-  ⟜-intro :
-    g ⊗ h ⊢  k →
-    g ⊢ k ⟜ h
-  ⟜-intro e _ p w' q =
-    e _ ((_ , refl) , p , q)
+--   ⊸-strength :
+--     (g ⊸ h) ⊗ k ⊢ g ⊸ (h ⊗ k)
+--   ⊸-strength {g = g}{h = h}{k = k} =
+--     ⊸-intro {g = g}{h = (g ⊸ h) ⊗ k}{k = h ⊗ k}
+--       (⊗-assoc ⋆ ⊗-intro ⊸-app id)
 
-  ⟜-app :
-    (g ⟜ h) ⊗ h ⊢ g
-  ⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
-    subst g (sym w≡w'++w'') (f _ inp)
+--   -- THE ORDER SWAPS!
+--   ⊸-curry :
+--     (g ⊗ h) ⊸ k ⊢ h ⊸ (g ⊸ k)
+--   ⊸-curry {g = g}{k = k} =
+--     ⊸-intro {k = g ⊸ k} (⊸-intro {k = k} (⊸-app ∘g ⊗-assoc))
 
-  ⟜-intro' :
-    g ,, h ⊢ k
-    → g ⊢ k ⟜ h
-  ⟜-intro' f w x w' x₁ = f w w' x x₁
-  ⟜-app' :
-    (g ⟜ h) ,, h ⊢ g
-  ⟜-app' w w' fp hp = fp w' hp
-  ⟜-β' :
-    ∀ (f : g ,, h ⊢ k) →
-    _b∘l_ {g = k ⟜ h}{k = k} ⟜-app' (⟜-intro' f) ≡ f
-  ⟜-β' f = refl
+--   ⊸-β :
+--     (m : (g ⊗ h) ⊢ k) →
+--     (⊸-intro⁻ {g = h}{h = g}{k = k} (⊸-intro {g = g}{h = h}{k = k} m))
+--       ≡
+--     m
+--   ⊸-β {k = k} m = funExt (λ w → funExt (λ p⊗ →
+--     fromPathP {A = λ i → k (p⊗ .fst .snd (~ i))}
+--       (congP (λ _ → m _) (⊗PathP refl refl))))
 
-  ⟜-η' :
-    ∀ (f : g ⊢ k ⟜ h) →
-    f ≡ ⟜-intro' (_b∘l_ {g = k ⟜ h}{k = k} ⟜-app' f)
-  ⟜-η' f = refl
+--   ⊸-η :
+--     (f : g ⊢ h ⊸ k) →
+--     f
+--       ≡
+--     (⊸-intro {g = h}{h = g}{k = k} (⊸-intro⁻ {g = g}{h = h}{k = k} f))
+--   ⊸-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
+--     (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
 
-⟜-intro⁻ :
-  g ⊢ h ⟜ k →
-  g ⊗ k ⊢ h
-⟜-intro⁻ {h = h}{k = k} f =
-  ⟜-app ∘g ⊗-intro f (id {g = k})
 
-opaque
-  unfolding _⟜_ ⟜-intro
-  ⟜-η :
-    (e : g ⊢ h ⟜ k) →
-    ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e
-  ⟜-η e = funExt λ w → funExt λ pg →
-    funExt λ w' → funExt λ pk → transportRefl _
+--   ⟜-intro :
+--     g ⊗ h ⊢  k →
+--     g ⊢ k ⟜ h
+--   ⟜-intro e _ p w' q =
+--     e _ ((_ , refl) , p , q)
 
-  ⟜-β :
-    (e : g ⊗ h ⊢ k) →
-    ⟜-intro⁻ {g = g}{h = k}{k = h}(⟜-intro e) ≡ e
-  ⟜-β e = funExt λ w → funExt λ p⊗ →
-    fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-      (⊗PathP refl refl))
+--   ⟜-app :
+--     (g ⟜ h) ⊗ h ⊢ g
+--   ⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
+--     subst g (sym w≡w'++w'') (f _ inp)
 
--- THE ORDER SWAPS!
-⟜-mapCod : k ⊢ l → k ⟜ g ⊢ l ⟜ g
-⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
+--   ⟜-intro' :
+--     g ,, h ⊢ k
+--     → g ⊢ k ⟜ h
+--   ⟜-intro' f w x w' x₁ = f w w' x x₁
+--   ⟜-app' :
+--     (g ⟜ h) ,, h ⊢ g
+--   ⟜-app' w w' fp hp = fp w' hp
+--   ⟜-β' :
+--     ∀ (f : g ,, h ⊢ k) →
+--     _b∘l_ {g = k ⟜ h}{k = k} ⟜-app' (⟜-intro' f) ≡ f
+--   ⟜-β' f = refl
 
-⟜-curry :
-  k ⟜ (g ⊗ h) ⊢ k ⟜ h ⟜ g
-⟜-curry {k = k} = ⟜-intro (⟜-intro {k = k} (⟜-app ∘g ⊗-assoc⁻))
+--   ⟜-η' :
+--     ∀ (f : g ⊢ k ⟜ h) →
+--     f ≡ ⟜-intro' (_b∘l_ {g = k ⟜ h}{k = k} ⟜-app' f)
+--   ⟜-η' f = refl
 
-⟜-intro-ε :
-  g ⊢ k → ε ⊢ k ⟜ g
-⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-l)
+-- ⟜-intro⁻ :
+--   g ⊢ h ⟜ k →
+--   g ⊗ k ⊢ h
+-- ⟜-intro⁻ {h = h}{k = k} f =
+--   ⟜-app ∘g ⊗-intro f (id {g = k})
 
-⟜2-intro-ε :
-  g1 ⊗ g2 ⊢ k → ε ⊢ k ⟜ g2 ⟜ g1
-⟜2-intro-ε {k = k} f = ⟜-curry {k = k} ∘g ⟜-intro-ε f
+-- opaque
+--   unfolding _⟜_ ⟜-intro
+--   ⟜-η :
+--     (e : g ⊢ h ⟜ k) →
+--     ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e
+--   ⟜-η e = funExt λ w → funExt λ pg →
+--     funExt λ w' → funExt λ pk → transportRefl _
 
-⟜3-intro-ε :
-  g1 ⊗ g2 ⊗ g3 ⊢ k → ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1
-⟜3-intro-ε {k = k} f =
-  ⟜-mapCod (⟜-curry {k = k})
-  ∘g ⟜2-intro-ε f
+--   ⟜-β :
+--     (e : g ⊗ h ⊢ k) →
+--     ⟜-intro⁻ {g = g}{h = k}{k = h}(⟜-intro e) ≡ e
+--   ⟜-β e = funExt λ w → funExt λ p⊗ →
+--     fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
+--       (⊗PathP refl refl))
 
-⟜4-intro-ε :
-  g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊢ k → ε ⊢ k ⟜ g4 ⟜ g3 ⟜ g2 ⟜ g1
-⟜4-intro-ε {k = k} f =
-  ⟜-mapCod (⟜-mapCod (⟜-curry {k = k}))
-  ∘g ⟜3-intro-ε f
+-- -- THE ORDER SWAPS!
+-- ⟜-mapCod : k ⊢ l → k ⟜ g ⊢ l ⟜ g
+-- ⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
 
-⟜-strength :
-  g ⊗ (h ⟜ k) ⊢ (g ⊗ h) ⟜ k
-⟜-strength {g = g}{h = h}{k = k} =
-  ⟜-intro (⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+-- ⟜-curry :
+--   k ⟜ (g ⊗ h) ⊢ k ⟜ h ⟜ g
+-- ⟜-curry {k = k} = ⟜-intro (⟜-intro {k = k} (⟜-app ∘g ⊗-assoc⁻))
 
-⟜UMP : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
-  → Iso (g ⊗ h ⊢ k) (g ⊢ k ⟜ h)
-⟜UMP {k = k} = iso ⟜-intro ⟜-intro⁻ (⟜-η {h = k}) ⟜-β
+-- ⟜-intro-ε :
+--   g ⊢ k → ε ⊢ k ⟜ g
+-- ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-l)
 
--- applying a multi-argument function to the front of a substitution
-⟜-app-l : (g ⟜ h) ⊗ h ⊗ l ⊢ g ⊗ l
-⟜-app-l = (⊗-intro ⟜-app id ∘g ⊗-assoc)
+-- ⟜2-intro-ε :
+--   g1 ⊗ g2 ⊢ k → ε ⊢ k ⟜ g2 ⟜ g1
+-- ⟜2-intro-ε {k = k} f = ⟜-curry {k = k} ∘g ⟜-intro-ε f
 
-⟜0⊗ : ε ⊢ k → l ⊢ k ⊗ l
-⟜0⊗ f = f ,⊗ id ∘g ⊗-unit-l⁻
+-- ⟜3-intro-ε :
+--   g1 ⊗ g2 ⊗ g3 ⊢ k → ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1
+-- ⟜3-intro-ε {k = k} f =
+--   ⟜-mapCod (⟜-curry {k = k})
+--   ∘g ⟜2-intro-ε f
 
-⟜1⊗ : ε ⊢ k ⟜ g1 → g1 ⊗ h ⊢ k ⊗ h
-⟜1⊗ f = ⟜-app-l ∘g ⟜0⊗ f
+-- ⟜4-intro-ε :
+--   g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊢ k → ε ⊢ k ⟜ g4 ⟜ g3 ⟜ g2 ⟜ g1
+-- ⟜4-intro-ε {k = k} f =
+--   ⟜-mapCod (⟜-mapCod (⟜-curry {k = k}))
+--   ∘g ⟜3-intro-ε f
 
-⟜2⊗ : ε ⊢ k ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
-⟜2⊗ f = ⟜-app-l ∘g ⟜1⊗ f
+-- ⟜-strength :
+--   g ⊗ (h ⟜ k) ⊢ (g ⊗ h) ⟜ k
+-- ⟜-strength {g = g}{h = h}{k = k} =
+--   ⟜-intro (⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
 
-⟜3⊗ : ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ l ⊢ k ⊗ l
-⟜3⊗ f = ⟜-app-l ∘g ⟜2⊗ f
+-- ⟜UMP : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
+--   → Iso (g ⊗ h ⊢ k) (g ⊢ k ⟜ h)
+-- ⟜UMP {k = k} = iso ⟜-intro ⟜-intro⁻ (⟜-η {h = k}) ⟜-β
 
-⟜4⊗ : ε ⊢ k ⟜ g4 ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊗ l ⊢ k ⊗ l
-⟜4⊗ f = ⟜-app-l ∘g ⟜3⊗ f
+-- -- applying a multi-argument function to the front of a substitution
+-- ⟜-app-l : (g ⟜ h) ⊗ h ⊗ l ⊢ g ⊗ l
+-- ⟜-app-l = (⊗-intro ⟜-app id ∘g ⊗-assoc)
 
-⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
-⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
+-- ⟜0⊗ : ε ⊢ k → l ⊢ k ⊗ l
+-- ⟜0⊗ f = f ,⊗ id ∘g ⊗-unit-l⁻
 
-⟜-app⊸0⊗ :
-  ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) →
-  ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
-⟜-app⊸0⊗ = {!!}
+-- ⟜1⊗ : ε ⊢ k ⟜ g1 → g1 ⊗ h ⊢ k ⊗ h
+-- ⟜1⊗ f = ⟜-app-l ∘g ⟜0⊗ f
+
+-- ⟜2⊗ : ε ⊢ k ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
+-- ⟜2⊗ f = ⟜-app-l ∘g ⟜1⊗ f
+
+-- ⟜3⊗ : ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ l ⊢ k ⊗ l
+-- ⟜3⊗ f = ⟜-app-l ∘g ⟜2⊗ f
+
+-- ⟜4⊗ : ε ⊢ k ⟜ g4 ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊗ l ⊢ k ⊗ l
+-- ⟜4⊗ f = ⟜-app-l ∘g ⟜3⊗ f
+
+-- ⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
+-- ⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
+
+-- ⟜-app⊸0⊗ :
+--   ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) →
+--   ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
+-- ⟜-app⊸0⊗ = {!!}
