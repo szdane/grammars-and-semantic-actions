@@ -278,7 +278,7 @@ opaque
     ∙ cong ((⟜-app ,⊗ id) ∘g_) (cong (_∘g (id ,⊗ f)) (⊗-assoc⊗-intro {f' = id}{f'' = id}))
     ∙ ( (λ i → (⟜-β ⊗-unit-l i) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f))
     ∙ cong (_∘g (id ,⊗ f)) (cong ((⊗-unit-l ,⊗ id) ∘g_) (sym (⊗-assoc⊗-intro {f' = id}{f'' = id})))
-    ∙ cong (_∘g id ,⊗ f) ⊗-unit-l⊗-assoc
+    ∙ cong (_∘g id ,⊗ f) {!!}
     ∙ sym (⊗-unit-l⊗-intro _)
 
   upgradeBalancedBuilder :

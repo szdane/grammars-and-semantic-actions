@@ -1,4 +1,5 @@
 {- An indexed inductive type is basically just a mutually inductive type -}
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -131,3 +132,140 @@ module _ where
     unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
       alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
       alg a = map (F a) (λ _ → roll)
+
+
+open import Cubical.Data.Unit
+open import Cubical.Data.Nat
+open import Grammar.Equivalence Alphabet
+
+module _ (g : Grammar ℓ-zero) where
+  data *Tag : Type where
+    nil cons : *Tag
+
+  *Ty : Unit → Functor Unit
+  *Ty _ = ⊕e *Tag (λ { nil → k ε ; cons → ⊗e (k g) (Var _)})
+
+  * : Grammar ℓ-zero
+  * = μ *Ty _
+
+  isUnambiguous→isUnambiguous* : unambiguous g → unambiguous *
+  isUnambiguous→isUnambiguous* unambig e e' =
+    {!!}
+
+
+  repeat' : ℕ → Grammar ℓ-zero
+  repeat' zero = ε
+  repeat' (suc n) = g ⊗ repeat' n
+
+  repeat = ⊕[ n ∈ ℕ ] repeat' n
+
+  unambiguousε : unambiguous ε
+  unambiguousε = {!!}
+
+  unambiguous-repeat : ∀ n → unambiguous g → unambiguous (repeat' n)
+  unambiguous-repeat zero unambig e e' = unambiguousε e e'
+  unambiguous-repeat (suc n) unambig e e' = {!!}
+
+  open StrongEquivalence
+
+  gradeAlg : Algebra *Ty λ _ → repeat
+  gradeAlg _ = ⊕ᴰ-elim (λ {
+      nil → ⊕ᴰ-in 0 ∘g lowerG
+    ; cons → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG })
+
+  grade : * ⊢ repeat
+  grade = rec *Ty gradeAlg _
+
+  ungrade' : ∀ n → repeat' n ⊢ *
+  ungrade' zero = roll ∘g ⊕ᴰ-in nil ∘g liftG
+  ungrade' (suc n) = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG ∘g id ,⊗ ungrade' n
+
+  ungrade : repeat ⊢ *
+  ungrade = ⊕ᴰ-elim λ n → ungrade' n
+
+finString : Grammar ℓ-zero
+finString = repeat char
+
+-- isUnambiguousFinString :
+
+  -- open import Grammar.Equalizer Alphabet
+  -- opaque
+  --   unfolding ⊕ᴰ-distR ⊗-intro eq-π
+  --   secAlg : Algebra *Ty (λ _ → equalizer (grade ∘g ungrade) id)
+  --   secAlg _ = ⊕ᴰ-elim (λ {
+  --       nil → eq-intro _ _ (⊕ᴰ-in 0) refl ∘g lowerG
+  --     ; cons → eq-intro _ _
+  --       (⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
+  --         ⊕ᴰ-distR .fun ∘g
+  --         id ,⊗ eq-π _ _ ∘g
+  --         lowerG ,⊗ lowerG)
+  --       (λ i → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n))
+  --                 ∘g ⊕ᴰ-distR .fun
+  --                 ∘g id ,⊗ eq-π-pf (grade ∘g ungrade) id i
+  --                 ∘g lowerG ,⊗ lowerG) })
+
+  -- opaque
+  --   unfolding secAlg
+  --   ω-colimit : StrongEquivalence * (⊕[ n ∈ ℕ ] repeat n)
+  --   ω-colimit .fun = grade
+  --   ω-colimit .inv = ungrade
+  --   ω-colimit .sec =
+  --     equalizer-section (grade ∘g ungrade) id
+  --     (rec *Ty secAlg _ ∘g ungrade)
+  --     (⊕ᴰ≡ _ _
+  --       λ { zero → eq-β _ _ (⊕ᴰ-in 0) refl
+  --        ; (suc n) →
+  --          eq-π (grade ∘g ungrade) id ∘g
+  --          (eq-intro _ _
+  --           (⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
+  --             ⊕ᴰ-distR .fun ∘g
+  --             id ,⊗ eq-π _ _ ∘g
+  --             lowerG ,⊗ lowerG)
+  --           (λ i → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n))
+  --                     ∘g ⊕ᴰ-distR .fun
+  --                     ∘g id ,⊗ eq-π-pf (grade ∘g ungrade) id i
+  --                     ∘g lowerG ,⊗ lowerG)) ∘g
+  --           liftG ,⊗ (liftG ∘g rec *Ty secAlg _ ∘g ungrade' n)
+  --            ≡⟨ (λ i →
+  --              eq-β _ _
+  --                (⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
+  --                  ⊕ᴰ-distR .fun ∘g
+  --                  id ,⊗ eq-π _ _ ∘g
+  --                  lowerG ,⊗ lowerG)
+  --                (λ i → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n))
+  --                     ∘g ⊕ᴰ-distR .fun
+  --                     ∘g id ,⊗ eq-π-pf (grade ∘g ungrade) id i
+  --                     ∘g lowerG ,⊗ lowerG) i ∘g
+  --                 liftG ,⊗ (liftG ∘g rec *Ty secAlg _ ∘g ungrade' n))
+  --             ⟩
+  --          ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
+  --          ⊕ᴰ-distR .fun ∘g
+  --          id ,⊗ eq-π _ _  ∘g
+  --          id ,⊗ (rec *Ty secAlg _ ∘g ungrade' n)
+  --            ≡⟨ {!!} ⟩
+  --          ⊕ᴰ-in (suc n)
+  --          ∎})
+  --     -- equalizer-section (grade ∘g ungrade) id
+  --     --   {!!}
+  --     --   ?
+  --     --   -- (rec *Ty secAlg _ ∘g ungrade)
+  --     --   {!!}
+  --     -- ⊕ᴰ≡ _ _
+  --     --   (λ { zero → refl
+  --     --     ; (suc n) → {!!}
+  --     --       -- ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
+  --     --       -- ⊕ᴰ-distR .fun ∘g
+  --     --       -- id ,⊗ grade ∘g
+  --     --       -- id ,⊗ ungrade' n
+  --     --       --   ≡⟨ {!!} ⟩
+  --     --       -- ⊕ᴰ-in (suc n)
+  --     --       -- ∎
+  --     --       })
+  --   ω-colimit .ret =
+  --     ind-id' *Ty
+  --       (compHomo *Ty (initialAlgebra *Ty) gradeAlg (initialAlgebra *Ty)
+  --         ((λ _ → ungrade) ,
+  --         (λ _ → ⊕ᴰ≡ _ _
+  --           λ { nil → refl
+  --             ; cons → refl }))
+  --         (recHomo *Ty gradeAlg)) _

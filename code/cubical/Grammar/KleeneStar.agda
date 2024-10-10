@@ -18,6 +18,7 @@ private
     h : Grammar ℓH
 
 module _ (g : Grammar ℓG) where
+
   data KL* : Grammar ℓG
     where
     nil : ε ⊢ KL*
