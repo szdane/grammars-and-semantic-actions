@@ -148,124 +148,72 @@ module _ (g : Grammar ℓ-zero) where
   * : Grammar ℓ-zero
   * = μ *Ty _
 
-  isUnambiguous→isUnambiguous* : unambiguous g → unambiguous *
-  isUnambiguous→isUnambiguous* unambig e e' =
-    {!!}
-
+  repeatTy : ℕ → Functor ℕ
+  repeatTy zero = k ε
+  repeatTy (suc n) = ⊗e (k g) (Var n)
 
   repeat' : ℕ → Grammar ℓ-zero
-  repeat' zero = ε
-  repeat' (suc n) = g ⊗ repeat' n
+  repeat' n = μ repeatTy n
 
   repeat = ⊕[ n ∈ ℕ ] repeat' n
-
-  unambiguousε : unambiguous ε
-  unambiguousε = {!!}
-
-  unambiguous-repeat : ∀ n → unambiguous g → unambiguous (repeat' n)
-  unambiguous-repeat zero unambig e e' = unambiguousε e e'
-  unambiguous-repeat (suc n) unambig e e' = {!!}
 
   open StrongEquivalence
 
   gradeAlg : Algebra *Ty λ _ → repeat
   gradeAlg _ = ⊕ᴰ-elim (λ {
-      nil → ⊕ᴰ-in 0 ∘g lowerG
-    ; cons → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG })
+      nil → ⊕ᴰ-in 0 ∘g roll
+    ; cons →
+        ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n) ∘g roll ∘g liftG ,⊗ liftG) ∘g
+        ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG
+    })
 
   grade : * ⊢ repeat
   grade = rec *Ty gradeAlg _
 
+  ungradeAlg : Algebra repeatTy λ n → *
+  ungradeAlg zero = roll ∘g ⊕ᴰ-in nil
+  ungradeAlg (suc a) = roll ∘g ⊕ᴰ-in cons
+
   ungrade' : ∀ n → repeat' n ⊢ *
-  ungrade' zero = roll ∘g ⊕ᴰ-in nil ∘g liftG
-  ungrade' (suc n) = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG ∘g id ,⊗ ungrade' n
+  ungrade' n = rec repeatTy ungradeAlg n
 
   ungrade : repeat ⊢ *
   ungrade = ⊕ᴰ-elim λ n → ungrade' n
 
-finString : Grammar ℓ-zero
-finString = repeat char
+  open import Grammar.Equalizer Alphabet
+  opaque
+    unfolding ⊕ᴰ-distR ⊗-intro eq-π
+    secAlg : Algebra repeatTy (λ n → equalizer (grade ∘g ungrade' n) (⊕ᴰ-in n))
+    secAlg zero = eq-intro _ _ roll refl
+    secAlg (suc n) =
+      eq-intro _ _
+        (roll ∘g id ,⊗ (liftG ∘g eq-π _ _ ∘g lowerG))
+        (λ i → ⊕ᴰ-elim (λ m → ⊕ᴰ-in (suc m) ∘g roll ∘g liftG ,⊗ liftG) ∘g
+               ⊕ᴰ-distR .fun ∘g id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG)
 
--- isUnambiguousFinString :
-
-  -- open import Grammar.Equalizer Alphabet
-  -- opaque
-  --   unfolding ⊕ᴰ-distR ⊗-intro eq-π
-  --   secAlg : Algebra *Ty (λ _ → equalizer (grade ∘g ungrade) id)
-  --   secAlg _ = ⊕ᴰ-elim (λ {
-  --       nil → eq-intro _ _ (⊕ᴰ-in 0) refl ∘g lowerG
-  --     ; cons → eq-intro _ _
-  --       (⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
-  --         ⊕ᴰ-distR .fun ∘g
-  --         id ,⊗ eq-π _ _ ∘g
-  --         lowerG ,⊗ lowerG)
-  --       (λ i → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n))
-  --                 ∘g ⊕ᴰ-distR .fun
-  --                 ∘g id ,⊗ eq-π-pf (grade ∘g ungrade) id i
-  --                 ∘g lowerG ,⊗ lowerG) })
-
-  -- opaque
-  --   unfolding secAlg
-  --   ω-colimit : StrongEquivalence * (⊕[ n ∈ ℕ ] repeat n)
-  --   ω-colimit .fun = grade
-  --   ω-colimit .inv = ungrade
-  --   ω-colimit .sec =
-  --     equalizer-section (grade ∘g ungrade) id
-  --     (rec *Ty secAlg _ ∘g ungrade)
-  --     (⊕ᴰ≡ _ _
-  --       λ { zero → eq-β _ _ (⊕ᴰ-in 0) refl
-  --        ; (suc n) →
-  --          eq-π (grade ∘g ungrade) id ∘g
-  --          (eq-intro _ _
-  --           (⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
-  --             ⊕ᴰ-distR .fun ∘g
-  --             id ,⊗ eq-π _ _ ∘g
-  --             lowerG ,⊗ lowerG)
-  --           (λ i → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n))
-  --                     ∘g ⊕ᴰ-distR .fun
-  --                     ∘g id ,⊗ eq-π-pf (grade ∘g ungrade) id i
-  --                     ∘g lowerG ,⊗ lowerG)) ∘g
-  --           liftG ,⊗ (liftG ∘g rec *Ty secAlg _ ∘g ungrade' n)
-  --            ≡⟨ (λ i →
-  --              eq-β _ _
-  --                (⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
-  --                  ⊕ᴰ-distR .fun ∘g
-  --                  id ,⊗ eq-π _ _ ∘g
-  --                  lowerG ,⊗ lowerG)
-  --                (λ i → ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n))
-  --                     ∘g ⊕ᴰ-distR .fun
-  --                     ∘g id ,⊗ eq-π-pf (grade ∘g ungrade) id i
-  --                     ∘g lowerG ,⊗ lowerG) i ∘g
-  --                 liftG ,⊗ (liftG ∘g rec *Ty secAlg _ ∘g ungrade' n))
-  --             ⟩
-  --          ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
-  --          ⊕ᴰ-distR .fun ∘g
-  --          id ,⊗ eq-π _ _  ∘g
-  --          id ,⊗ (rec *Ty secAlg _ ∘g ungrade' n)
-  --            ≡⟨ {!!} ⟩
-  --          ⊕ᴰ-in (suc n)
-  --          ∎})
-  --     -- equalizer-section (grade ∘g ungrade) id
-  --     --   {!!}
-  --     --   ?
-  --     --   -- (rec *Ty secAlg _ ∘g ungrade)
-  --     --   {!!}
-  --     -- ⊕ᴰ≡ _ _
-  --     --   (λ { zero → refl
-  --     --     ; (suc n) → {!!}
-  --     --       -- ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n)) ∘g
-  --     --       -- ⊕ᴰ-distR .fun ∘g
-  --     --       -- id ,⊗ grade ∘g
-  --     --       -- id ,⊗ ungrade' n
-  --     --       --   ≡⟨ {!!} ⟩
-  --     --       -- ⊕ᴰ-in (suc n)
-  --     --       -- ∎
-  --     --       })
-  --   ω-colimit .ret =
-  --     ind-id' *Ty
-  --       (compHomo *Ty (initialAlgebra *Ty) gradeAlg (initialAlgebra *Ty)
-  --         ((λ _ → ungrade) ,
-  --         (λ _ → ⊕ᴰ≡ _ _
-  --           λ { nil → refl
-  --             ; cons → refl }))
-  --         (recHomo *Ty gradeAlg)) _
+  opaque
+    unfolding secAlg ⊕ᴰ-distR eq-π ⊗-intro eq-intro
+    ω-colimit : StrongEquivalence * repeat
+    ω-colimit .fun = grade
+    ω-colimit .inv = ungrade
+    ω-colimit .sec =
+      ⊕ᴰ≡ _ _ (λ n →
+        equalizer-section (grade ∘g ungrade' n) (⊕ᴰ-in n)
+          (rec repeatTy secAlg n)
+          (ind-id' repeatTy
+            (compHomo repeatTy
+              (initialAlgebra repeatTy)
+              secAlg
+              (initialAlgebra repeatTy)
+              ((λ m → eq-π _ _) ,
+              λ { zero → refl ; (suc m) → refl })
+              (recHomo repeatTy secAlg))
+            n))
+    ω-colimit .ret =
+      ind-id' *Ty
+        (compHomo *Ty (initialAlgebra *Ty) gradeAlg (initialAlgebra *Ty)
+          ((λ _ → ungrade) ,
+          (λ _ → ⊕ᴰ≡ _ _
+            λ { nil → refl
+              ; cons → refl }))
+          (recHomo *Ty gradeAlg)) _
