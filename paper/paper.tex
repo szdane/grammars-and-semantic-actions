@@ -74,6 +74,8 @@
 %% \newcommand{\DepPlus}[2]{{\textstyle\bigoplus}\limits_{#1}{#2}
 \newcommand{\GrTy}{\mathsf{Gr}}
 
+\newcommand{\equalizer}[4]{\{#1\,|\,\apptol {#2}{#1} = \apptol{#3}{#1 \}}
+
 \newcommand{\ctxwff}[1]{#1 \,\, \mathsf{ok}}
 \newcommand{\ctxwffjdg}[2]{#1 \vdash #2 \,\, \mathsf{type}}
 \newcommand{\linctxwff}[2]{#1 \vdash #2 \,\, \mathsf{ok}}
@@ -355,7 +357,18 @@ grammars, and non-linear types $X$, which act like ordinary types or sets. Both
 linear and non-linear types are checked for well-formedness in a context
 $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
 
-
+\begin{figure}
+  \begin{array}{rrcl}
+    \textrm{non-linear contexts} & \Gamma & ::= & \cdot \pipe \Gamma,x:X \\
+    % 
+    \textrm{non-linear types} & X , Y , Z & ::= & \mathsf{Nat} \pipe \mathsf{Int} \pipe \mathsf{Empty} \pipe \mathsf{Unit} \pipe \mathsf{SPF}\,X\pipe U \pipe L \pipe !A \pipe \sum_{x:X} Y \pipe \prod_{x:X} Y\pipe M =_A N\\
+    \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
+    \textrm{linear types} & A , B , C & ::= &
+    c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M
+    A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{e}{f}\\
+  \end{array}
+  \caption{Overview of Types}
+\end{figure}
 
 \begin{figure}
   \begin{mathpar}
@@ -515,20 +528,6 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     {\Gamma; \Delta \vdash \fold(A)(x.b.f)(M,e) = e'[M/x][e/a] : B\,M}
   \end{mathpar}
   \caption{Indexed Inductive Linear Types}
-\end{figure}
-
-\begin{figure}
-  \begin{mathpar}
-    \begin{array}{rcl}
-      \textrm{non-linear types} X,Y,Z & ::= & \textrm{Empty}\pipe\textrm{Unit}\pipe\textrm{Bool}\pipe\textrm{Nat}
-      \pipe \sum_{x:X} Y \pipe \prod_{x:X}Y\pipe \textrm{SPF}\,X \pipe \cdots \max{also eliminators...}\\
-      \textrm{linear types} A,B,C & ::= & c \pipe I \pipe A \otimes B \pipe A \lto B \pipe B \tol A
-      \pipe \bigoplus_{x:X} A \pipe \bigamp_{x:X} A \pipe \mu e e'\\
-      \textrm{non-linear terms} M,N,O & ::= & \cdots\\
-      \textrm{linear terms} 
-    \end{array}
-  \end{mathpar}
-  \caption{Syntax of Types and Terms}
 \end{figure}
 
 Omission of the structural rules of a deductive system, such as in
@@ -766,6 +765,8 @@ types is standard, so below we focus on the linear syntax.
   \inferrule{\Gamma \vdash e \equiv e' : X}{\Gamma \vdash \mathsf{refl} : e =_X e'}
   \and
   \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash \mathsf G e : \mathsf G A}
+
+  \textrm{TODO: inductive types (boolean, nat) with their eliminators allowed in }
   \end{mathpar}
   \caption{Intuitionistic typing}
   \label{fig:inttyping}
