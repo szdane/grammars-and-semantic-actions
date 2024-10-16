@@ -90,3 +90,43 @@ syntax seq e e' = e ⋆ e'
 --   isMono e' → isMono e → isMono (e' ∘g e)
 -- Mono∘g e e' mon-e mon-e' f f' e'ef≡e'ef' =
 --   mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
+
+□ : Grammar ℓ → Type ℓ
+□ A = A []
+
+_⟜_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+(B ⟜ A) w = ∀ (w' : String) → A w' → B (w ++ w')
+
+data Context : Typeω where
+  [] : Context
+  _∷_ : ∀ {ℓ : Level} → Grammar ℓ → Context → Context
+
+appCtx : Context → Context → Context
+appCtx [] Γ = Γ
+appCtx (A ∷ Δ) Γ = A ∷ appCtx Δ Γ
+
+CtxLevel : Context → Level
+CtxLevel [] = ℓ-zero
+CtxLevel (_∷_ {ℓ = ℓ} A Δ) = ℓ-max ℓ (CtxLevel Δ)
+
+Multilinear : (Δ : Context) (B : Grammar ℓ) → Type (ℓ-max (CtxLevel Δ) ℓ)
+Multilinear [] B = □ B
+Multilinear (A ∷ Δ) B = Multilinear Δ (B ⟜ A)
+
+data CtxEq (Δ : Context) : Context → Typeω where
+  refll : CtxEq Δ Δ
+
+data Subst (Δ : Context) : (Γ : Context) → Typeω where
+  [] : CtxEq Δ [] → Subst Δ []
+  ext : ∀ {ΔA ΔΓ}{A : Grammar ℓ}{Γ}
+    → (CtxEq (appCtx ΔA ΔΓ) Δ)
+    → Multilinear ΔA A
+    → Subst ΔΓ Γ
+    → Subst Δ (A ∷ Γ)
+
+private
+  variable
+    Δ Δ' Δ'' : Context
+compSubst : Subst Δ' Δ'' → Subst Δ Δ' → Subst Δ Δ''
+compSubst ([] refll) δ = δ
+compSubst (ext refll x₁ δ') δ = {!!}
