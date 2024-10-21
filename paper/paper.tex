@@ -51,6 +51,9 @@
 \DeclareMathOperator*{\bigamp}{\scalerel*{\&}{\bigoplus}}
 \DeclareMathOperator*{\bigwith}{\scalerel*{\&}{\bigoplus}}
 
+
+\newcommand{\bang}{~\textbf{!}~}
+
 \newcommand{\oplusinj}[2]{\sigma\,#1\,#2}
 \newcommand{\withprj}[2]{\pi\,#1\,#2}
 
@@ -74,7 +77,9 @@
 %% \newcommand{\DepPlus}[2]{{\textstyle\bigoplus}\limits_{#1}{#2}
 \newcommand{\GrTy}{\mathsf{Gr}}
 
-\newcommand{\equalizer}[4]{\{#1\,|\,\apptol {#2}{#1} = \apptol{#3}{#1} \}}
+\newcommand{\equalizer}[3]{\{#1\,|\,\apptol {#2}{#1} = \apptol{#3}{#1} \}}
+\newcommand{\equalizerpair}[2]{\langle #1 , #2 \rangle}
+\newcommand{\equalizerpi}[1]{#1.\pi}
 
 \newcommand{\ctxwff}[1]{#1 \,\, \mathsf{ok}}
 \newcommand{\ctxwffjdg}[2]{#1 \vdash #2 \,\, \mathsf{type}}
@@ -365,7 +370,7 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
     \textrm{linear types} & A , B , C & ::= &
     c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M
-    A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{e}{f}\\
+    A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{f}{g}\\
   \end{array}
   \caption{Overview of Types}
 \end{figure}
@@ -416,7 +421,30 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     \and
     %
     \inferrule{\Gamma ; \Delta \vdash e : \bigoplus\limits_{x:X} A \quad \Gamma, x : X ; \Delta'_1, a : A, \Delta'_2 \vdash e' : C}{\Gamma; \Delta'_1, \Delta, \Delta'_2 \vdash \letin {\sigma\,x\,a} e {e'}: C}
-    %% %
+    %
+    \and
+    %
+    \inferrule
+    {~}
+    {\Gamma , x : \square A ; \cdot \vdash \bang x : A}
+    %
+    \and
+    %
+    \inferrule
+    {\Gamma \vdash f : \square (A \lto B) \\
+      \Gamma \vdash g : \square (A \lto B) \\
+      \Gamma ; \Delta \vdash a : A \\
+      \Gamma ; \Delta \vdash p : \apptol {\bang f}{a} = \apptol {\bang g}{a}}
+    {\Gamma ; \Delta \vdash \equalizerpair{a}{p} : \equalizer {a}{\bang f}{\bang
+      g}}
+    %
+    \and
+    %
+    \inferrule
+    {\Gamma \vdash f : \square (A \lto B) \\
+      \Gamma \vdash g : \square (A \lto B) \\
+      \Gamma ; \Delta \vdash e : \equalizer{a}{\bang f}{\bang g}}
+    {\Gamma ; \Delta \vdash \equalizerpi {e} : A}
     %% \\
     %% %
     %% \inferrule{~}{\Gamma ; \Delta \vdash () : \top}
@@ -723,6 +751,17 @@ types is standard, so below we focus on the linear syntax.
     \and
     %
     \inferrule{\Gamma, x : L_i \vdash A : L_i \and A \textrm{ strictly positive}}{\Gamma \vdash \mu x.\, A : L_i}
+    %
+    \and
+    %
+    \inferrule
+    {\Gamma \vdash A : L_i}
+    {\Gamma \vdash \square A : U_i}
+    %
+    \and
+    \inferrule
+    {\Gamma ; \Delta \vdash f : A \\ \Gamma \vdash g : \square (A \lto B)}
+    {\Gamma ; \Delta \vdash \equalizer {a}{\bang f}{\bang g} : L_i}
   \end{mathpar}
   \caption{Type well-formedness}
   \label{fig:typewf}
@@ -874,6 +913,23 @@ types is standard, so below we focus on the linear syntax.
     \and
     %
     \inferrule{~}{\Gamma; \Delta \vdash \letin {(x, a)} e {\subst {e'} {(x, a)} y} \equiv \subst {e'} e y : C}
+    \and
+    %
+    \inferrule
+    {\Gamma \vdash f : \square (A \lto B) \\
+      \Gamma \vdash g : \square (A \lto B) \\
+      \Gamma ; \Delta \vdash a : A \\
+      \Gamma ; \Delta \vdash p : \apptol {\bang f}{a} \equiv \apptol {\bang g}{a}}
+    {\Gamma ; \Delta \vdash \equalizerpi {\equalizerpair {a}{p}} \equiv a : A}
+    %
+    \and
+    %
+    \inferrule
+    {\Gamma \vdash f : \square (A \lto B) \\
+      \Gamma \vdash g : \square (A \lto B) \\
+      \Gamma ; \Delta \vdash p : \apptol {\bang f}{a} = \apptol {\bang g}{a} \\
+      \Gamma ; \Delta \vdash e : \equalizer{a}{\bang f}{\bang g}}
+    {\Gamma ; \Delta \vdash \equalizerpair {\equalizerpi {e}} {p} \equiv e : A}
 \end{mathpar}
   \caption{Judgmental equality}
   \label{fig:jdgeq}
