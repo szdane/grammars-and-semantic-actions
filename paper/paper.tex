@@ -8,6 +8,7 @@
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 \usepackage{xspace}
+\usepackage{listings}
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{stmaryrd}
@@ -23,6 +24,8 @@
 \newcommand{\map}{\mathsf{map}}
 \newcommand{\roll}{\mathsf{roll}}
 \newcommand{\fold}{\mathsf{fold}}
+\newcommand{\inl}{\mathsf{inl}}
+\newcommand{\inr}{\mathsf{inr}}
 \newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
@@ -53,6 +56,10 @@
 
 
 \newcommand{\bang}{~\textbf{!}~}
+\newcommand{\nil}{\mathsf{nil}}
+\newcommand{\cons}{\mathsf{cons}}
+\newcommand{\data}{\mathsf{data}}
+\newcommand{\stringquote}[1]{\texttt{\textquotesingle#1\textquotesingle}}
 
 \newcommand{\oplusinj}[2]{\sigma\,#1\,#2}
 \newcommand{\withprj}[2]{\pi\,#1\,#2}
@@ -341,8 +348,184 @@ all-encompassing semantic domain for parsing.
   we would have to be a bit clearer in terms of how familiar notions of grammar can be seen as categories with functor into $\Grammar$.}
 
 
-\section{Dependent Lambek Calculus by Example}
+\section{\theoryname by Example}
 \label{sec:type-theory-examples}
+
+To gain intuiton for working in \theoryname, let's walk through some examples of
+grammars and parses internal to it.
+
+\paragraph{Finite Grammars}
+First, consider finite grammars over the alphabet $\{ a , b , c \}$. Each letter of the
+alphabet corresponds to a base type in our calculus. For instance, the grammar
+for the single character $a$ has a single parse tree for the string \stringquote{a}.
+and no parse trees at any other strings.
+
+A finite grammar is built from base types via dijunctions $\oplus$ and
+concatenations $\otimes$ --- for instance, $(a \oplus b) \otimes c$.
+In \cref{fig:fingram} we find a proof tree showing that the input string \stringquote{ac} matches
+the grammar $(a \oplus b) \otimes c$.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule
+  {
+    \inferrule
+    {~}
+    {x : a \vdash \inl(x) : a \oplus b}
+    \\
+    \inferrule
+    {~}
+    {y : c \vdash y : c}
+  }
+  {x : a , y : c \vdash \inl(x) \otimes y : (a \oplus b) \otimes c}
+\end{mathpar}
+\caption{\stringquote{ac} matches $(a \oplus b) \otimes c$}
+\label{fig:fingram}
+\end{figure}
+
+To parse the specific string \stringquote{ac}, we populate the context with an
+internalized encoding of that string. In contexts of this form, linear terms
+describe the structure of a parse tree. That is, $\inl(x) \otimes y$ details the
+manner by which \stringquote{ac} matches $(a \oplus b) \otimes c$.
+
+Because derivations in a linear context correspond to parse trees in this
+manner, we cannot affirm all of the usual structural rules of a type system.
+Weakening and contraction each allow for modification of the string in context ---
+weakening allows for characters to be dropped at will, while contraction allows
+for duplication of characters. Omission of these rules offers a
+resource-sensitive view that ensures only the inputted characters are parsed.
+Moreover, strings are not simply sets of characters, as they carry an inherent
+ordering. Thus, the rule of exchange is also omitted in this calculus so that
+the constituent characters of a string are not freely permuted.
+
+Without the above structural rules we
+arrive at an ordered, linear type system, and to summarize this
+particular choice of substructural restrictions: when parsing, characters must
+be processed
+without modification and in the order in which they were written.
+
+\paragraph{Regular Expressions}
+Next, we demonstrate how to parse a regular expression in \theoryabbv. Again,
+consider grammars over $\{ a , b , c \}$. Similar to finite grammars, regular
+expresssions are built inductively using base types, $\oplus$, and $\otimes$ ;
+however, unlike finite grammars, regular expressions additionally have a
+restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
+
+% TODO this should be beter formatted but can't use listings with \otimes ^{\ast}
+\begin{figure}
+\begin{align*}
+\data &~A^{*}:\\
+      & \nil : I \to A* \\
+      & \cons : A \otimes A* \to A*
+\end{align*}
+\caption{Kleene Star as an inductive type}
+\label{fig:kleenestarinductive}
+\end{figure}
+
+For a grammar $A$, the recursive nature of $A^{*}$ is captured by defining
+$A^{*}$ to be an inductive linear
+type, as shown in \cref{fig:kleenestarinductive}. Just as in \cref{fig:fingram}, we can show that particular strings match a Kleene
+star. In \cref{fig:kleenestarderivation}, we demonstrate that \stringquote{ab}
+matches $a^{*} \otimes b$ through repeated application of the Kleene star constructors.
+
+\begin{figure}
+\begin{mathpar}
+  \inferrule
+  {
+    \inferrule
+    {
+      \inferrule
+      {~}
+      {x : a \vdash x : a}
+      \\
+      \inferrule
+      {
+        \inferrule
+        {~}
+        {I \vdash \nil : a^{*}}
+      }
+      {\cdot \vdash \nil : a^{*}}
+    }
+    {x : a \vdash \cons (x , \nil) : a^{*}}
+    \\
+    \inferrule
+    {~}
+    {y : b \vdash y : b}
+  }
+  {x : a , y : b \vdash \cons(x ) \otimes y : a^{*} \otimes b}
+\end{mathpar}
+\caption{\stringquote{ab} matches $a^{*} \otimes b$}
+\label{fig:kleenestarderivation}
+\end{figure}
+
+However, we can have derivations where the term in context is not simply a
+string of base types. For instance, by using the elimination principle for
+Kleene star, \cref{fig:kleeneabstractproof} builds a term of type
+$A^{*}$ in context comprising abstract\footnote{A linear type that is not a
+  finite grammar.} linear types. In these contexts, it is not quite appropriate
+to treat linear terms as parse \textit{trees}, because the information in
+context is not a string. Instead, it is more
+appropriate to think of such terms as parse \textit{transformers}. That is, in
+\cref{fig:kleeneabstractproof} the
+inhabitant $x : (A \otimes A)^{*}$ in the context is not itself data to be parsed; rather,
+$x$ is a parse tree and the term from context $x : (A \otimes A)^{*}$ to the
+term $A^{*}$ is a transformation of parse trees of the input grammar into parse
+trees of the output grammar.
+
+\steven{TODO : describe elimination principle somewhere. Maybe just in prose?}
+\steven{I probably can't get away with the inline definition of $f$ below}
+\begin{figure}
+\begin{mathpar}
+  \inferrule
+  {
+    \inferrule
+    {~}
+    {x_I : I \vdash \nil : A^*}
+    \\
+    \inferrule
+    {
+      \inferrule
+      {~}
+      {x_1 : A , x_2 : A , y : A* \vdash \cons (x_1 , \cons(x_2 , y)) : A^*}
+    }
+    {x : A \otimes A , y : A^*  \vdash f := \letin {x_1 \otimes x_2} {x} {\cons(x_1 ,
+        \cons(x_2 , y))} : A^*}
+  }
+  {x : (A \otimes A)^* \vdash \fold(\nil , f) : A^* }
+\end{mathpar}
+\caption{An example mapping out of abstract grammars}
+\label{fig:kleeneabstractproof}
+\end{figure}
+
+
+
+% \begin{tikzpicture}[%opacity=0.5,
+%   treenode/.style = {shape=rectangle, rounded corners,
+%     draw, align=center,
+%     top color=white, bottom color=white!20},
+%     line/.style={draw, -latex'},
+%     edge from parent/.style={draw,-latex'},
+%     level 1/.style={sibling distance=20mm, level distance=0.5cm},
+%     level 2/.style={sibling distance=1cm, level distance=1cm},
+%     visible on=<3->
+%     ]
+%   \node[treenode] (tree) {$\otimes$}
+%     child { node[treenode] (a) {${\color{blue} a}$} }
+%     child { node[treenode] (b){${\color{magenta} \mathsf{inl}}$}
+%         child { node[treenode] (c) {${\color{magenta} b}$} }
+%       };
+%       \node[draw, fit=(tree)(a)(b)(c),
+%       label={[name=l] $g(ab)$}, visible on=<3->] {};
+%     \node[below=2.5cm of tree] (mt) {};
+%     \node[below=2.5cm of a] (mta) {};
+%     \node[below=2.5cm of b] (mtb) {};
+%     \node[below=-0.2cm of mt, visible on=<4->] (mtset) {};
+%       \node[draw, fit=(mt)(mtset)(mta)(mtb),
+%       label={[name=l, visible on=<4->] $g(aa)$}, visible on=<4->] {};
+% \end{tikzpicture}
+
+
+
 
 %% 1. First example: finite grammars (regex minus Kleene star)
 %%    - why ordered linear:
@@ -362,16 +545,23 @@ grammars, and non-linear types $X$, which act like ordinary types or sets. Both
 linear and non-linear types are checked for well-formedness in a context
 $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
 
+\steven{This figure is broken}
 \begin{figure}
-  \begin{array}{rrcl}
-    \textrm{non-linear contexts} & \Gamma & ::= & \cdot \pipe \Gamma,x:X \\
-    % 
-    \textrm{non-linear types} & X , Y , Z & ::= & \mathsf{Nat} \pipe \mathsf{Int} \pipe \mathsf{Empty} \pipe \mathsf{Unit} \pipe \mathsf{SPF}\,X\pipe U \pipe L \pipe !A \pipe \sum_{x:X} Y \pipe \prod_{x:X} Y\pipe M =_A N\\
-    \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
-    \textrm{linear types} & A , B , C & ::= &
-    c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M
-    A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{f}{g}\\
-  \end{array}
+  % \begin{array}{rrcl}
+  %   \textrm{non-linear contexts} & \Gamma & ::= & \cdot \pipe \Gamma,x:X \\
+  %   \textrm{non-linear types} & X , Y , Z & ::= & \mathsf{Nat} \pipe
+  %                                                 \mathsf{Int} \pipe
+  %                                                 \mathsf{Empty} \pipe
+  %                                                 \mathsf{Unit} \pipe
+  %                                                 \mathsf{SPF}\,X\pipe U \pipe L
+  %                                                 \pipe !A \pipe \sum_{x:X} Y
+  %                                                 \pipe \prod_{x:X} Y\pipe M =_A
+  %                                                 N \\
+  %   \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
+  %   \textrm{linear types} & A , B , C & ::= &
+  %   c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M
+  %   A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{f}{g}\\
+  % \end{array}
   \caption{Overview of Types}
 \end{figure}
 
