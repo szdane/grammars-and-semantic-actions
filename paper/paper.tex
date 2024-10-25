@@ -56,6 +56,9 @@
 
 
 \newcommand{\bang}{~\textbf{!}~}
+% Tentatively using uparrow for linear to non-linear to be in line with
+% Pfennings adjoint functional programming
+\newcommand{\ltonl}[1]{~\uparrow #1}
 \newcommand{\nil}{\mathsf{nil}}
 \newcommand{\cons}{\mathsf{cons}}
 \newcommand{\data}{\mathsf{data}}
@@ -599,7 +602,7 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
                                                   \mathsf{Empty} \pipe
                                                   \mathsf{Unit} \pipe
                                                   \mathsf{SPF}\,X\pipe U \pipe L
-                                                  \pipe !A \pipe \sum_{x:X} Y
+                                                  \pipe \ltonl A \pipe \sum_{x:X} Y
                                                   \pipe \prod_{x:X} Y\pipe M =_A
                                                   N \\
     \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
@@ -662,24 +665,23 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     %
     \inferrule
     {~}
-    {\Gamma , x : \square A ; \cdot \vdash \bang x : A}
+    {\Gamma , x : \ltonl A ; \cdot \vdash x : A}
     %
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \square (A \lto B) \\
-      \Gamma \vdash g : \square (A \lto B) \\
+    {\Gamma \vdash f : \ltonl {(A \lto B)} \\
+      \Gamma \vdash g : \ltonl { (A \lto B) } \\
       \Gamma ; \Delta \vdash a : A \\
-      \Gamma ; \Delta \vdash p : \apptol {\bang f}{a} = \apptol {\bang g}{a}}
-    {\Gamma ; \Delta \vdash \equalizerpair{a}{p} : \equalizer {a}{\bang f}{\bang
-      g}}
+      \Gamma ; \Delta \vdash p : \apptol {f}{a} = \apptol {g}{a}}
+    {\Gamma ; \Delta \vdash \equalizerpair{a}{p} : \equalizer {a}{f}{g}}
     %
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \square (A \lto B) \\
-      \Gamma \vdash g : \square (A \lto B) \\
-      \Gamma ; \Delta \vdash e : \equalizer{a}{\bang f}{\bang g}}
+    {\Gamma \vdash f : \ltonl { (A \lto B) } \\
+      \Gamma \vdash g : \ltonl { (A \lto B) } \\
+      \Gamma ; \Delta \vdash e : \equalizer{a}{f}{g}}
     {\Gamma ; \Delta \vdash \equalizerpi {e} : A}
     %% \\
     %% %
@@ -925,9 +927,9 @@ types is standard, so below we focus on the linear syntax.
 %
     \inferrule{~}{\Gamma \vdash 1 : U_i}
 %
-    \and
+    % \and
 %
-    \inferrule{\Gamma \vdash A : L_i}{\Gamma \vdash G A : U_i}
+    % \inferrule{\Gamma \vdash A : L_i}{\Gamma \vdash G A : U_i}
 
     \and
 %
@@ -976,12 +978,12 @@ types is standard, so below we focus on the linear syntax.
     %
     \inferrule
     {\Gamma \vdash A : L_i}
-    {\Gamma \vdash \square A : U_i}
+    {\Gamma \vdash \ltonl { A } : U_i}
     %
     \and
     \inferrule
-    {\Gamma ; \Delta \vdash f : A \\ \Gamma \vdash g : \square (A \lto B)}
-    {\Gamma ; \Delta \vdash \equalizer {a}{\bang f}{\bang g} : L_i}
+    {\Gamma ; \Delta \vdash f : A \\ \Gamma \vdash g : \ltonl { (A \lto B) }}
+    {\Gamma ; \Delta \vdash \equalizer {a}{f}{g} : L_i}
   \end{mathpar}
   \caption{Type well-formedness}
   \label{fig:typewf}
@@ -1023,7 +1025,7 @@ types is standard, so below we focus on the linear syntax.
   %
   \inferrule{\Gamma \vdash e \equiv e' : X}{\Gamma \vdash \mathsf{refl} : e =_X e'}
   \and
-  \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash \mathsf G e : \mathsf G A}
+  \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash e : \ltonl A}
 
   \textrm{TODO: inductive types (boolean, nat) with their eliminators allowed in }
   \end{mathpar}
@@ -1064,17 +1066,16 @@ types is standard, so below we focus on the linear syntax.
 %
     \inferrule{~}{\Gamma \vdash t \equiv t' : 1}
 %
-    \and
+    % \and
 %
-    \inferrule{~}{\Gamma \vdash G\, (G^{-1} \, t) \equiv t : G A}
+    % \inferrule{~}{\Gamma \vdash G\, (G^{-1} \, t) \equiv t : G A}
 
     \\
 
     \boxed{\Gamma ; \Delta \vdash a \equiv a' : A}
 
-    \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
+    % \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
 %
-    \\
 %
     \inferrule{~}{\Gamma; \Delta \vdash \app {(\lamblto a e)} {e'} \equiv \subst e x {e'} : C}
 %
@@ -1136,24 +1137,27 @@ types is standard, so below we focus on the linear syntax.
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \square (A \lto B) \\
-      \Gamma \vdash g : \square (A \lto B) \\
+    {\Gamma \vdash f : \ltonl { (A \lto B) } \\
+      \Gamma \vdash g : \ltonl { (A \lto B) } \\
       \Gamma ; \Delta \vdash a : A \\
-      \Gamma ; \Delta \vdash p : \apptol {\bang f}{a} \equiv \apptol {\bang g}{a}}
+      \Gamma ; \Delta \vdash p : \apptol {f}{a} \equiv \apptol {g}{a}}
     {\Gamma ; \Delta \vdash \equalizerpi {\equalizerpair {a}{p}} \equiv a : A}
     %
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \square (A \lto B) \\
-      \Gamma \vdash g : \square (A \lto B) \\
-      \Gamma ; \Delta \vdash p : \apptol {\bang f}{a} = \apptol {\bang g}{a} \\
-      \Gamma ; \Delta \vdash e : \equalizer{a}{\bang f}{\bang g}}
+    {\Gamma \vdash f : \ltonl { (A \lto B) } \\
+      \Gamma \vdash g : \ltonl { (A \lto B) } \\
+      \Gamma ; \Delta \vdash p : \apptol {f}{a} = \apptol {g}{a} \\
+      \Gamma ; \Delta \vdash e : \equalizer{a}{f}{g}}
     {\Gamma ; \Delta \vdash \equalizerpair {\equalizerpi {e}} {p} \equiv e : A}
 \end{mathpar}
   \caption{Judgmental equality}
   \label{fig:jdgeq}
 \end{figure}
+\steven{Do we need inverse for $\ltonl A$ in judgemental equality figure?}
+\steven{Do we need to say anything about the equalizer proofs being unique in
+  judgemental equality figure?}
 
 \subsection{Formal Grammars as Linear Types}
 \label{sec:formaltype}
@@ -1377,7 +1381,7 @@ as,
   F X := \LinSigTy a A I
 \]
 %
-\steven{Elaborate on $G$ more}
+\steven{Elaborate on $G$ more and rename $G A$to $\ltonl A$ in this section}
 
 \pedro{Agreed :) maybe mention connections to persistent propositions from the
 separation logic literature}
@@ -1396,7 +1400,6 @@ grammar semantics of $A$.
 %
 \pedro{We should justify, even if briefly, the existence of this
   fixed-point}
-\steven{As a consequence of Knaster-Tarski}
 
 Observe that we need not take the Kleene star as a primitive
 grammar constructor, as it is definable as a fixed point.
