@@ -30,7 +30,7 @@
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
 \newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
-\newcommand{\String}{\Sigma^{*}}
+\newcommand{\String}{\textbf{String}}
 \newcommand{\Set}{\mathbf{Set}}
 \newcommand{\Syn}{\mathbf{Synx}}
 \newcommand{\SemAct}{\mathbf{SemAct}}
@@ -193,7 +193,7 @@ The theory of formal languages and parsing is one of the oldest and most
 thoroughly developed area of theoretical computer science.
 The central object of study is a \emph{formal language} $L$ over an alphabet
 $\Sigma$, which is classically defined as a
-\emph{subset} of strings $L \subseteq \String$. The expressivity of formal
+\emph{subset} of strings $L \subseteq \String = \Sigma^{*}$. The expressivity of formal
 languages is sufficient for defining a \emph{recognizer} of a language $L$:
 a function $r : \String \to \Prop$ such that $r$ maps each string $w$ to the
 proposition that $w$ is in the language $w \in L$. This technique of language
@@ -839,7 +839,6 @@ where the linear types have natural interpretation in terms of formal languages 
 the tensor corresponds to grammar concatenation. We conclude the section by showing how
 classes of grammars correspond to certain sub-type-theories inside \theoryabbv.
 
-\pedro{Hopefully this serves as a segue between this and the syntax subsection}
 \subsection{Syntax}
 \label{subsec:syntax}
 
@@ -1529,19 +1528,132 @@ context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
 will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
 calculus, which of course induces a semantics of unrestricted grammars.
 
-\section{Formal Grammar Theory in Lambek}
+\section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
 
-\steven{this entire section should become much more compact with the examples
+\steven{below this is unedited word vomit}
+\steven{this entire ``Formal Grammar Theory in Lambek'' section should become much more compact with the examples
   section from the beginning in mind}
 
-%% Make sure to say which results are mechanized
+\subsection{Grammar Properties}
+\steven{Mention that $\top$ and $\String$ are iso. Highlight this as a needed axiom}
+
 %% 1. Basic concepts: unambiguity, parseability, weak and strong equivalence
+\paragraph{Unambiguity}
+In the grammars model, we say that a grammar is unambiguous if there is at most
+one parse tree for any input string. There are several ways to capture this
+concept internally.
+
+In the presence of distributive coproducts, the following are equivalent:
+\begin{itemize}
+  \item $A$ is an unambiguous grammar
+  \item The morphism $! : A \to \top$ is a monomorphism
+  \item Given a grammar $B$, all morphisms $B \to A$ are equal
+  \item $A \& A \cong A$
+\end{itemize}
+
+\paragraph{Parseability}
+We say $A$ is \emph{weakly parseable} if there exists a type $B$ and a map
+$\top \to A \oplus B$. Because $\top \cong \String$, this says that any string
+can be parsed into either an $A$ or a $B$.
+
+If $\top \cong A \oplus B$, call $A$ \emph{parseable}. This notion of
+parseability implies that $A$ and $B$ are each unambiguous.
+
+\paragraph{Decidability}
+In the case that $A$ is parseable with respect to $\neg A$ --- i.e.
+$\top \cong A \oplus \neg A$ --- then call $A$ \emph{decidable}.
+
+\paragraph{Equivalence}
+Grammars $A$ and $B$ are \emph{weakly equivalent} if there exists maps
+$f : A \to B$ and $g : B \to A$.
+
+If $f$ and $g$ form an isomorphsim, then $A$ and $B$ are \emph{strongly
+  equivalent}.
+\steven{TODO cite that these are the same as Chomsky's notions of equivalence}
+
+
+\subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
+
+\subsection{The Dyck Grammar}
 %% 3. Dyck language
+The Dyck grammar $D$ for balanced parens (summarize what it is + citation)
+
+
+\steven{this is a VERY loose sketch of the things I want to say about $D$}
+\Cref{fig:DyckAutomaton} presents an automaton $M$ that recognizes $D$. We show this
+precisely by constructing an isomorphism between $D$ and $\Trace_{M}~0~\true$.
+Unlike the finite automata seen thus far, $M$ has infinitely many states --- one
+for each $n : \mathbb{N}$ with an additional fail state. This diverges a bit
+from classical language theory, where this machine would be encoded as a
+pushdown automaton with finitely many
+states and stack of memory. Such PDAs are encodable in our theory, although they
+are a little cumbersome to use. Moreover, they
+seem overfit to classical reasoning as they don't preserve the gramamr up to
+strong equivalence, only weak equivalnce in general. \steven{cite lambek
+  automata and state that is is a secondary goal to preserve as much structure as possible}
+By moving the stack of memory (the nats) into the
+state, we obtain infinitely many states, which is fine bc the states need only
+be a type for us to interface with it.
+
+\steven{TODO sketch proof of equivalence. Mention that it is mechanized}
+
+\begin{figure}
+  \begin{tikzpicture}[node distance = 17mm ]
+    \node[state, initial, accepting] (0) {$0$};
+    \node[state, right of=0] (1) {$1$};
+    \node[state, right of=1] (2) {$2$};
+    \node[right of=2] (3) {$\dots$};
+    \node[state, below of=0] (fail) {$\mathsf{fail}$};
+
+    \path[->] (0) edge[above, bend left] node{\stringquote{(}} (1)
+              (1) edge[below, bend left] node{\stringquote{)}} (0)
+              (1) edge[above, bend left] node{\stringquote{(}} (2)
+              (2) edge[below, bend left] node{\stringquote{)}} (1)
+              (2) edge[above, bend left] node{\stringquote{(}} (3)
+              (3) edge[below, bend left] node{\stringquote{)}} (2)
+              (fail) edge[loop right] node{\stringquote{(}, \stringquote{)}} (fail)
+              (0) edge[left] node{\stringquote{)}} (fail);
+  \end{tikzpicture}
+  \caption{Automaton $M$ for the Dyck grammar}
+  \label{fig:DyckAutomaton}
+\end{figure}
+
+\subsection{LL(1)}
 %% 4. LL(1) parser
+
+\steven{TODO impute LL(1) example, mention that its weak equivalence is mechanized}
+
+\subsection{UnReStRiCtEd}
 %% 5. Expressiveness: Turing Machines
 
+%% Make sure to say which results are mechanized
+
+\subsection{Semantic Actions}
+\steven{TODO edit this. synthesize it with the later presentation of sematnic
+  actions as models, and then remove the model section}
+All constructions discussed until now detail how a string may be parsed into a
+\emph{concrete} syntax tree; however, this is often not the representation that later
+compiler passes would take in. Instead, they often take in an \emph{abstract}
+syntax tree that forgets syntactic details that are superfluous to the later
+passes. For example, after using parentheses to disambiguate a parse of a string
+into a concrete syntax tree, we may remove these parentheses to have a cleaner
+structured representation of the underlying data. The procedure that takes in a
+concrete syntax tree and returns an abstract one is referred to as a
+\emph{semantic action}.
+
+Given a linear type $A$, the inhaitants of $A$ serve as concrete syntax. We may
+then chose a non-linear type $X$ that serves as abstract syntax. A semantic
+action can then be defined as $\square (A \lto \Delta X)$ where
+$\Delta X = \LinSigTy x X \top$.
+\steven{Note here that even though $\Delta$ is a map from nonlinear types into
+  linear ones, it is very different from $F$/whatever we call that half of the adjunction}
+
+\steven{Everything in this section below this marker is outdated and needs to be
+folded into the above or cut}
+
+\steven{Need a different segue because canonicity is no longer before this}
 The canonicity theorem from the previous section gives a tight connection
 between terms in our type theory and the theory of formal languages. In this section
 we further explore these connections by using the fact that, classically
@@ -1582,158 +1694,7 @@ are often represented formally as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$,
   \item $F \subset Q$ a set of accepting states
 \end{itemize}
 
-Intuitively, this can be thought of like a directed graph with nodes in $Q$ with
-an edge $q \overset{c}{\to} q'$ whenever $q' \in \delta(q, c)$. Note that
-transitions in an NFA may be labeled with the empty string $\varepsilon$ --- such
-transitions are referred to as \emph{$\varepsilon$-transitions}. We may see an
-example of an NFA in \cref{fig:NFA}.
 
-From an NFA, we may construct a grammar of traces as follows:
-
-First, we define a mutual fixed point grammar that describes the traces through the NFA.\ Then, we have another
-grammar that tells us if we're currently in an accepting state of the automaton.
-A parse of the NFA grammar is then a pair of a trace and the data that we're in
-an accepting state.
-
-Consider the NFA $N$ pictured in \cref{fig:NFA}. There are three states, $1$, $2$,
-and $3$. We introduce a non-linear type $Q$ with three inhabitants $q_{1}$,
-$q_{2}$, and $q_{3}$ to represent each of these states, respectively. Given a
-$q, q'$, we can
-then define the type of traces from $q$ to $q'$. For instance, let's construct
-the traces starting at $q_{1}$ and ending at $q_{2}$ as an example.
-
-\begin{equation}
-  \label{eq:nfatrace}
-  \mathsf{Trace}_{N}(q_{1}, q_{2}) = \mu
-  \begin{pmatrix}
-    g_{q_{1}} := g_{q_{3}} \oplus ( b \otimes g_{q_{2}} ) \\
-    g_{q_{2}} := ( a \otimes g_{q_{2}} ) \oplus ( a \otimes g_{q_{3}} ) \oplus ( b \otimes g_{q_{3}} ) \oplus I \\
-    g_{q_{3}} := a \otimes g_{q_{1}} \\
-  \end{pmatrix}. g_{q_{1}}
-\end{equation}
-
-We should read this as defining three mutually recursive grammars, one for each
-state. The definitions of these mutually recursive grammars capture the
-transitions of the automaton. To ensure that we only encode traces that end in
-state 2, we only include the unit $I$ as a summand in
-$g_{q_{2}}$. That is, by only including $I$ at this location, it makes it the
-only place where derivations of $\mathsf{Trace}(q_{1}, q_{2})$ can terminate. We
-can think of all of these definitions underneath
-of the $\mu$ binder as bringing some local grammars into scope. With these local
-grammars in scope we are ultimately constructing a term of type $g_{q_{1}}$ to denote
-only traces starting in state 1.
-
-To encode the acceptance criteria of $N$, we want to internalize a proposition
-over each state of the NFA.\ That is, for each $q \in Q$ we define a term
-
-\[
-  \mathsf{acc}(q) := q \text{ is accepting}
-\]
-
-In this example, $\mathsf{acc}(q_{1}) = \top$ and
-$\mathsf{acc}(q_{2}) = \mathsf{acc}(q_{3}) = \bot$. An accepting trace of the NFA $N$ is then given by the following dependent grammar,
-\[
- \mathsf{AccTrace}_{N} := \LinSigTy q Q {\left( \mathsf{Trace}_{N}(q_{0} , q) \pair \mathsf{acc}(q) \right)}
-\]
-
-where $q_{0}$ is the initial state. That is, a trace is accepted by the NFA if
-we can construct the trace, and the trace ends at an accepting state. This idea
-is simple enough and aligns with how we intuitively treat these automata.
-
-Generalizing over the above example, we want to define the type of traces as,
-
-\[
-  \mathsf{Trace}_{N}(q_{0}, q_{1}) = \mu
-  \begin{pmatrix}
-    g_{q} := \mathsf{Trans}(q), & q \neq q_{1} \\
-    g_{q} := \mathsf{Trans}(q) \oplus I , & q = q_{1}
-  \end{pmatrix}. g_{q_{0}}
-\]
-
-where $\mathsf{Trans}(q)$ is an iterated disjunction that describes which
-transition you should take. For an NFA, $\mathsf{Trans}(q)$ must take on the
-following syntactic form,
-
-\begin{gather*}
- \mathsf{State} \in \{ g_{q} : q \in Q \} \\
- \mathsf{Char} \in \Sigma \\
- \mathsf{Trans}_{N}(q) ::= \mathsf{Char} \otimes \mathsf{State}~|~\mathsf{State}~|~\mathsf{Trans}_{N}(q) \oplus \mathsf{Trans}_{N}(q)
-\end{gather*}
-
-That is, $\mathsf{Trans}(q)$ is a disjunction of literals followed by grammars
-that encode states.
-
-When conducting proofs involving NFA grammars, we often to
-need either construct terms of type $\mathsf{Trace}_{N}(q , q')$. To
-this end, we give three admissible rules for constructing
-traces,
-
-\begin{figure}[h!]
-  \label{fig:admissibleintro}
-  \begin{mathpar}
-    \inferrule
-    {~}
-    {\Gamma ; \cdot \vdash \mathsf{nil} : \mathsf{Trace}_N
-      (q , q)}
-
-    \and
-
-    \inferrule
-    {\Gamma ; \Delta \vdash M : \mathsf{Trace}_N
-      (dst , q') \\
-    \exists \text{ transition } src \overset{c}{\to} dst
-    }
-    {\Gamma ; x : c , \Delta \vdash \mathsf{cons}(M) : \mathsf{Trace}_N
-    (src , q')}
-
-    \and
-
-    \inferrule
-    {\Gamma ; \Delta \vdash M : \mathsf{Trace}_N (dst , q')
-      \\
-    \exists~\varepsilon\text{-transition } src
-    \overset{\varepsilon}{\to} dst}
-    {\Gamma ; \Delta \vdash \mathsf{\varepsilon cons}(M) : \mathsf{Trace}_N
-    (src , q')}
-  \end{mathpar}
-  \caption{Admissible Trace Constructors}
-\end{figure}
-
-
-That is, we may use $\mathsf{nil}$ to terminate a trace that
-begins and ends at state $q$. The rules $\mathsf{cons}$ and
-$\mathsf{\varepsilon cons}$ are then used to inductively
-stitch traces together when sound. For instance, we can read
-the $\mathsf{cons}$ rule as saying that we can
-create a trace coming from a state $src$ provided that we may first
-transition via the character $c$ to state $dst$ and
-inductively build a trace starting from $dst$. The
-$\mathsf{\varepsilon cons}$ rule says something similar, but
-with an $\varepsilon$-transition instead of a transition
-labelled by a character. Recall that
-these rules are \emph{admissible}. They are not strictly
-necessary as primitives to conduct our proofs; however, they
-do provide convenient shorthand notation for building terms
-of type $\mathsf{Trace}_{N}(q , q')$.
-
-Dual to constructing traces, we often want to construct
-other terms in a context containing values of type
-$\mathsf{Trace}_{N}(q , q')$. For this purpose, we make use
-of the elimination principle for multiple-fixed points ---
-which we write as $\mathsf{mfold}$ --- given
-in \cref{fig:multifix}.
-
-Note that this general construction will readily generalize to other types of
-automata. If we wanted to define say deterministic finite automata\footnote{DFAs
-\emph{could} just be defined as NFAs that happen to be deterministic. This is
-one way to do so, or you may choose to present the transition relation for the
-automaton as a transition \emph{function} instead. Concerns like these don't
-matter so much when defining things on paper, but at formalization time these
-are important and can make some proofs much easier.}, pushdown automata, Turing
-machines, etc, we just swap out the type of traces for a different, but very
-similar, trace construction.
-
-With this setting for finite automata, we can now internalize some classical theorems inside of our formal system.
 
 \subsection{A DFA Parser}
 \label{subsec:regexparser}
@@ -2620,6 +2581,8 @@ weak equivalence, and thus even give a syntactic way to reason about language eq
 \steven{TODO language semantics}
 
 \subsection{Semantic Actions}
+\steven{Tentatively planning to cut this subsection for an internal representation
+  of semantic actions}
 Returning to the problem of parsing, the output of a parse usually is not the
 literal parse tree. Rather, the output is the result of some \emph{semantic
   actions} ran on the parse tree, which usually serve to remove some syntactic
@@ -2840,6 +2803,8 @@ like that they practically ask for a type theory}
 \steven{Mention Neel's typed algebraic approach paper here. Say it is similar at
   first glance, as its parsing with types, but that he actually is representing
   something quite different. Or is it so different that its not worth mentioning?}
+
+\steven{TODO add lambek calculus/categorial grammars here}
 
 \paragraph{Kleene Algebra}
 Since the early works in the theory of formal languages, Kleene
