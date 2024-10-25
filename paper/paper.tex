@@ -539,6 +539,10 @@ transition from state 1 to state 3 is labeled by the empty string $\epsilon$, so
 the transition consumes no input. In this case, when building a trace out of
 state 1, it suffices to build a trace out of state 3 \emph{over the same string}.
 
+Overall, leveraging \emph{indexed} inductive types provides a concise interface
+for defineing a family
+of mutually recursive types over the indexing data.
+
 \begin{figure}
   \begin{tikzpicture}[node distance = 25mm ]
     \node[state, initial, accepting] (1) {$1$};
@@ -586,23 +590,24 @@ grammars, and non-linear types $X$, which act like ordinary types or sets. Both
 linear and non-linear types are checked for well-formedness in a context
 $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
 
-\steven{This figure is broken}
 \begin{figure}
-  % \begin{array}{rrcl}
-  %   \textrm{non-linear contexts} & \Gamma & ::= & \cdot \pipe \Gamma,x:X \\
-  %   \textrm{non-linear types} & X , Y , Z & ::= & \mathsf{Nat} \pipe
-  %                                                 \mathsf{Int} \pipe
-  %                                                 \mathsf{Empty} \pipe
-  %                                                 \mathsf{Unit} \pipe
-  %                                                 \mathsf{SPF}\,X\pipe U \pipe L
-  %                                                 \pipe !A \pipe \sum_{x:X} Y
-  %                                                 \pipe \prod_{x:X} Y\pipe M =_A
-  %                                                 N \\
-  %   \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
-  %   \textrm{linear types} & A , B , C & ::= &
-  %   c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M
-  %   A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{f}{g}\\
-  % \end{array}
+  \[
+  \begin{array}{rrcl}
+    \textrm{non-linear contexts} & \Gamma & ::= & \cdot \pipe \Gamma,x:X \\
+    \textrm{non-linear types} & X , Y , Z & ::= & \mathsf{Nat} \pipe
+                                                  \mathsf{Int} \pipe
+                                                  \mathsf{Empty} \pipe
+                                                  \mathsf{Unit} \pipe
+                                                  \mathsf{SPF}\,X\pipe U \pipe L
+                                                  \pipe !A \pipe \sum_{x:X} Y
+                                                  \pipe \prod_{x:X} Y\pipe M =_A
+                                                  N \\
+    \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
+    \textrm{linear types} & A , B , C & ::= &
+    c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M
+    A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{f}{g}\\
+  \end{array}
+  \]
   \caption{Overview of Types}
 \end{figure}
 
@@ -796,25 +801,14 @@ to ensure that every value in context is used exactly once. This control enables
 \emph{resource-sensitive} reasoning, where we may treat a resource as
 \emph{consumed} after usage. This viewpoint is amenable to parsing applications,
 as we may treat characters of a string as finite resources that are consumed at
-parse-time. That is, when reading a string, the occurrence of any character is read once. Freely duplicating or dropping characters from a string changes the meaning of that string. \max{what about a backtracking parser?} \steven{Does the sentence sound better now? I've tried to avoid suggesting any particular parser design. Also, I think backtracking is a very interesting question to talk about in future work}. One may then envision a linear type system where the types comprise
+parse-time. That is, when reading a string, the occurrence of any character is read once. Freely duplicating or dropping characters from a string changes the meaning of that string. \max{what about a backtracking parser?}. One may then envision a linear type system where the types comprise
 formal grammars generated over some alphabet $\Sigma$, and the type constructors
 correspond precisely to inductive constructions on grammars --- such as
 conjunction, disjunction, concatenation, etc.
 
-Unfortunately, programming in a linear term language is often
-cumbersome and unintuitive for users who are unaccustomed to the usage
-restrictions.\max{You are arguing against our own type theory here...} \steven{I
-  want to argue against a \emph{purely linear} calculus to motivate the
-  convenience of LNL, but perhaps this isn't appropriate here, and I don't want to
-  make our own type theory sound bad.Should probably just cut the beginning of
-  this paragraph and jump into LNL, but then there's not an immediate reason for
-  why one might want/need it over a pure linear system}
-\pedro{I think that it's reasonable to simply say something like ``programming in a purely linear term language
-is limiting due to variable usage restrictions''. In this case we're not throwing our own TT under the bus}
-Code in such a language can
-become unnecessarily verbose when ensuring every function written is indeed linear. It would be more ergonomic to allow users using Girard encodings to translate
-high-level reasoning into low-level linear terms.\pedro{What encodings are these?
-We should add a citation here}
+Programming in a purely linear term language is limiting due to the variable
+usage restrictions. Code in such a language can
+become unnecessarily verbose when ensuring the linearity invariant.
 To alleviate this
 concern, in 1995 Benton et al.\ proposed an alternative categorical
 semantics of linear logic based on adjoint interactions between linear
@@ -837,10 +831,6 @@ on linear terms
 is disallowed; however, through dependence of a linear term on a non-linear
 index, we recover the definition of Aho's indexed grammars \cite{AhoIndexed}
 internal to \theoryabbv.
-
-\steven{The above is meant to walk the reader into accepting LNL as a natural
-  choice, but it doesn't really flow well to the beginning of the next subsection }
-
 
 In this section we go on a tour of \theoryabbv. We start by presenting its syntax.
 In order to avoid a notion of raw-term, we present it in an intrinsically-typed fashion,
