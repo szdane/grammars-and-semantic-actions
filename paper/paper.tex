@@ -467,10 +467,10 @@ matches $a^{*} \otimes b$ through repeated application of the Kleene star constr
 \label{fig:kleenestarderivation}
 \end{figure}
 
-However, we can have derivations where the term in context is not simply a
+We may also have derivations where the term in context is not simply a
 string of base types. For instance, by using the elimination principle for
 Kleene star, \cref{fig:kleeneabstractproof} builds a term of type
-$A^{*}$ in context comprising abstract linear types. In these contexts, it is
+$A^{*}$ in a context comprising abstract linear types. In these contexts, it is
 not quite appropriate
 to treat linear terms as parse \textit{trees}, because the information in
 context is not a string. Instead, it is more
@@ -482,7 +482,7 @@ type $A^{*}$ is a transformation of parse trees of the input grammar into parse
 trees of the output grammar.
 
 \steven{TODO : describe elimination principle somewhere. Maybe just in prose?}
-\steven{I probably can't get away with the inline definition of $f$ below}
+\steven{I probably can't get away with the inline definition of $f$ in \cref{fig:kleeneabstractproof}}
 \begin{figure}
 \begin{mathpar}
   \inferrule
@@ -818,7 +818,10 @@ and non-linear logics \cite{bentonMixedLinearNonlinear1995} ---
 appropriately referred to as a \emph{linear-non-linear} (LNL)
 system. This work is simply typed, so the boundary between linear and
 non-linear subtheories is entirely characterized via a monoidal
-adjunction $F \dashv G$ between linear terms and non-linear terms.
+adjunction between linear terms and non-linear terms.
+
+\steven{Describe this monoidal adjunction with $\ltonl A$ and the derivable
+  version of $F$}
 
 Inside of an LNL system, linearity may be thought of as an option that users can
 choose to deliberately invoke at deliberate points in their developments in an
@@ -831,13 +834,18 @@ Through the approach described by Krishnaswami et al.\ in
 we may define a restricted form of dependent types. In particular, dependence
 on linear terms
 is disallowed; however, through dependence of a linear term on a non-linear
-index, we recover the definition of Aho's indexed grammars \cite{AhoIndexed}
-internal to \theoryabbv.
+index, we can recover the definition of Aho's indexed grammars \cite{AhoIndexed}
+internal to \theoryabbv. Although, we can define strictly more things, as Aho's
+indexed grammars provide restricted access to the index whereas we can do
+whatever with it.
+
+\steven{elaborate on indexed grammars in a more articulate way in the last sentence}
+\steven{Put the aho stuff in the subtheory section}
 
 In this section we go on a tour of \theoryabbv. We start by presenting its syntax.
 In order to avoid a notion of raw-term, we present it in an intrinsically-typed fashion,
 where only well-typed terms are meaningful. Next, we show how it admits a model in $\Set^{\String}$
-where the linear types have natural interpretation in terms of formal languages --- for instance,
+where the linear types have natural interpretation in terms of formal grammars --- for instance,
 the tensor corresponds to grammar concatenation. We conclude the section by showing how
 classes of grammars correspond to certain sub-type-theories inside \theoryabbv.
 
@@ -1329,6 +1337,7 @@ right-handed counterpart.
 \end{figure}
 
 \paragraph{LNL Dependent Types}
+\steven{talk about how binary sum and binary with are definable over $\Bool$}
 Given a non-linear type $X$, we may form both the dependent product type
 $\LinPiTy x X A$ and the dependent pair type $\LinSigTy x X A$ as linear types
 where $x$ is free in $A$.
@@ -1356,6 +1365,7 @@ particular, via a dependence on $\Bool$.
 where $C(\true) = A, C(\false) = B$.
 
 \paragraph{Universal Type}
+\steven{Definable as nullary product}
 The universal type $\top$ may be formed in any context.
 %
 \[ \sem{\top} \gamma w = \{ \ast \}\]
@@ -1363,6 +1373,7 @@ The universal type $\top$ may be formed in any context.
 Its grammar semantics in set outputs the unit type in $\Set$ for all input strings in all contexts.
 
 \paragraph{Empty Type}
+\steven{Definable as nullary sum}
 The empty type $\bot$ has no inhabitants. The elimination for the empty type
 witnesses the principle of explosion --- i.e.\ from a term of type $\bot$ we may
 introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
@@ -1370,6 +1381,8 @@ introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
 \[ \sem {\bot} \gamma w = \emptyset \]
 %
 \paragraph{The $G$ Modality}
+\steven{Rename this}
+\steven{Compare to persistance modalities from separation logic}
 The $G$ modality provides the embedding of linear types in the empty context
 into non-linear types. The introduction and elimination forms for $G A$ obey the
 same rules as given in \cite{bentonMixedLinearNonlinear1995} and \cite{krishnaswami_integrating_2015}.
@@ -1392,6 +1405,9 @@ The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\vare
 %
 %
 \paragraph{Recursive Types}
+\steven{reflavor this section as ``indexed inductive'' instead of ``recursive'',
+and entirely rework with the new inductive definition}
+\steven{The non-indexed inductive are definable as being trivially indexed over unit}
 Recursive linear types may be defined via the least-fixed point operator $\mu$.
 The grammar semantics of which are the fixed-point of sets induced by the
 grammar semantics of $A$.
@@ -1531,6 +1547,9 @@ context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
 will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
 calculus, which of course induces a semantics of unrestricted grammars.
 
+\steven{Aho's indexed grammars to be moved into here to reflect on yet another
+  grammar formalism that is internally definable}
+
 \section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
 
@@ -1578,10 +1597,22 @@ If $f$ and $g$ form an isomorphsim, then $A$ and $B$ are \emph{strongly
 
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
+\steven{How much is worth explicitly walking through? The examples from earlier
+  give motivation, and we are pressed for space}
+
+\paragraph{Regex-NFA/Thompson}
+\steven{TODO put regex-NFA iso here. Call it Thompson's constructon?. Mention
+  its mechanized}
+
+\paragraph{Determinization of an NFA}
+\steven{TODO put determinzation here. Mention its mechanized}
 
 \subsection{The Dyck Grammar}
 %% 3. Dyck language
 The Dyck grammar $D$ for balanced parens (summarize what it is + citation)
+
+\steven{somewhere in here, sneak in the benchmark where the dyck parser could
+  handle 10's of thousands of characters in about 30s}
 
 
 \steven{this is a VERY loose sketch of the things I want to say about $D$}
@@ -2567,6 +2598,9 @@ if we don't say anything about the syntactic category, reviewers won't mind.}
 \subsection{Concrete Models of \theoryabbv}
 \label{sec:othermodels}
 
+\steven{Because we can define a version of semantic actions internally, we
+  shouldn't put it as a separate model}
+
 One of the powers of type theories is that it can be profitable to interpret them
 in various models. In this section, by using our just-defined Chomsky categories,
 we show how other useful concepts from formal language theory can also be organized
@@ -2583,38 +2617,38 @@ propositionally truncated view of the syntax. Logical equivalence should induce
 weak equivalence, and thus even give a syntactic way to reason about language equivalence.
 \steven{TODO language semantics}
 
-\subsection{Semantic Actions}
-\steven{Tentatively planning to cut this subsection for an internal representation
-  of semantic actions}
-Returning to the problem of parsing, the output of a parse usually is not the
-literal parse tree. Rather, the output is the result of some \emph{semantic
-  actions} ran on the parse tree, which usually serve to remove some syntactic
-details that are unnecessary for later processing.
+% \subsection{Semantic Actions}
+% \steven{Tentatively planning to cut this subsection for an internal representation
+%   of semantic actions}
+% Returning to the problem of parsing, the output of a parse usually is not the
+% literal parse tree. Rather, the output is the result of some \emph{semantic
+%   actions} ran on the parse tree, which usually serve to remove some syntactic
+% details that are unnecessary for later processing.
 
-Given a grammar $G : \String \to \Set$, we define a semantic action to be a set
-$X$ with a function $f$ that produces a semantic element from any parse of $G$.
+% Given a grammar $G : \String \to \Set$, we define a semantic action to be a set
+% $X$ with a function $f$ that produces a semantic element from any parse of $G$.
 
-\[
-  f : \PiTy w \String {G w \to X}
-\]
+% \[
+%   f : \PiTy w \String {G w \to X}
+% \]
 
-Further, semantic actions can be arranged into a structured category.
-Define $\SemAct$ as the comma
-category $\Grammar / \Delta$, where $\Delta : \Set \to \Grammar$ defines a
-discrete presheaf. That is, for a set $X$, $\Delta (X)(w) = X$ for all
-$w \in \String$. As $\SemAct$ is defined as a comma category, it has a forgetful
-functor into $\Grammar$. That is, $\SemAct$ serves as a notion of formal
-grammar. Moreover, $\SemAct$ is a model of \theoryabbv.
+% Further, semantic actions can be arranged into a structured category.
+% Define $\SemAct$ as the comma
+% category $\Grammar / \Delta$, where $\Delta : \Set \to \Grammar$ defines a
+% discrete presheaf. That is, for a set $X$, $\Delta (X)(w) = X$ for all
+% $w \in \String$. As $\SemAct$ is defined as a comma category, it has a forgetful
+% functor into $\Grammar$. That is, $\SemAct$ serves as a notion of formal
+% grammar. Moreover, $\SemAct$ is a model of \theoryabbv.
 
-\steven{It being a notion of formal grammar is distinct from being a model. This
-probably warrants a proof}
+% \steven{It being a notion of formal grammar is distinct from being a model. This
+% probably warrants a proof}
 
-\steven{TODO semantic actions}
+% \steven{TODO semantic actions}
 
-\pedro{This is a very nice opportunity of showing off the supremacy of denotational
-  reasoning ;) We should probably prove the gluing lemma in the previous section
-  and apply it here and in the canonicity section. The actual proof might have to be
-  moved to the appendix, though}
+% \pedro{This is a very nice opportunity of showing off the supremacy of denotational
+%   reasoning ;) We should probably prove the gluing lemma in the previous section
+%   and apply it here and in the canonicity section. The actual proof might have to be
+%   moved to the appendix, though}
 
 \subsection{Parse Canonicity}
 Canonicity is an important metatheoretic theorem in the type theory
