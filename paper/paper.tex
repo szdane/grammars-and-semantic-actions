@@ -1,6 +1,6 @@
 
 % -*- fill-column: 80; -*-
-\documentclass[sigconf,review,anonymous,screen,acmsmall]{acmart}
+\documentclass[review,anonymous,screen,acmsmall,nonacm]{acmart}
 \usepackage{mathpartir}
 \usepackage{tikz-cd}
 \usepackage{lipsum}
@@ -59,6 +59,8 @@
 \newcommand{\nil}{\mathsf{nil}}
 \newcommand{\cons}{\mathsf{cons}}
 \newcommand{\data}{\mathsf{data}}
+\newcommand{\where}{\mathsf{where}}
+\newcommand{\Trace}{\mathsf{Trace}}
 \newcommand{\stringquote}[1]{\texttt{\textquotesingle#1\textquotesingle}}
 
 \newcommand{\oplusinj}[2]{\sigma\,#1\,#2}
@@ -351,17 +353,21 @@ all-encompassing semantic domain for parsing.
 \section{\theoryname by Example}
 \label{sec:type-theory-examples}
 
-To gain intuiton for working in \theoryname, let's walk through some examples of
-grammars and parses internal to it.
+\steven{To save space, each of these example figures can be
+  minified/potentially inlined}
 
-\paragraph{Finite Grammars}
-First, consider finite grammars over the alphabet $\{ a , b , c \}$. Each letter of the
+To gain intuiton for working in \theoryname, let's walk through some examples of
+grammars and parses internal to it. In each of our examples, we will look at
+grammars over the three character alphabet $\{ a , b , c\}$.
+
+Each letter of the
 alphabet corresponds to a base type in our calculus. For instance, the grammar
 for the single character $a$ has a single parse tree for the string \stringquote{a}.
 and no parse trees at any other strings.
 
-A finite grammar is built from base types via dijunctions $\oplus$ and
-concatenations $\otimes$ --- for instance, $(a \oplus b) \otimes c$.
+\paragraph{Finite Grammars}
+First consider finite grammars --- those built from base types via dijunctions $\oplus$ and
+concatenations $\otimes$. For instance, $(a \oplus b) \otimes c$.
 In \cref{fig:fingram} we find a proof tree showing that the input string \stringquote{ac} matches
 the grammar $(a \oplus b) \otimes c$.
 
@@ -405,8 +411,8 @@ be processed
 without modification and in the order in which they were written.
 
 \paragraph{Regular Expressions}
-Next, we demonstrate how to parse a regular expression in \theoryabbv. Again,
-consider grammars over $\{ a , b , c \}$. Similar to finite grammars, regular
+Next, we demonstrate how to parse a regular expression in \theoryabbv. Similar
+to finite grammars, regular
 expresssions are built inductively using base types, $\oplus$, and $\otimes$ ;
 however, unlike finite grammars, regular expressions additionally have a
 restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
@@ -414,9 +420,9 @@ restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 % TODO this should be beter formatted but can't use listings with \otimes ^{\ast}
 \begin{figure}
 \begin{align*}
-\data &~A^{*}:\\
-      & \nil : I \to A* \\
-      & \cons : A \otimes A* \to A*
+\data &~A^{*}: L_{i}~\where\\
+      & \nil : I \lto A^{*} \\
+      & \cons : A \otimes A^{*} \lto A^{*}
 \end{align*}
 \caption{Kleene Star as an inductive type}
 \label{fig:kleenestarinductive}
@@ -461,15 +467,15 @@ matches $a^{*} \otimes b$ through repeated application of the Kleene star constr
 However, we can have derivations where the term in context is not simply a
 string of base types. For instance, by using the elimination principle for
 Kleene star, \cref{fig:kleeneabstractproof} builds a term of type
-$A^{*}$ in context comprising abstract\footnote{A linear type that is not a
-  finite grammar.} linear types. In these contexts, it is not quite appropriate
+$A^{*}$ in context comprising abstract linear types. In these contexts, it is
+not quite appropriate
 to treat linear terms as parse \textit{trees}, because the information in
 context is not a string. Instead, it is more
 appropriate to think of such terms as parse \textit{transformers}. That is, in
 \cref{fig:kleeneabstractproof} the
 inhabitant $x : (A \otimes A)^{*}$ in the context is not itself data to be parsed; rather,
 $x$ is a parse tree and the term from context $x : (A \otimes A)^{*}$ to the
-term $A^{*}$ is a transformation of parse trees of the input grammar into parse
+type $A^{*}$ is a transformation of parse trees of the input grammar into parse
 trees of the output grammar.
 
 \steven{TODO : describe elimination principle somewhere. Maybe just in prose?}
@@ -497,44 +503,79 @@ trees of the output grammar.
 \label{fig:kleeneabstractproof}
 \end{figure}
 
+\paragraph{Non-deterministic Finite Automata}
+As a final example, consider the non-deterministic finite
+automaton (NFA) $N$ from \cref{fig:exampleNFA}. Such automata play a critical
+role, as they serve as operationalized and
+executable presentation of a formal grammar. Therefore, it is crucial that we
+can represent them internal to \theoryabbv.
 
+Our method of representing these automata internally is to provide an \emph{indexed}
+inductive type of traces through the machine. For $N$, this indexed inductive
+type is given in \cref{fig:nfainductive}.
 
-% \begin{tikzpicture}[%opacity=0.5,
-%   treenode/.style = {shape=rectangle, rounded corners,
-%     draw, align=center,
-%     top color=white, bottom color=white!20},
-%     line/.style={draw, -latex'},
-%     edge from parent/.style={draw,-latex'},
-%     level 1/.style={sibling distance=20mm, level distance=0.5cm},
-%     level 2/.style={sibling distance=1cm, level distance=1cm},
-%     visible on=<3->
-%     ]
-%   \node[treenode] (tree) {$\otimes$}
-%     child { node[treenode] (a) {${\color{blue} a}$} }
-%     child { node[treenode] (b){${\color{magenta} \mathsf{inl}}$}
-%         child { node[treenode] (c) {${\color{magenta} b}$} }
-%       };
-%       \node[draw, fit=(tree)(a)(b)(c),
-%       label={[name=l] $g(ab)$}, visible on=<3->] {};
-%     \node[below=2.5cm of tree] (mt) {};
-%     \node[below=2.5cm of a] (mta) {};
-%     \node[below=2.5cm of b] (mtb) {};
-%     \node[below=-0.2cm of mt, visible on=<4->] (mtset) {};
-%       \node[draw, fit=(mt)(mtset)(mta)(mtb),
-%       label={[name=l, visible on=<4->] $g(aa)$}, visible on=<4->] {};
-% \end{tikzpicture}
+The type of traces in $N$ is indexed by two pieces of data: a state in $N$ and a
+Boolean. For each state $s : N.\mathsf{state}$ and $acc : \Bool$, we define the
+type of traces from state $s$, $\Trace_{N}~s~acc$. The Boolean flag $acc$ marks if the trace
+ends in either an accepting or a rejecting state. Let us dissect the structure
+of this type in more detail for state 1 of $N$.
 
+$\Trace_{N}~1~acc$ has three constructors. The first constructor
+$\mathsf{stop}_{1}$ allows a trace to end at state one, and because state
+1 is accepting $acc$ is true when terminating at state 1.
 
+The constructor
+$\mathsf{1to2}$ denotes the $b$-labeled transition in $N$ from state 1 to state
+2. The character $b$ is consumed when taking this transition and then a trace
+beginning at state 2 must be produced, which is denoted by the tensor product of
+the grammar $b$ and $Trace_{N}~2~acc$. Finally, the constructor $\mathsf{1to2}$
+abstracts over the acceptance Boolean because it is not yet determined.
+Because the Boolean is set by the acceptance criteria of the \emph{final} state,
+it is provided inductively by the trace out of state 2.
 
+The constructor $\mathsf{1to3}$ is built quite similarly as $\mathsf{1to2}$;
+however, $\mathsf{1to3}$ does not involve a tensor product. This is because the
+transition from state 1 to state 3 is labeled by the empty string $\epsilon$, so
+the transition consumes no input. In this case, when building a trace out of
+state 1, it suffices to build a trace out of state 3 \emph{over the same string}.
 
-%% 1. First example: finite grammars (regex minus Kleene star)
-%%    - why ordered linear:
-%%      + no exchange
-%%      + no contraction
-%%      + no weakening
-%%      + ambiguity
-%% 2. Second example: Kleene star
-%% 3. Third example: NFA traces to show the indexed inductive types 
+\begin{figure}
+  \begin{tikzpicture}[node distance = 25mm ]
+    \node[state, initial, accepting] (1) {$1$};
+    \node[state, below left of=1] (2) {$2$};
+    \node[state, right of=2] (3) {$3$};
+
+    \path[->] (1) edge[above] node{$b$} (2)
+              (1) edge[below, bend right, left=0.3] node{$\epsilon$} (3)
+              (2) edge[loop left] node{$a$} (2)
+              (2) edge[below] node{$b$} (3)
+              (3) edge[above, bend right, right=0.3] node{$a$} (1);
+  \end{tikzpicture}
+  \caption{NFA $N$}
+  \label{fig:exampleNFA}
+\end{figure}
+
+\begin{figure}
+\begin{align*}
+\data &~\Trace_{N}~1~(acc : \Bool) : L_{i}~\where\\
+      & \mathsf{stop}_{1} : I \lto \Trace_{N}~1~\true \\
+      & \mathsf{1to2} : \forall (acc : \Bool) \to b \otimes \Trace_{N}~2~acc \lto \Trace_{N}~1~acc \\
+      & \mathsf{1to3} : \forall (acc : \Bool) \to \Trace_{N}~3~acc \lto \Trace_{N}~1~acc \\
+\\
+\data &~\Trace_{N}~2~(acc : \Bool) : L_{i}~\where\\
+      & \mathsf{stop}_{2} : I \lto \Trace_{N}~2~\false \\
+      & \mathsf{2to2} : \forall (acc : \Bool) \to a \otimes \Trace_{N}~2~acc \lto \Trace_{N}~2~acc \\
+      & \mathsf{2to3} : \forall (acc : \Bool) \to b \otimes \Trace_{N}~3~acc \lto \Trace_{N}~2~acc \\
+\\
+\data &~\Trace_{N}~3~(acc : \Bool) : L_{i}~\where\\
+      & \mathsf{stop}_{3} : I \lto \Trace_{N}~3~\true \\
+      & \mathsf{3to1} : \forall (acc : \Bool) \to a \otimes \Trace_{N}~1~acc \lto \Trace_{N}~3~acc \\
+\end{align*}
+\caption{$N$ as an indexed inductive type}
+\label{fig:nfainductive}
+\end{figure}
+
+%% 3. Third example: NFA traces to show the indexed inductive types
 
 \section{Syntax and Typing for \theoryname}
 \label{sec:tt}
@@ -1500,6 +1541,9 @@ calculus, which of course induces a semantics of unrestricted grammars.
 
 \section{Formal Grammar Theory in Lambek}
 \label{sec:applications}
+
+\steven{this entire section should become much more compact with the examples
+  section from the beginning in mind}
 
 %% Make sure to say which results are mechanized
 %% 1. Basic concepts: unambiguity, parseability, weak and strong equivalence
