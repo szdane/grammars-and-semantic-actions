@@ -364,7 +364,7 @@ programs in \theoryabbv look like.
   minified/potentially inlined}
 
 To gain intuiton for working in \theoryabbv, we study some examples of
-grammars and parses of them internal to \theoryabbc. In each of our examples, we will look at
+grammars and parses of them internal to \theoryabbv. In each of our examples, we will look at
 grammars over the three character alphabet $\{ a , b , c\}$.
 
 Each letter of the
@@ -589,7 +589,7 @@ $N.\mathsf{state} \times \Bool$.
       & \mathsf{1to3} : \forall (acc : \Bool) \to \ltonl {(\Trace_{N}~3~acc \lto \Trace_{N}~1~acc)} \\
 \\
 \data &~\Trace_{N}~2~(acc : \Bool) : L_{i}~\where\\
-      & \mathsf{stop}_{2} : \ltonol {\Trace_{N}~2~\false} \\
+      & \mathsf{stop}_{2} : \ltonl {\Trace_{N}~2~\false} \\
       & \mathsf{2to2} : \forall (acc : \Bool) \to \ltonl {(a \lto \Trace_{N}~2~acc \lto \Trace_{N}~2~acc)} \\
       & \mathsf{2to3} : \forall (acc : \Bool) \to \ltonl {(b \lto \Trace_{N}~3~acc \lto \Trace_{N}~2~acc)}  \\
 \\
