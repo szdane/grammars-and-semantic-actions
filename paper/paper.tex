@@ -65,6 +65,7 @@
 \newcommand{\where}{\mathsf{where}}
 \newcommand{\Trace}{\mathsf{Trace}}
 \newcommand{\stringquote}[1]{\texttt{\textquotesingle#1\textquotesingle}}
+\newcommand{\internalize}[1]{\lceil#1\rceil}
 
 \newcommand{\oplusinj}[2]{\sigma\,#1\,#2}
 \newcommand{\withprj}[2]{\pi\,#1\,#2}
@@ -89,7 +90,7 @@
 %% \newcommand{\DepPlus}[2]{{\textstyle\bigoplus}\limits_{#1}{#2}
 \newcommand{\GrTy}{\mathsf{Gr}}
 
-\newcommand{\equalizer}[3]{\{#1\,|\,\apptol {#2}{#1} = \apptol{#3}{#1} \}}
+\newcommand{\equalizer}[3]{\{#1\,|\,\applto {#2}{#1} = \applto{#3}{#1} \}}
 \newcommand{\equalizerpair}[2]{\langle #1 , #2 \rangle}
 \newcommand{\equalizerpi}[1]{#1.\pi}
 
@@ -290,6 +291,8 @@ formal grammar:
   $G : \String \to \Set$.
 \end{definition}
 
+\steven{TODO need to go through and ensure that $\Sigma^{*}$ and $\String$ are each used appropriately}
+
 We say that a grammar $G$ associates to every string $w$ the set\footnote{We
   make little comment as to which foundations are used to encode $\Set$. Our
   construction is polymorphic in choice of a proper class of small sets, a
@@ -306,35 +309,18 @@ For each formal grammar $G$, define the language of accepted strings $L_{G}$ as,
 \[ L_{G} = \{ w \in \String ~|~ G w~\text{is inhabited} \} \]
 
 As they are simply sets, formal languages are naturally endowed with a partial
-order via subset inclusion. Similarly, formal grammars naturally coalesce into a
-\emph{category}. Define $\Grammar$ to be the category of formal grammars. Whose
+order via subset inclusion. Just, formal grammars naturally coalesce into a
+\emph{category}.
+
+Define $\Grammar$ to be the category of formal grammars. Whose
 objects are grammars, and whose morphisms are functions $f : G \to H$ between two
-grammars presented by a family of functions
+grammars presented by a family of functions $f^{w} : G w \to H w$ for
+$w : \String$. Intuitively, we interpret these morphisms as parse
+\emph{transformers} --- as constructive translations of $G$-parses into $H$-parses. Throughout this paper, we will make frequent reference to this categorical
+structure on $\Grammar$.
 
-\[ f^{w} : G w \to H w \]
-
-for every string $w \in \String$. Intuitively, we read a morphism of grammars as
-a \emph{parse transformer} --- i.e. $f$ translates a $G$-parse of $w$ into an $H$-parse
-of $w$. The induced notion of isomorphism in $\Grammar$ encodes that two grammars are equivalent if there is
-a bijective translation of parses. In other words, two grammars are isomorphic
-if they capture the same structural descriptions of strings, which is
-precisely Chomsky's notion of \emph{strong equivalence} of
-grammars \cite{chom1963}. In works like
-\cite{yoshinaga2002formal}, this notion of strong equivalence is often treated
-like the appropriate choice of ``sameness'' for two grammars. When abstracting over the latent
-structure of formal grammars and describing it in the the language of
-categories, it is encouraging to see the same definition of equivalence arise
-naturally.
-
-Upon inspection of the above definition, $\Grammar$ may equivalently
-be described as the functor category $\Set^{\String}$ --- where the
-set $\String$ is viewed as a discrete\footnote{Objects in $\String$
-comprise the set of all strings, and the only morphisms are the
-identity morphisms.}  category. In fact, in this paper we will take
-$\Grammar$ to be defined as the functor category $\Set^{\String}$ ---
-also called presheaf category. Such presheaf categories carry a
-remarkable amount of structure.  Indeed they are a monoidal topos and,
-as such, are a model to a substructural dependently typed theory.
+\steven{Above sounds awkward. I want to additionally say something here that signposts that we will give more
+  information about that structure without just listing it all here. }
 
 \paragraph{From Grammars to Formal Grammars}
 The category-theoretic framework can be further used to describe and compare
@@ -347,10 +333,28 @@ $\Grammar$. That is, they may all be interpreted in our category of grammars. In
 this sense, $\Grammar$ provides an
 all-encompassing semantic domain for parsing.
 
-\max{this section kind of trails off at the end with a very vague aside about a $2$-category of grammar formalisms. Maybe this should go in future work/discussion? What is the message of this section? How does it tie in with the message of the paper? What even is the message of this paper?}
 
-\pedro{Would building on this proposed structure make the message of the section clearer? In this case
-  we would have to be a bit clearer in terms of how familiar notions of grammar can be seen as categories with functor into $\Grammar$.}
+Upon further inspection, $\Grammar$ may equivalently
+be described as the functor category $\Set^{\String}$ --- where the
+set $\String$ is viewed as a discrete\footnote{Objects in $\String$
+comprise the set of all strings, and the only morphisms are the
+identity morphisms.} category. In fact, in this paper we will take
+$\Grammar$ to be defined as the functor category $\Set^{\String}$. Such functor
+categories in $\Set$, called presheaf categories, carry a
+remarkable amount of structure.  Indeed they are a monoidal topos and,
+as such, are a model to a substructural dependently typed theory.
+
+Thus we
+present \theoryname (\theoryabbv) as a domain-specific type theory that
+abstracts over the structure of $\Grammar$. To begin, let us look at what some
+programs in \theoryabbv look like.
+
+\steven{TODO Reword this transition into the examples}
+
+% \max{this section kind of trails off at the end with a very vague aside about a $2$-category of grammar formalisms. Maybe this should go in future work/discussion? What is the message of this section? How does it tie in with the message of the paper? What even is the message of this paper?}
+
+% \pedro{Would building on this proposed structure make the message of the section clearer? In this case
+%   we would have to be a bit clearer in terms of how familiar notions of grammar can be seen as categories with functor into $\Grammar$.}
 
 
 \section{\theoryname by Example}
@@ -359,8 +363,8 @@ all-encompassing semantic domain for parsing.
 \steven{To save space, each of these example figures can be
   minified/potentially inlined}
 
-To gain intuiton for working in \theoryname, let's walk through some examples of
-grammars and parses internal to it. In each of our examples, we will look at
+To gain intuiton for working in \theoryabbv, we study some examples of
+grammars and parses of them internal to \theoryabbc. In each of our examples, we will look at
 grammars over the three character alphabet $\{ a , b , c\}$.
 
 Each letter of the
@@ -369,10 +373,19 @@ for the single character $a$ has a single parse tree for the string \stringquote
 and no parse trees at any other strings.
 
 \paragraph{Finite Grammars}
-First consider finite grammars --- those built from base types via dijunctions $\oplus$ and
+First consider finite grammars --- those built from base types via disjunctions $\oplus$ and
 concatenations $\otimes$. For instance, $(a \oplus b) \otimes c$.
-In \cref{fig:fingram} we find a proof tree showing that the input string \stringquote{ac} matches
-the grammar $(a \oplus b) \otimes c$.
+In \cref{fig:fingram} we find a proof tree that constructs a term of type
+$(a \oplus b) \otimes c$ in the context $x : a, y : c$. We think of this term as
+a parse tree internal to \theoryabbv.
+
+Parses of a fixed string $w$ into a grammar $A$ are internally represented as
+terms of type $A$ in the context $\internalize w$, where $\internalize w$ is a
+comma-separated list of the constituent characters of $w$. In particular, to
+parse \stringquote{ac}, we build parse trees in the context
+$\internalize{\stringquote{ac}} = x : A , y : C$. Thus the term
+$\inl(x) \otimes y$ from \cref{fig:fingram} details the
+manner by which \stringquote{ac} matches the grammar $(a \oplus b) \otimes c$.
 
 \begin{figure}
 \begin{mathpar}
@@ -392,10 +405,6 @@ the grammar $(a \oplus b) \otimes c$.
 \label{fig:fingram}
 \end{figure}
 
-To parse the specific string \stringquote{ac}, we populate the context with an
-internalized encoding of that string. In contexts of this form, linear terms
-describe the structure of a parse tree. That is, $\inl(x) \otimes y$ details the
-manner by which \stringquote{ac} matches $(a \oplus b) \otimes c$.
 
 Because derivations in a linear context correspond to parse trees in this
 manner, we cannot affirm all of the usual structural rules of a type system.
@@ -432,7 +441,9 @@ restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 \end{figure}
 
 For a grammar $A$, the recursive nature of $A^{*}$ is captured by defining
-$A^{*}$ to be an inductive linear
+$A^{*}$ to be an inductive\footnote{As we will soon see, our theory defines
+  \emph{indexed} inductive types. We can recover non-indexed inductive types by
+  indexing over the unit type.} linear
 type, as shown in \cref{fig:kleenestarinductive}. Just as in \cref{fig:fingram}, we can show that particular strings match a Kleene
 star. In \cref{fig:kleenestarderivation}, we demonstrate that \stringquote{ab}
 matches $a^{*} \otimes b$ through repeated application of the Kleene star constructors.
@@ -511,17 +522,22 @@ trees of the output grammar.
 \paragraph{Non-deterministic Finite Automata}
 As a final example, consider the non-deterministic finite
 automaton (NFA) $N$ from \cref{fig:exampleNFA}. Such automata play a critical
-role, as they serve as operationalized and
+role in defining parsers, as they often serve as an operationalized and
 executable presentation of a formal grammar. Therefore, it is crucial that we
 can represent them internal to \theoryabbv.
 
 Our method of representing these automata internally is to provide an \emph{indexed}
-inductive type of traces through the machine. For $N$, this indexed inductive
-type is given in \cref{fig:nfainductive}.
+inductive type of traces through the machine. An ordered, linear theory is
+integral to our design of \theoryabbv ; however, there are some aspects of parsing that
+cannot be captured through linear types alone. Often one wants to define a
+\emph{family} of linear types varying over a set, which is a primary motivator
+for us to make \theoryabbv a linear-non-linear theory. For the NFA $N$, an indexed inductive
+type of traces through $N$ is given in \cref{fig:nfainductive}.
 
 The type of traces in $N$ is indexed by two pieces of data: a state in $N$ and a
-Boolean. For each state $s : N.\mathsf{state}$ and $acc : \Bool$, we define the
-type of traces from state $s$, $\Trace_{N}~s~acc$. The Boolean flag $acc$ marks if the trace
+Boolean. For each state $s : N.\mathsf{state}$ and $acc : \Bool$, we define
+$\Trace_{N}~s~acc$ which denotes the
+type of traces starting at state $s$ and terminating at an arbitrary state. The Boolean flag $acc$ marks if the trace
 ends in either an accepting or a rejecting state. Let us dissect the structure
 of this type in more detail for state 1 of $N$.
 
@@ -544,9 +560,10 @@ transition from state 1 to state 3 is labeled by the empty string $\epsilon$, so
 the transition consumes no input. In this case, when building a trace out of
 state 1, it suffices to build a trace out of state 3 \emph{over the same string}.
 
-Overall, leveraging \emph{indexed} inductive types provides a concise interface
-for defineing a family
-of mutually recursive types over the indexing data.
+Overall, leveraging the \emph{indexed} inductive types provides a concise interface
+for defining the traces of $N$ as a family
+of mutually recursive types varying coherently over indexing data drawn from
+$N.\mathsf{state} \times \Bool$.
 
 \begin{figure}
   \begin{tikzpicture}[node distance = 25mm ]
@@ -675,7 +692,7 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     {\Gamma \vdash f : \ltonl {(A \lto B)} \\
       \Gamma \vdash g : \ltonl { (A \lto B) } \\
       \Gamma ; \Delta \vdash a : A \\
-      \Gamma ; \Delta \vdash p : \apptol {f}{a} = \apptol {g}{a}}
+      \Gamma ; \Delta \vdash p : \applto {f}{a} = \applto {g}{a}}
     {\Gamma ; \Delta \vdash \equalizerpair{a}{p} : \equalizer {a}{f}{g}}
     %
     \and
@@ -798,51 +815,57 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
   \caption{Indexed Inductive Linear Types}
 \end{figure}
 
-Omission of the structural rules of a deductive system, such as in
-linear logic \cite{GIRARD19871}, offers precise control over how a value is used
-in a derivation. Linear logic omits the weakening and contraction rules
-to ensure that every value in context is used exactly once. This control enables
-\emph{resource-sensitive} reasoning, where we may treat a resource as
-\emph{consumed} after usage. This viewpoint is amenable to parsing applications,
-as we may treat characters of a string as finite resources that are consumed at
-parse-time. That is, when reading a string, the occurrence of any character is read once. Freely duplicating or dropping characters from a string changes the meaning of that string. \max{what about a backtracking parser?}. One may then envision a linear type system where the types comprise
-formal grammars generated over some alphabet $\Sigma$, and the type constructors
-correspond precisely to inductive constructions on grammars --- such as
-conjunction, disjunction, concatenation, etc.
+% \steven{TODO the intro to this section is to be condensed based on what is
+%   included in the examples section as motivation and intuition building}
 
-Programming in a purely linear term language is limiting due to the variable
-usage restrictions. Code in such a language can
-become unnecessarily verbose when ensuring the linearity invariant.
-To alleviate this
-concern, in 1995 Benton et al.\ proposed an alternative categorical
-semantics of linear logic based on adjoint interactions between linear
-and non-linear logics \cite{bentonMixedLinearNonlinear1995} ---
-appropriately referred to as a \emph{linear-non-linear} (LNL)
-system. This work is simply typed, so the boundary between linear and
-non-linear subtheories is entirely characterized via a monoidal
-adjunction between linear terms and non-linear terms.
+% Omission of the structural rules of a deductive system, such as in
+% linear logic \cite{GIRARD19871}, offers precise control over how a value is used
+% in a derivation. Linear logic omits the weakening and contraction rules
+% to ensure that every value in context is used exactly once. This control enables
+% \emph{resource-sensitive} reasoning, where we may treat a resource as
+% \emph{consumed} after usage. This viewpoint is amenable to parsing applications,
+% as we may treat characters of a string as finite resources that are consumed at
+% parse-time. That is, when reading a string, the occurrence of any character is read once. Freely duplicating or dropping characters from a string changes the meaning of that string. \max{what about a backtracking parser?}. One may then envision a linear type system where the types comprise
+% formal grammars generated over some alphabet $\Sigma$, and the type constructors
+% correspond precisely to inductive constructions on grammars --- such as
+% conjunction, disjunction, concatenation, etc.
 
-\steven{Describe this monoidal adjunction with $\ltonl A$ and the derivable
-  version of $F$}
+% Programming in a purely linear term language is limiting due to the variable
+% usage restrictions. Code in such a language can
+% become unnecessarily verbose when ensuring the linearity invariant.
+% To alleviate this
+% concern, in 1995 Benton et al.\ proposed an alternative categorical
+% semantics of linear logic based on adjoint interactions between linear
+% and non-linear logics \cite{bentonMixedLinearNonlinear1995} ---
+% appropriately referred to as a \emph{linear-non-linear} (LNL)
+% system. This work is simply typed, so the boundary between linear and
+% non-linear subtheories is entirely characterized via a monoidal
+% adjunction between linear terms and non-linear terms.
 
-Inside of an LNL system, linearity may be thought of as an option that users can
-choose to deliberately invoke at deliberate points in their developments in an
-otherwise intuitionistic system. However, if we are wishing to treat parsers as
-linear terms over input strings, the non-linear fragment of an LNL theory does
-not really assist in the development of parsers. It is instead the case that
-parsers may benefit from a \emph{dependence} on non-linear terms.
-Through the approach described by Krishnaswami et al.\ in
-\cite{krishnaswami_integrating_2015},
-we may define a restricted form of dependent types. In particular, dependence
-on linear terms
-is disallowed; however, through dependence of a linear term on a non-linear
-index, we can recover the definition of Aho's indexed grammars \cite{AhoIndexed}
-internal to \theoryabbv. Although, we can define strictly more things, as Aho's
-indexed grammars provide restricted access to the index whereas we can do
-whatever with it.
+% \steven{Describe this monoidal adjunction with $\ltonl A$ and the derivable
+%   version of $F$}
 
-\steven{elaborate on indexed grammars in a more articulate way in the last sentence}
-\steven{Put the aho stuff in the subtheory section}
+% Inside of an LNL system, linearity may be thought of as an option that users can
+% choose to deliberately invoke at deliberate points in their developments in an
+% otherwise intuitionistic system. However, if we are wishing to treat parsers as
+% linear terms over input strings, the non-linear fragment of an LNL theory does
+% not really assist in the development of parsers. It is instead the case that
+% parsers may benefit from a \emph{dependence} on non-linear terms.
+% Through the approach described by Krishnaswami et al.\ in
+% \cite{krishnaswami_integrating_2015},
+% we may define a restricted form of dependent types.
+
+% In particular, dependence
+% on linear terms
+% is disallowed; however, through dependence of a linear term on a non-linear
+% index, we can recover the definition of Aho's indexed grammars \cite{AhoIndexed}
+% internal to \theoryabbv. Although, we can define strictly more things, as Aho's
+% indexed grammars provide restricted access to the index whereas we can do
+% whatever with it.
+
+% \steven{elaborate on indexed grammars in a more articulate way in the last sentence}
+% \steven{Put the aho stuff in the subtheory section}
+%
 
 In this section we go on a tour of \theoryabbv. We start by presenting its syntax.
 In order to avoid a notion of raw-term, we present it in an intrinsically-typed fashion,
@@ -1172,43 +1195,43 @@ types is standard, so below we focus on the linear syntax.
 \subsection{Formal Grammars as Linear Types}
 \label{sec:formaltype}
 
-The linear typing judgment in our syntax takes on the following schematic form
-$\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
-our syntax. The intended semantics of these linear types are formal grammars.
-That is, the linear typing system is designed to syntactically reflect the
-behavior of formal grammars. For this reason, we may often interchangeably use
-the terms ``linear type'' and ``grammar''.
+% The linear typing judgment in our syntax takes on the following schematic form
+% $\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
+% our syntax. The intended semantics of these linear types are formal grammars.
+% That is, the linear typing system is designed to syntactically reflect the
+% behavior of formal grammars. For this reason, we may often interchangeably use
+% the terms ``linear type'' and ``grammar''.
 
-The term $a$ is an inhabitant of type $A$, which is thought of as a parse tree of
-the grammar $A$. The core idea of this entire paper follows precisely from this
-single correspondence: grammars are types, and the inhabitants of these types
-are parse trees for the grammars.
+% The term $a$ is an inhabitant of type $A$, which is thought of as a parse tree of
+% the grammar $A$. The core idea of this entire paper follows precisely from this
+% single correspondence: grammars are types, and the inhabitants of these types
+% are parse trees for the grammars.
 
-$\Gamma$ represents a non-linear context, while $\Delta$ represents a
-\emph{linear context} dependent on $\Gamma$. These linear contexts behave
-substructurally. As stated earlier, they are linear --- they do not obey
-weakening or contraction --- because a character is exhausted once read by a
-parsing procedure. Moreover, the characters in strings appear in the order in
-which we read them. We do not have the freedom to freely permute characters,
-therefore any type theory that is used to reason about formal grammars ought to
-omit the structural rule of exchange as well. This means that every variable
-within $\Delta$ must be used \emph{exactly once} and \emph{in order of
-  occurrence}. Thus, we can think of the linear contexts as an ordered list of
-limited resources. Once a resource is consumed, we cannot make reference to it
-again. Variables in a linear context then act like building
-blocks for constructing patterns over strings.
+% $\Gamma$ represents a non-linear context, while $\Delta$ represents a
+% \emph{linear context} dependent on $\Gamma$. These linear contexts behave
+% substructurally. As stated earlier, they are linear --- they do not obey
+% weakening or contraction --- because a character is exhausted once read by a
+% parsing procedure. Moreover, the characters in strings appear in the order in
+% which we read them. We do not have the freedom to freely permute characters,
+% therefore any type theory that is used to reason about formal grammars ought to
+% omit the structural rule of exchange as well. This means that every variable
+% within $\Delta$ must be used \emph{exactly once} and \emph{in order of
+%   occurrence}. Thus, we can think of the linear contexts as an ordered list of
+% limited resources. Once a resource is consumed, we cannot make reference to it
+% again. Variables in a linear context then act like building
+% blocks for constructing patterns over strings.
 
-We give the base types and type constructors for linear terms. As the
-interpretation of types as grammars in $\Grammar$ serves as our intended
-semantics, we simultaneously give the interpretation $\sem \cdot$ of the
-semantics as grammars.
+% We give the base types and type constructors for linear terms. As the
+% interpretation of types as grammars in $\Grammar$ serves as our intended
+% semantics, we simultaneously give the interpretation $\sem \cdot$ of the
+% semantics as grammars.
 
-\pedro{The paragraphs above are a bit circular, what about the following alternative?}
-\steven{I am in favor of cutting what's above, but we haven't introduced the
-  syntax in the main body of the paper yet, even if the figures appeared
-  earlier. So what you write needs to take that into account}
-\pedro{In which case we should introduce it in the previous section. I suggest
-  adding this right after ``and the intuitionistic typing rules in fig 3''}
+% \pedro{The paragraphs above are a bit circular, what about the following alternative?}
+% \steven{I am in favor of cutting what's above, but we haven't introduced the
+%   syntax in the main body of the paper yet, even if the figures appeared
+%   earlier. So what you write needs to take that into account}
+% \pedro{In which case we should introduce it in the previous section. I suggest
+%   adding this right after ``and the intuitionistic typing rules in fig 3''}
 
 Now that we have specified the syntactic aspect of \theoryabbv, we must justify
 its connections to formal grammars in order to show that it is a sound methodology
@@ -1411,115 +1434,115 @@ The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\vare
 and entirely rework with the new inductive definition}
 \steven{The non-indexed inductive are definable as being trivially indexed over unit}
 Recursive linear types may be defined via the least-fixed point operator $\mu$.
-The grammar semantics of which are the fixed-point of sets induced by the
-grammar semantics of $A$.
-%
-\[ \sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x) \]
-%
-\pedro{We should justify, even if briefly, the existence of this
-  fixed-point}
+% The grammar semantics of which are the fixed-point of sets induced by the
+% grammar semantics of $A$.
+% %
+% \[ \sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x) \]
+% %
+% \pedro{We should justify, even if briefly, the existence of this
+%   fixed-point}
 
-Observe that we need not take the Kleene star as a primitive
-grammar constructor, as it is definable as a fixed point.
-The Kleene star of a grammar $g$ is given as,
+% Observe that we need not take the Kleene star as a primitive
+% grammar constructor, as it is definable as a fixed point.
+% The Kleene star of a grammar $g$ is given as,
 
-\[
-  g^{*} := \mu X . I \oplus (g \otimes X)
-\]
+% \[
+%   g^{*} := \mu X . I \oplus (g \otimes X)
+% \]
 
-\begin{figure}[h!]
-\begin{mathpar}
-  \inferrule
-  {\Gamma ; \Delta \vdash p : I}
-  {\Gamma ; \Delta \vdash \mathsf{nil} : g^{*}}
+% \begin{figure}[h!]
+% \begin{mathpar}
+%   \inferrule
+%   {\Gamma ; \Delta \vdash p : I}
+%   {\Gamma ; \Delta \vdash \mathsf{nil} : g^{*}}
 
-  \and
+%   \and
 
-  \inferrule
-  {\Gamma ; \Delta \vdash p : g \\ \Gamma ; \Delta' \vdash q
-  : g^{*}}
-  {\Gamma ; \Delta \vdash \mathsf{cons}(p , q) : g^{*}}
+%   \inferrule
+%   {\Gamma ; \Delta \vdash p : g \\ \Gamma ; \Delta' \vdash q
+%   : g^{*}}
+%   {\Gamma ; \Delta \vdash \mathsf{cons}(p , q) : g^{*}}
 
-  \\
+%   \\
 
-  \inferrule
-  {
-    \Gamma ; \Delta \vdash p : g^{*} \\
-    \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
-    \Gamma ; x : g , y : h \vdash p_{\ast} : h
-  }
-  {\Gamma ; \Delta \vdash \mathsf{foldr}(p_{\varepsilon} , p_{\ast}) : g^{*}}
-\end{mathpar}
-\caption{Kleene Star Rules}
-\label{fig:star}
-\end{figure}
+%   \inferrule
+%   {
+%     \Gamma ; \Delta \vdash p : g^{*} \\
+%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
+%     \Gamma ; x : g , y : h \vdash p_{\ast} : h
+%   }
+%   {\Gamma ; \Delta \vdash \mathsf{foldr}(p_{\varepsilon} , p_{\ast}) : g^{*}}
+% \end{mathpar}
+% \caption{Kleene Star Rules}
+% \label{fig:star}
+% \end{figure}
 
-Likewise, $g^{*}$ has admissible introduction and
-elimination rules, shown in \cref{fig:star}. Note that this
-definition of $g^{*}$ and these
-rules arbitrarily assigns a handedness to the Kleene star.
-We could have just as well took it to be a fixed point of
-$I \oplus (X \otimes g)$. In fact, the definitions are
-equivalent, as the existence of the $\mathsf{foldl}$ term below
-shows that $g^{*}$ is also a fixed point of
-$I \oplus (X \otimes g)$.
-This is a marked point of difference from Kleene
-algebra with recursion, where the fixed points for the left and right variants
-of Kleene star need not agree \cite{leiss}.
+% Likewise, $g^{*}$ has admissible introduction and
+% elimination rules, shown in \cref{fig:star}. Note that this
+% definition of $g^{*}$ and these
+% rules arbitrarily assigns a handedness to the Kleene star.
+% We could have just as well took it to be a fixed point of
+% $I \oplus (X \otimes g)$. In fact, the definitions are
+% equivalent, as the existence of the $\mathsf{foldl}$ term below
+% shows that $g^{*}$ is also a fixed point of
+% $I \oplus (X \otimes g)$.
+% This is a marked point of difference from Kleene
+% algebra with recursion, where the fixed points for the left and right variants
+% of Kleene star need not agree \cite{leiss}.
 
-\begin{equation}
-  \label{eq:foldl}
-  \inferrule
-  {
-    \Gamma ; \Delta \vdash p : g^{*} \\
-    \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
-    \Gamma ; y : h , x : h \vdash p_{\ast} : h
-  }
-  {\Gamma ; \Delta \vdash \mathsf{foldl}(p_{\varepsilon} , p_{\ast}) : g^{*}}
-\end{equation}
+% \begin{equation}
+%   \label{eq:foldl}
+%   \inferrule
+%   {
+%     \Gamma ; \Delta \vdash p : g^{*} \\
+%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
+%     \Gamma ; y : h , x : h \vdash p_{\ast} : h
+%   }
+%   {\Gamma ; \Delta \vdash \mathsf{foldl}(p_{\varepsilon} , p_{\ast}) : g^{*}}
+% \end{equation}
 
-In fact, the $\mathsf{foldl}$ term is defined using
-$\mathsf{foldr}$ --- much in the same way one
-may define a left fold over lists in terms of a right fold
-in a functional programming language.
-The underlying trick is to fold over a list of linear functions
-instead of the original string. We curry each character $c$
-of the string into a function that concatenates $c$, and
-right fold over this list of linear functions. Because function
-application is left-associative, this results in a left
-fold over the original string.
+% In fact, the $\mathsf{foldl}$ term is defined using
+% $\mathsf{foldr}$ --- much in the same way one
+% may define a left fold over lists in terms of a right fold
+% in a functional programming language.
+% The underlying trick is to fold over a list of linear functions
+% instead of the original string. We curry each character $c$
+% of the string into a function that concatenates $c$, and
+% right fold over this list of linear functions. Because function
+% application is left-associative, this results in a left
+% fold over the original string.
 
-We only take fixed points of a single variable as a
-primitive operation in the type theory, but we may apply
-Beki\`c's theorem \cite{Bekić1984} to define an admissible
-notion of multivariate fixed point. This is particularly
-useful for defining grammars that encode the states of an
-automaton, as we will see in \cref{sec:automata}. In \cref{fig:multifix} we provide the
-introduction and elimination principles for such a fixed
-point, where $\sigma$ is the substitution that unrolls the
-mutually recursive definitions one level. That is,
+% We only take fixed points of a single variable as a
+% primitive operation in the type theory, but we may apply
+% Beki\`c's theorem \cite{Bekić1984} to define an admissible
+% notion of multivariate fixed point. This is particularly
+% useful for defining grammars that encode the states of an
+% automaton, as we will see in \cref{sec:automata}. In \cref{fig:multifix} we provide the
+% introduction and elimination principles for such a fixed
+% point, where $\sigma$ is the substitution that unrolls the
+% mutually recursive definitions one level. That is,
 
-\begin{align*}
-  \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
-\end{align*}
+% \begin{align*}
+%   \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
+% \end{align*}
 
-\begin{figure}
-\begin{mathpar}
-  \inferrule
-  {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
-  {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
+% \begin{figure}
+% \begin{mathpar}
+%   \inferrule
+%   {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
+%   {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
 
-  \and
+%   \and
 
-  \inferrule
-  {\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
-             \Gamma ; x_{j} : \simulsubst {A_{j}}{\sigma} \vdash e_{j} : B_{j}\quad \forall j
-  }
-  {\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
-\end{mathpar}
-\caption{Multi-fixed Points}
-\label{fig:multifix}
-\end{figure}
+%   \inferrule
+%   {\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
+%              \Gamma ; x_{j} : \simulsubst {A_{j}}{\sigma} \vdash e_{j} : B_{j}\quad \forall j
+%   }
+%   {\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
+% \end{mathpar}
+% \caption{Multi-fixed Points}
+% \label{fig:multifix}
+% \end{figure}
 
 \subsection{Subtheories}
 Each choice of connective has direct implications on the expressivity of
@@ -1549,15 +1572,19 @@ context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
 will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
 calculus, which of course induces a semantics of unrestricted grammars.
 
-\steven{Aho's indexed grammars to be moved into here to reflect on yet another
-  grammar formalism that is internally definable}
+\paragraph{Indexed Grammars}
+The LNL dependent types can be used to encode Aho's indexed grammars
+\cite{AhoIndexed} internal to \theoryabbv. Although, we can define strictly more
+things with this non-linear index, as we have unstricted access to the index
+whereas Aho's grammars can only manipulate it in a particular way.
+
+\steven{Elaborate on these, and note that they are bw context free and context
+  sensitive on the chomsky hierarchy}
 
 \section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
 
-\steven{below this is unedited word vomit}
-\steven{this entire ``Formal Grammar Theory in Lambek'' section should become much more compact with the examples
-  section from the beginning in mind}
+\steven{this section is mostly word vomit, need to edit}
 
 \subsection{Grammar Properties}
 \steven{Mention that $\top$ and $\String$ are iso. Highlight this as a needed axiom}
@@ -1566,9 +1593,9 @@ calculus, which of course induces a semantics of unrestricted grammars.
 \paragraph{Unambiguity}
 In the grammars model, we say that a grammar is unambiguous if there is at most
 one parse tree for any input string. There are several ways to capture this
-concept internally.
+concept inside of the theory of \theoryabbv.
 
-In the presence of distributive coproducts, the following are equivalent:
+In the presence of distributive coproducts (which we probably add a) the following are equivalent:
 \begin{itemize}
   \item $A$ is an unambiguous grammar
   \item The morphism $! : A \to \top$ is a monomorphism
@@ -1577,16 +1604,15 @@ In the presence of distributive coproducts, the following are equivalent:
 \end{itemize}
 
 \paragraph{Parseability}
-We say $A$ is \emph{weakly parseable} if there exists a type $B$ and a map
+We say $A$ is \emph{parseable} if there exists a type $B$ and a map
 $\top \to A \oplus B$. Because $\top \cong \String$, this says that any string
 can be parsed into either an $A$ or a $B$.
 
-If $\top \cong A \oplus B$, call $A$ \emph{parseable}. This notion of
-parseability implies that $A$ and $B$ are each unambiguous.
+If $\top \cong A \oplus B$, call $A$ \emph{unambiguously parseable}.
 
 \paragraph{Decidability}
 In the case that $A$ is parseable with respect to $\neg A$ --- i.e.
-$\top \cong A \oplus \neg A$ --- then call $A$ \emph{decidable}.
+there's a map $\top \to A \oplus \neg A$ --- then call $A$ \emph{decidable}.
 
 \paragraph{Equivalence}
 Grammars $A$ and $B$ are \emph{weakly equivalent} if there exists maps
@@ -1596,6 +1622,16 @@ If $f$ and $g$ form an isomorphsim, then $A$ and $B$ are \emph{strongly
   equivalent}.
 \steven{TODO cite that these are the same as Chomsky's notions of equivalence}
 
+The induced notion of isomorphism in $\Grammar$ encodes that two grammars are equivalent if there is
+a bijective translation of parses. In other words, two grammars are isomorphic
+if they capture the same structural descriptions of strings, which is
+precisely Chomsky's notion of \emph{strong equivalence} of
+grammars \cite{chom1963}. In works like
+\cite{yoshinaga2002formal}, this notion of strong equivalence is often treated
+like the appropriate choice of ``sameness'' for two grammars. When abstracting over the latent
+structure of formal grammars and describing it in the the language of
+categories, it is encouraging to see the same definition of equivalence arise
+naturally.
 
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
@@ -1622,11 +1658,11 @@ The Dyck grammar $D$ for balanced parens (summarize what it is + citation)
 precisely by constructing an isomorphism between $D$ and $\Trace_{M}~0~\true$.
 Unlike the finite automata seen thus far, $M$ has infinitely many states --- one
 for each $n : \mathbb{N}$ with an additional fail state. This diverges a bit
-from classical language theory, where this machine would be encoded as a
+from classical language theory, where the recognizer for $D$ would be encoded as a
 pushdown automaton with finitely many
 states and stack of memory. Such PDAs are encodable in our theory, although they
 are a little cumbersome to use. Moreover, they
-seem overfit to classical reasoning as they don't preserve the gramamr up to
+seem overfit to classical reasoning as they don't preserve the grammar up to
 strong equivalence, only weak equivalnce in general. \steven{cite lambek
   automata and state that is is a secondary goal to preserve as much structure as possible}
 By moving the stack of memory (the nats) into the
@@ -1686,545 +1722,545 @@ $\Delta X = \LinSigTy x X \top$.
 \steven{Note here that even though $\Delta$ is a map from nonlinear types into
   linear ones, it is very different from $F$/whatever we call that half of the adjunction}
 
-\steven{Everything in this section below this marker is outdated and needs to be
-folded into the above or cut}
-
-\steven{Need a different segue because canonicity is no longer before this}
-The canonicity theorem from the previous section gives a tight connection
-between terms in our type theory and the theory of formal languages. In this section
-we further explore these connections by using the fact that, classically
-formal language theory is closely related to the study of automata.
-In the Chomsky hierarchy, each language class is associated to a class of
-automata that serve as recognizers. Internal to \theoryabbv,
-we can characterize these language classes syntactically; moreover, we
-demonstrate the equivalence of these language classes to its associated automata class as a
-proof term within our logic.
-
-\subsection{Non-deterministic Finite Automata}
-\label{subsec:finiteaut}
-\begin{figure}
-  \begin{tikzpicture}[node distance = 25mm ]
-    \node[state, initial, accepting] (1) {$1$};
-    \node[state, below left of=1] (2) {$2$};
-    \node[state, right of=2] (3) {$3$};
-
-    \path[->] (1) edge[above] node{$b$} (2)
-              (1) edge[below, bend right, left=0.3] node{$\epsilon$} (3)
-              (2) edge[loop left] node{$a$} (2)
-              (2) edge[below] node{$a, b$} (3)
-              (3) edge[above, bend right, right=0.3] node{$a$} (1);
-  \end{tikzpicture}
-  \caption{An example NFA}
-  \label{fig:NFA}
-\end{figure}
-
-Classically, a \emph{nondeterministic finite automaton} (NFA) is a finite state machine where
-transitions are labeled with characters from a fixed alphabet $\Sigma$. These
-are often represented formally as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$,
-
-\begin{itemize}
-  \item $Q$ a finite set of states
-  \item $\Sigma$ a fixed, finite alphabet
-  \item $\delta : Q \times (\Sigma \cup \{ \varepsilon\}) \to \mathcal{P}(Q)$ the labeled transition function
-  \item $q_{0} \in Q$ the start state
-  \item $F \subset Q$ a set of accepting states
-\end{itemize}
-
-
-
-\subsection{A DFA Parser}
-\label{subsec:regexparser}
-
-Just as we encoded traces of NFAs as grammars, we likewise
-encode the traces of a DFA as grammars. The key difference
-between NFAs and DFAs is \emph{determinism} --- meaning,
-that in a state $q$ inside of DFA, given a character $c$ there
-will be exactly one transition that we may take leaving $q$
-with label $c$. For us, this changes the definition of valid
-transitions for a DFA, instead of the definition of
-$\mathsf{Trans}$ provided in \cref{subsec:finiteaut} DFAs
-obey
-
-\begin{gather*}
- \mathsf{State} \in \{ g_{q} : q \in Q \} \\
- \mathsf{Trans}(q) ::= \bigoplus_{c \in \Sigma} (c \otimes \mathsf{State})
-\end{gather*}
-
-Meaning, each state has a transition for every character. \emph{Note:} the above use
-  of a disjunction over $\Sigma$ is a bit of abuse of notation.
-  As $\Sigma$ is a finite alphabet, we wish to think of this as an iterated
-  binary sum, or perhaps as a finitely indexed sum defined via linear dependent
-  sums in the same manner by which we defined binary sums.
-
-We now wish to define a parser term for DFA grammars. In
-particular, for a DFA $D$ we want to build a term,
-
-\[
-  w : \String \vdash \mathsf{parse}_{D} : \mathsf{AccTrace}_{D} \oplus \top
-\]
-
-where left injection into the output type denotes acceptance
-by the parser, and right injection denotes rejection. To
-build such a parser, it will suffice to construct a term
-
-\[
-  w : \String \vdash \mathsf{parse}_{D} : \LinSigTy q Q {\mathsf{Trace}_{D}(q_{0} , q)}
-\]
-This is because given a trace of a DFA, we may easily check
-if we should accept or reject by simply testing
-if the final state is accepting.
-
-Because $w$ is a Kleene star of characters, we may construct
-our desired $\mathsf{parse}_{D}$ term as a $\mathsf{foldl}$
-over $w$. In the empty case, we just have the trace that
-ends at the accepting state. In the recursive case, we
-effectively add to our trace by transitioning one character
-at a time, as we read them moving across $w$.
-
-Perhaps this derivation is not too surprising. All it says
-is that a DFA may be ran by transitioning a single character
-at a time, and then accepting or rejecting based on the
-final state. This is exactly what DFAs did initially, so
-what did we gain? Well, this has the benefit of our type
-system to ensure its correctness. Moreover, this construction exports to an
-intrinsically verified and executable decision procedure for DFAs in \theoryabbv
-embedded in Agda.
-
-We should note that the
-construction of a DFA parser requires the addition of an additional but seemingly innocuous
-axiom.
-
-\[
-  \top \cong \left( \bigoplus_{c : \Sigma} c \right)^{*}
-\]
-
-That is, the characters in the alphabet $\Sigma$ really are all of the
-characters. The need for this axiom arises when we go to take a transition
-within the DFA,
-as we must ensure that the next character of the string has a corresponding
-transition from the current state
---- which would be guaranteed by determinism provided there are no surprise characters.
-
-\subsection{Regular Expressions and DFAs}
-\label{subsec:deriv}
-
-In order to extend the DFA
-parser from \cref{subsec:regexparser} to the construction of
-a verified parser
-generator for regular expression we need to perform some
-plumbing establishing an equivalence between regular
-expressions and DFAs.
-
-There are several routes we may hope to take in establishing
-this equivalence. First, we could prove an equivalence
-between NFAs and regular expressions, and separately prove
-an equivalence between NFAs and DFAs.
-In \cref{subsec:eqproofs}, we include a version of
-Thompson's construction --- which established the
-equivalence between regular grammars and DFAs. We may additionally
-hope to internalize a variant of the powerset construction \cite{rabinFiniteAutomataTheir1959}
---- which takes as input an NFA and constructs a DFA that
-recognizes the same language --- and combine the results of
-Thompson's construction and the powerset constructions to give an equivalence
-between regular expressions and DFAs.  This route is alluring, as it
-internalizes several classic grammar-theoretic constructions. However, it may
-necessitate extensions to the LNL theory, like
-a propositional truncation, and we have not yet investigated
-how this would interact with the existing types in the
-theory. The addition of a propositional truncation may seem
-harmless, but it is not always immediately clear how
-distinct constructions will interact. For instance, when
-exploring LNL models, Benton discovered that the synthesis
-of linear and dependent types require a new presentation of
-the $!$ modality from linear logic
-\cite{bentonMixedLinearNonlinear1995}. That is all to say,
-this is a work in progress and
-it is not immediate that the addition of a propositional
-truncation is adequate for establishing the weak equivalence
-between NFAs and DFAs.
-
-We may instead hope to internalize an equivalence between
-regular grammars and DFAs by using Brzozowski derivatives to
-directly create a DFA that is weakly equivalent to a given
-regular expression, as described by Owens et al.
-\cite{owensRegularexpressionDerivativesReexamined2009}.
-One characterization of regular grammars is that they are
-precisely those grammars which have finitely many inequivalent Brzozowski
-derivatives
-\cite{brzozowskiDerivativesRegularExpressions1964}.
-The algorithm used by Owens takes in a
-regular grammar and generates a DFA that recognizes the same
-language, and the states in this DFA are the finitely many
-derivative equivalence classes. We initially had a version of
-this theorem very roughly internalized in the LNL theory.
-To our taste, too much of this presentation relied on
-meta-arguments that lived outside of
-our formalism, and thus this particular phrasing of the
-theorem did not translate well into formalization.
-
-In any case, we believe
-that revisiting these lines of thought will lead to a
-satisfactory internalization of the equivalence between
-regular grammars and DFAs, and thus would bridge the gap
-between our DFA parser and a full regular expression parser.
-
-\subsection{Equivalence Between Regular Expressions and Finite Automata}
-\label{subsec:eqproofs}
-In this section, we describe a version of Thompson's
-construction \cite{thompsonProgrammingTechniquesRegular1968}
-   where we construct an NFA that recognizes a given regular
-expression. Moreover, we will show that this NFA is strongly equivalent to the
-original grammar. Witnessing this construction in our syntax has two benefits
-\begin{enumerate}
-  \item It reinforces this high-level view that the syntax is a natural and
-        general setting for formal grammar reasoning, as we demonstrate that
-        this formal system subsume results from existing systems, and
-  \item Following the
-        development of Thompson's construction, we then need
-        only establish the equivalence of NFAs and DFAs to
-        complete the full regular expression parser
-\end{enumerate}
-
-\begin{theorem}[Thompson]
-  \label{thm:thompson}
-  For $g$ a regular grammar $g$, there is an NFA $N$ that recognizes the same
-  language as $g$.
-\end{theorem}
-We make a pretty straightforward adaptation of Thompson's theorem to our setting,
-
-\begin{theorem}[Typed Thompson]
-  \label{thm:typthompson}
-  For $g$ a regular expression $g$, there is an NFA $N$ such that $g$ is isomorphic
-  to $\mathsf{AccTrace}_{N}$.
-\end{theorem}
-
-\begin{proof}[Proof Sketch]
-  Recall that regular expressions are inductively defined via
-  disjunction, concatenation, and Kleene star over literals
-  and the empty grammar. By induction over regular expressions,
-  we will construct an NFA that is equivalent to $g$.
-
-  First, define the recognizing NFA for the empty grammar
-  $I$.
-
-  \begin{figure}[h!]
-  \begin{tikzpicture}[node distance = 25mm ]
-    \node[state, initial] (1) {$1$};
-    \node[state, right of=1, accepting] (2) {$2$};
-
-    \path[->] (1) edge[below] node{$\varepsilon$} (2);
-  \end{tikzpicture}
-  \caption{$NFA(I)$}
-  \label{fig:emptyNFA}
-  \end{figure}
-
-  The type of traces from the initial state of $NFA(I)$ to the single
-  accepting state is given by,
-
-  \[
-    \mathsf{Trace}_{NFA(I)}(q_{1}, q_{2}) = \mu
-      \begin{pmatrix}
-         g_{q_{1}} := g_{q_{2}} \\
-         g_{q_{2}} := I
-      \end{pmatrix}. g_{q_{1}}
-  \]
-
-  The accepting traces through $NFA(I)$ are then described
-  as,
-
-  \[
-    \mathsf{AccTrace}_{NFA(I)} = \LinSigTy q {\{1 , 2\}} {\left( \mathsf{Trace}_{NFA(I)}(q_{1} , q) \pair \mathsf{acc}(q) \right)}
-  \]
-
-  A quick inspection of \cref{fig:emptyNFA} reveals that the
-  only reasonable choice for $q$ is $q_{2}$ --- because
-  state 2 is accepting while state 1 is not. Therefore,
-
-  \begin{align*}
-    \mathsf{AccTrace}_{NFA(I)}
-    & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \pair \mathsf{acc}(q_{2}) \\
-    & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \pair \top \\
-    & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})
-  \end{align*}
-
-  From here, to prove
-  $I \cong \mathsf{AccTrace}_{NFA(I)}$ it suffices to show
-  $I \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})$. Below we
-  give two parse transformers, one from $I$ to
-  $\mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})$ and vice versa.
-
-  \[
-    \inferrule
-    {p : I \vdash \mathsf{nil} : \mathsf{Trace}(q_{2} , q_{2}) \\
-     \exists \text{~transition~} q_{1} \overset{\varepsilon}{\to} q_{2}
-    }
-    {p : I \vdash \mathsf{\varepsilon cons}(\mathsf{nil}) : \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})}
-  \]
-
-  Let $\gamma$ be the substitution $\{ g_{q_{2}} / g_{q_{1}}, I / g_{q_{2}} \}$,
-
-  \[
-    \inferrule
-    {
-      p : \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \vdash p :
-        \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \\
-      x_{1} : \simulsubst {g_{q_{2}}} {\gamma} = I \vdash x_{1} : I \\
-      x_{2} : \simulsubst {I} {\gamma} = I \vdash x_{2} : I
-    }
-    {
-      p : \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \vdash \mathsf{mfold}(x_{1}.x_{1} , x_{2}.x_{2})(p) : I
-    }
-  \]
-
-  This concludes the proof for the case of the empty
-  grammar. Let's now walk through the construction for
-  literal grammars. Given a character $c$, we construct an
-  NFA that recognizes only the string containing the single
-  character $c$ as,
-
-
-  \begin{figure}[h!]
-  \begin{tikzpicture}[node distance = 25mm ]
-    \node[state, initial] (1) {$1$};
-    \node[state, right of=1, accepting] (2) {$2$};
-
-    \path[->] (1) edge[below] node{$c$} (2);
-  \end{tikzpicture}
-  \caption{$NFA(c)$}
-  \label{fig:literalNFA}
-  \end{figure}
-
-  The automaton in \cref{fig:literalNFA} induces the
-  following type of traces from $q_{1}$ to $q_{2}$.
-
-  \[
-    \mathsf{Trace}_{NFA(c)}(q_{1}, q_{2}) = \mu
-      \begin{pmatrix}
-         g_{q_{1}} := c \otimes g_{q_{2}} \\
-         g_{q_{2}} := I
-      \end{pmatrix}. g_{q_{1}}
-  \]
-
-  Through the same argument as the empty grammar, the only
-  state that is accepting is $q_{2}$ and thus,
-
-  \[
-    \mathsf{AccTrace}_{NFA(c)} \cong \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2})
-  \]
-
-  To show the desired isomorphism of $c \cong NFA(c)$ we
-  make a similar argument as we did for the empty grammar
-  $I$, except we leverage the $\mathsf{cons}$ rule instead
-  of $\mathsf{\varepsilon cons}$. That is, the parse
-  transformers in either direction are given as,
-
-  \[
-    \inferrule
-    {\cdot \vdash \mathsf{nil} : \mathsf{Trace}(q_{2} , q_{2}) \\
-     \exists \text{~transition~} q_{1} \overset{c}{\to} q_{2}
-    }
-    {p : c \vdash \mathsf{cons}(\mathsf{nil}) :
-      \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2})}
-  \]
-
-
-  \[
-    \inferrule
-    {
-      p : \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2}) \vdash p :
-        \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2}) \\
-      x_{1} : \simulsubst {(c \otimes g_{q_{2}})} {\gamma} = c \otimes I \vdash \mathsf{unitR}(x_{1}) : c \\
-      x_{2} : \simulsubst {I} {\gamma} = I \vdash x_{2} : I
-    }
-    {
-      p : \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2}) \vdash \mathsf{mfold}(x_{1}.\mathsf{unitR}(x_{1}) , x_{2}.x_{2})(p) : c
-    }
-  \]
-
-  Where $\gamma$ is the substitution
-  $\{ c \otimes g_{q_{2}} / g_{q_{1}}, I / g_{q_{2}} \}$ and
-  $\mathsf{unitR}$ is a witness to the isomorphism
-  $c \otimes I \cong c$. Again, we may see that these do
-  indeed mutually invert each other in the Agda code.
-
-  It remains to show that the desired isomorphisms are
-  preserved by $\otimes$, $\oplus$, and Kleene star. Here,
-  we will give the argument for the disjunction case, the
-  others are defined quite similarly.
-
-  Given two NFAs $N$ and $M$, we may define a new NFA that
-  encodes the disjunction of $N$ and $M$. Denote the
-  internal states of $N$ by $q_{j}$'s and the internal states
-  of $M$ by $r_{k}$'s,
-
-  \begin{figure}[h!]
-  \begin{tikzpicture}[node distance = 20mm ]
-    \node[state] (2) {$q_{init}$};
-    \node[state, initial, below left of=2] (1) {$init$};
-    \node[state, below right of=1] (3) {$r_{init}$};
-    \node[right of=2] (4) {$\cdots$};
-    \node[right of=3] (5) {$\cdots$};
-    % \node[state, below right of=1] (3) {$3$};
-    % \node[state, below of=2] (4) {$4$};
-
-    \path[->] (1) edge[below] node{$\varepsilon$} (2);
-    \path[->] (1) edge[below] node{$\varepsilon$} (3);
-    \path[->] (2) edge[below] node{} (4);
-    \path[->] (3) edge[below] node{} (5);
-
-    \node[label={[name=l] $N$}, draw,line width=2pt,rounded corners=5pt, fit=(2)(4)] {};
-    \node[label={[name=l] $M$}, draw,line width=2pt,rounded corners=5pt, fit=(3)(5)] {};
-  \end{tikzpicture}
-  \caption{$N \oplus_{NFA} M$}
-  \label{fig:disjunctionNFA}
-  \end{figure}
-
-  \Cref{fig:disjunctionNFA} shows the process of
-  disjunctively combining NFAs. Precisely, we add a single
-  new state and we included copies of the states from each of $N$
-  and $M$. The new state acts as the initial state and has
-  $\varepsilon$-transitions to the initial states of $N$ and
-  $M$. We include all of the internal transitions from $N$
-  and $M$, and the accepting states of $N \oplus_{NFA} M$
-  are exactly the accepting states in each subautomaton.
-
-  Let $g$ and $g'$ be two regular grammars such that
-  $g \cong NFA(g)$ and $g' \cong NFA(g')$. As a matter of
-  notation\footnote{We shall similarly abuse notation for
-    $\otimes$ and Kleene. That is, for a regular grammar
-    $g$, when we write $NFA(g)$ we mean the NFA inductively
-    built up with the NFA-analogues to the constructors that
-    built up $g$.}, we will write $NFA(g \oplus g')$ for
-  $NFA(g) \oplus_{NFA} NFA(g')$. The traces of
-  $NFA(g \oplus g')$ are then given by,
-
-  \[
-    \mathsf{Trace}_{NFA(g \oplus g')}(src , dst) = \mu
-      \begin{pmatrix}
-        g_{init} := g_{q_{0}} \oplus g_{r_{0}} \\
-        g_{q_{j}} := \mathsf{Trans}_{NFA(g)}(q_{j}) \oplus \mathsf{isDst}(q_{j}) \\
-        g_{r_{k}} := \mathsf{Trans}_{NFA(g')}(r_{k}) \oplus \mathsf{isDst}(r_{k})
-      \end{pmatrix}.g_{src}
-    \]
-
-  where $\mathsf{Trans}$ is used to echo the same syntactic
-  definitions that appear in the $NFA(g)$ and $NFA(g')$.
-  Also, $src$ and $dst$ may take on any value in
-  $Q := \{init\} \cup \{q_{j}\} \cup \{r_{k}\}$, and
-  $\mathsf{isDst}(q)$ checks if $q$ is equal to $dst$. Which
-  is all to say, the traces of $NFA(g \oplus g')$ comprise
-  either a trace of $NFA(g)$, or a trace of $NFA(g')$, and
-  the transition coming out of $g_{init}$ determines which
-  subautomaton we step into.
-
-  The parse transformer from $g \oplus g'$ checks which side
-  of the sum type we are on, then takes the appropriate step
-  from $g_{init}$ in the automaton.
-
-  \[
-    \inferrule
-    {
-      u : g \vdash \iota (\phi (u)) : \mathsf{AccTrace}_{NFA(g \oplus g')} \\
-      v : g' \vdash \iota' (\psi (v)) : \mathsf{AccTrace}_{NFA(g \oplus g')}
-    }
-    {p : g \oplus g' \vdash \mathsf{case}~p \{ \mathsf{inl}(u) \mapsto s , \mathsf{inr}(v) \mapsto r \} : \mathsf{AccTrace}_{NFA(g \oplus g')}}
-  \]
-
-  with $\iota$ and $\iota'$ as embeddings from $NFA(g)$ and
-  $NFA(g')$, respectively, into $NFA(g \oplus g')$,
-  $\phi: g \cong \mathsf{AccTrace}_{NFA(g)}$, and $\psi: g' \cong \mathsf{AccTrace}_{NFA(g')}$. On a
-  high level, all this construction does is turn a parse of
-  $g$ into a parse of $NFA(g)$ and then embeds that inside
-  of the larger automaton $NFA(g \oplus g')$. Likewise for $g'$.
-
-  In the other direction, recall that the data of an
-  accepting trace for $NFA(g \oplus g')$ is a pair of a
-  trace and a proof that
-  the end state $q'$ of that trace is accepting. By
-  multifolding over the first part of that pair, we turn the
-  term of type
-  $\mathsf{Trace}_{NFA(g \oplus g')}(init , q')$ into a
-  trace of either of the subautomata,
-
-  \[
-    p : \mathsf{Trace}_{NFA(g \oplus g')}(init , q') \vdash \mathsf{mfold}_{NFA(g \oplus g')} : \mathsf{Trace}_{NFA(g)}(q_{0} , q') \oplus \mathsf{Trace}_{NFA(g')}(r_{0} , q')
-  \]
-
-  Additionally, we leverage the fact that the only accepting
-  states for $NFA(g \oplus g')$ are those from the
-  subautomata to extract that $q'$ must be an accepting
-  state from a subautomaton.
-
-  \[
-    x : \mathsf{acc}_{NFA(g \oplus g')}(q') \vdash M : \mathsf{acc}_{NFA(g)}(q') \oplus \mathsf{acc}_{NFA(g')}(q')
-  \]
-
-  We then combine the trace and proof of acceptance into an
-  accepting trace of one of the subautomata,
-
-  \[
-    p : \mathsf{AccTrace}_{NFA(g \oplus g')} \vdash N : \mathsf{AccTrace}_{NFA(g)} \oplus \mathsf{AccTrace}_{NFA(g')}
-  \]
-
-  Lastly, we then inductively use the isomorphisms $\phi$
-  and $\psi$ to turn the accepting traces into a parse of
-  $g$ or $g'$,
-
-  \[
-     N : \mathsf{AccTrace}_{NFA(g)} \oplus \mathsf{AccTrace}_{NFA(g')} \vdash \mathsf{case}~N~\{\mathsf{inl}(n) \mapsto \phi^{-1}(n), \mathsf{inr}(n') \mapsto \psi^{-1}(n')\} : g \oplus g'
-  \]
-
-  When you wish to show that these actually maps invert each other to form an isomorphism\max{jumbled sentence}, we invoke the
-  universal properties of the $\mathsf{Trace}$ types. That is,
-  $\mathsf{Trace}_{\oplus NFA}$, $\mathsf{Trace}_{N}$, and $\mathsf{Trace}_{M}$
-  are \emph{initial} algebras to the the functors that define them. Thus, the
-  embedding of traces through $N$ into $\oplus NFA$ and then mapped back down to $N$
-  compose to a map from $\mathsf{Trace}_{N}$ to itself. Such a map is unique and
-  thus must be the identity. The same reasoning shows that the desired
-  composite do indeed invert each other to form an isomorphism.
-
-  As discussed above, the other cases and
-  follow through a similar argument. This
-  concludes the proof of our variant of Thompson's construction.
-\end{proof}
-
-\subsection{Other Automata}
-\subsubsection{Pushdown Automata}
-\label{subsubsec:pda}
-A (nondeterministic) \emph{pushdown automaton} is an automaton that employs a
-stack. Just like NFAs, they have transitions labeled with characters from a
-fixed string alphabet $\Sigma$. Additionally, they maintain a stack of
-characters drawn from a stack alphabet $\Gamma$. They are often represented
-formally as a 7-tuple $(Q, \Sigma, \Gamma, \delta, q_{0}, Z, F)$,
-
-\begin{itemize}
-  \item $Q$ a finite set of states
-  \item $\Sigma$ a fixed, finite string alphabet
-  \item $S$ a fixed, finite stack alphabet
-  \item
-        $\delta \subset Q \times (\Sigma \cup \{ \varepsilon \}) \times S \to \mathcal{P}(Q \times S^{*})$
-        the transition function
-  \item $q_{0} \in Q$ the start state
-  \item $Z \in S$ the initial stack symbol
-  \item $F \subset Q$ the accepting states
-\end{itemize}
-
-We encode the traces of a pushdown automaton very similarly to those of an NFA,
-except the transitions of a PDA are instead encoded via the LNL product type
-$\bigamp$. This is because when simply transitioning via character, a PDA must
-also pop and push characters onto a stack, which is used as the argument to
-these dependent functions. Thus, the appropriate formation of traces through a
-PDA is dependent on a stack.
-
-Let $S$ be a non-linear type encoding the stack
-alphabet, and build lists over $S$ as the (non-linear) least fixed-point
-$\mathsf{List}(S) := \mu X . 1 + S \times X$. Then, the type of states for a
-PDA $P$ with stack alphabet $S$ are given as a functions that takes in lists $L$,
-and then makes a case distinction between possible transitions based on what was witnessed as $\mathsf{head}(L)$. The choice of transition
-will then determine which character to transition by and what word $w$ should be
-pushed onto the stack. The word that is added to the top of the stack is
-appended to $\mathsf{tail}(L)$ and then we recursively step into another state
-called on argument $w \cdot \mathsf{tail}(L)$.
+% \steven{Everything in this section below this marker is outdated and needs to be
+% folded into the above or cut}
+
+% \steven{Need a different segue because canonicity is no longer before this}
+% The canonicity theorem from the previous section gives a tight connection
+% between terms in our type theory and the theory of formal languages. In this section
+% we further explore these connections by using the fact that, classically
+% formal language theory is closely related to the study of automata.
+% In the Chomsky hierarchy, each language class is associated to a class of
+% automata that serve as recognizers. Internal to \theoryabbv,
+% we can characterize these language classes syntactically; moreover, we
+% demonstrate the equivalence of these language classes to its associated automata class as a
+% proof term within our logic.
+
+% \subsection{Non-deterministic Finite Automata}
+% \label{subsec:finiteaut}
+% \begin{figure}
+%   \begin{tikzpicture}[node distance = 25mm ]
+%     \node[state, initial, accepting] (1) {$1$};
+%     \node[state, below left of=1] (2) {$2$};
+%     \node[state, right of=2] (3) {$3$};
+
+%     \path[->] (1) edge[above] node{$b$} (2)
+%               (1) edge[below, bend right, left=0.3] node{$\epsilon$} (3)
+%               (2) edge[loop left] node{$a$} (2)
+%               (2) edge[below] node{$a, b$} (3)
+%               (3) edge[above, bend right, right=0.3] node{$a$} (1);
+%   \end{tikzpicture}
+%   \caption{An example NFA}
+%   \label{fig:NFA}
+% \end{figure}
+
+% Classically, a \emph{nondeterministic finite automaton} (NFA) is a finite state machine where
+% transitions are labeled with characters from a fixed alphabet $\Sigma$. These
+% are often represented formally as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$,
+
+% \begin{itemize}
+%   \item $Q$ a finite set of states
+%   \item $\Sigma$ a fixed, finite alphabet
+%   \item $\delta : Q \times (\Sigma \cup \{ \varepsilon\}) \to \mathcal{P}(Q)$ the labeled transition function
+%   \item $q_{0} \in Q$ the start state
+%   \item $F \subset Q$ a set of accepting states
+% \end{itemize}
+
+
+
+% \subsection{A DFA Parser}
+% \label{subsec:regexparser}
+
+% Just as we encoded traces of NFAs as grammars, we likewise
+% encode the traces of a DFA as grammars. The key difference
+% between NFAs and DFAs is \emph{determinism} --- meaning,
+% that in a state $q$ inside of DFA, given a character $c$ there
+% will be exactly one transition that we may take leaving $q$
+% with label $c$. For us, this changes the definition of valid
+% transitions for a DFA, instead of the definition of
+% $\mathsf{Trans}$ provided in \cref{subsec:finiteaut} DFAs
+% obey
+
+% \begin{gather*}
+%  \mathsf{State} \in \{ g_{q} : q \in Q \} \\
+%  \mathsf{Trans}(q) ::= \bigoplus_{c \in \Sigma} (c \otimes \mathsf{State})
+% \end{gather*}
+
+% Meaning, each state has a transition for every character. \emph{Note:} the above use
+%   of a disjunction over $\Sigma$ is a bit of abuse of notation.
+%   As $\Sigma$ is a finite alphabet, we wish to think of this as an iterated
+%   binary sum, or perhaps as a finitely indexed sum defined via linear dependent
+%   sums in the same manner by which we defined binary sums.
+
+% We now wish to define a parser term for DFA grammars. In
+% particular, for a DFA $D$ we want to build a term,
+
+% \[
+%   w : \String \vdash \mathsf{parse}_{D} : \mathsf{AccTrace}_{D} \oplus \top
+% \]
+
+% where left injection into the output type denotes acceptance
+% by the parser, and right injection denotes rejection. To
+% build such a parser, it will suffice to construct a term
+
+% \[
+%   w : \String \vdash \mathsf{parse}_{D} : \LinSigTy q Q {\mathsf{Trace}_{D}(q_{0} , q)}
+% \]
+% This is because given a trace of a DFA, we may easily check
+% if we should accept or reject by simply testing
+% if the final state is accepting.
+
+% Because $w$ is a Kleene star of characters, we may construct
+% our desired $\mathsf{parse}_{D}$ term as a $\mathsf{foldl}$
+% over $w$. In the empty case, we just have the trace that
+% ends at the accepting state. In the recursive case, we
+% effectively add to our trace by transitioning one character
+% at a time, as we read them moving across $w$.
+
+% Perhaps this derivation is not too surprising. All it says
+% is that a DFA may be ran by transitioning a single character
+% at a time, and then accepting or rejecting based on the
+% final state. This is exactly what DFAs did initially, so
+% what did we gain? Well, this has the benefit of our type
+% system to ensure its correctness. Moreover, this construction exports to an
+% intrinsically verified and executable decision procedure for DFAs in \theoryabbv
+% embedded in Agda.
+
+% We should note that the
+% construction of a DFA parser requires the addition of an additional but seemingly innocuous
+% axiom.
+
+% \[
+%   \top \cong \left( \bigoplus_{c : \Sigma} c \right)^{*}
+% \]
+
+% That is, the characters in the alphabet $\Sigma$ really are all of the
+% characters. The need for this axiom arises when we go to take a transition
+% within the DFA,
+% as we must ensure that the next character of the string has a corresponding
+% transition from the current state
+% --- which would be guaranteed by determinism provided there are no surprise characters.
+
+% \subsection{Regular Expressions and DFAs}
+% \label{subsec:deriv}
+
+% In order to extend the DFA
+% parser from \cref{subsec:regexparser} to the construction of
+% a verified parser
+% generator for regular expression we need to perform some
+% plumbing establishing an equivalence between regular
+% expressions and DFAs.
+
+% There are several routes we may hope to take in establishing
+% this equivalence. First, we could prove an equivalence
+% between NFAs and regular expressions, and separately prove
+% an equivalence between NFAs and DFAs.
+% In \cref{subsec:eqproofs}, we include a version of
+% Thompson's construction --- which established the
+% equivalence between regular grammars and DFAs. We may additionally
+% hope to internalize a variant of the powerset construction \cite{rabinFiniteAutomataTheir1959}
+% --- which takes as input an NFA and constructs a DFA that
+% recognizes the same language --- and combine the results of
+% Thompson's construction and the powerset constructions to give an equivalence
+% between regular expressions and DFAs.  This route is alluring, as it
+% internalizes several classic grammar-theoretic constructions. However, it may
+% necessitate extensions to the LNL theory, like
+% a propositional truncation, and we have not yet investigated
+% how this would interact with the existing types in the
+% theory. The addition of a propositional truncation may seem
+% harmless, but it is not always immediately clear how
+% distinct constructions will interact. For instance, when
+% exploring LNL models, Benton discovered that the synthesis
+% of linear and dependent types require a new presentation of
+% the $!$ modality from linear logic
+% \cite{bentonMixedLinearNonlinear1995}. That is all to say,
+% this is a work in progress and
+% it is not immediate that the addition of a propositional
+% truncation is adequate for establishing the weak equivalence
+% between NFAs and DFAs.
+
+% We may instead hope to internalize an equivalence between
+% regular grammars and DFAs by using Brzozowski derivatives to
+% directly create a DFA that is weakly equivalent to a given
+% regular expression, as described by Owens et al.
+% \cite{owensRegularexpressionDerivativesReexamined2009}.
+% One characterization of regular grammars is that they are
+% precisely those grammars which have finitely many inequivalent Brzozowski
+% derivatives
+% \cite{brzozowskiDerivativesRegularExpressions1964}.
+% The algorithm used by Owens takes in a
+% regular grammar and generates a DFA that recognizes the same
+% language, and the states in this DFA are the finitely many
+% derivative equivalence classes. We initially had a version of
+% this theorem very roughly internalized in the LNL theory.
+% To our taste, too much of this presentation relied on
+% meta-arguments that lived outside of
+% our formalism, and thus this particular phrasing of the
+% theorem did not translate well into formalization.
+
+% In any case, we believe
+% that revisiting these lines of thought will lead to a
+% satisfactory internalization of the equivalence between
+% regular grammars and DFAs, and thus would bridge the gap
+% between our DFA parser and a full regular expression parser.
+
+% \subsection{Equivalence Between Regular Expressions and Finite Automata}
+% \label{subsec:eqproofs}
+% In this section, we describe a version of Thompson's
+% construction \cite{thompsonProgrammingTechniquesRegular1968}
+%    where we construct an NFA that recognizes a given regular
+% expression. Moreover, we will show that this NFA is strongly equivalent to the
+% original grammar. Witnessing this construction in our syntax has two benefits
+% \begin{enumerate}
+%   \item It reinforces this high-level view that the syntax is a natural and
+%         general setting for formal grammar reasoning, as we demonstrate that
+%         this formal system subsume results from existing systems, and
+%   \item Following the
+%         development of Thompson's construction, we then need
+%         only establish the equivalence of NFAs and DFAs to
+%         complete the full regular expression parser
+% \end{enumerate}
+
+% \begin{theorem}[Thompson]
+%   \label{thm:thompson}
+%   For $g$ a regular grammar $g$, there is an NFA $N$ that recognizes the same
+%   language as $g$.
+% \end{theorem}
+% We make a pretty straightforward adaptation of Thompson's theorem to our setting,
+
+% \begin{theorem}[Typed Thompson]
+%   \label{thm:typthompson}
+%   For $g$ a regular expression $g$, there is an NFA $N$ such that $g$ is isomorphic
+%   to $\mathsf{AccTrace}_{N}$.
+% \end{theorem}
+
+% \begin{proof}[Proof Sketch]
+%   Recall that regular expressions are inductively defined via
+%   disjunction, concatenation, and Kleene star over literals
+%   and the empty grammar. By induction over regular expressions,
+%   we will construct an NFA that is equivalent to $g$.
+
+%   First, define the recognizing NFA for the empty grammar
+%   $I$.
+
+%   \begin{figure}[h!]
+%   \begin{tikzpicture}[node distance = 25mm ]
+%     \node[state, initial] (1) {$1$};
+%     \node[state, right of=1, accepting] (2) {$2$};
+
+%     \path[->] (1) edge[below] node{$\varepsilon$} (2);
+%   \end{tikzpicture}
+%   \caption{$NFA(I)$}
+%   \label{fig:emptyNFA}
+%   \end{figure}
+
+%   The type of traces from the initial state of $NFA(I)$ to the single
+%   accepting state is given by,
+
+%   \[
+%     \mathsf{Trace}_{NFA(I)}(q_{1}, q_{2}) = \mu
+%       \begin{pmatrix}
+%          g_{q_{1}} := g_{q_{2}} \\
+%          g_{q_{2}} := I
+%       \end{pmatrix}. g_{q_{1}}
+%   \]
+
+%   The accepting traces through $NFA(I)$ are then described
+%   as,
+
+%   \[
+%     \mathsf{AccTrace}_{NFA(I)} = \LinSigTy q {\{1 , 2\}} {\left( \mathsf{Trace}_{NFA(I)}(q_{1} , q) \pair \mathsf{acc}(q) \right)}
+%   \]
+
+%   A quick inspection of \cref{fig:emptyNFA} reveals that the
+%   only reasonable choice for $q$ is $q_{2}$ --- because
+%   state 2 is accepting while state 1 is not. Therefore,
+
+%   \begin{align*}
+%     \mathsf{AccTrace}_{NFA(I)}
+%     & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \pair \mathsf{acc}(q_{2}) \\
+%     & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \pair \top \\
+%     & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})
+%   \end{align*}
+
+%   From here, to prove
+%   $I \cong \mathsf{AccTrace}_{NFA(I)}$ it suffices to show
+%   $I \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})$. Below we
+%   give two parse transformers, one from $I$ to
+%   $\mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})$ and vice versa.
+
+%   \[
+%     \inferrule
+%     {p : I \vdash \mathsf{nil} : \mathsf{Trace}(q_{2} , q_{2}) \\
+%      \exists \text{~transition~} q_{1} \overset{\varepsilon}{\to} q_{2}
+%     }
+%     {p : I \vdash \mathsf{\varepsilon cons}(\mathsf{nil}) : \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})}
+%   \]
+
+%   Let $\gamma$ be the substitution $\{ g_{q_{2}} / g_{q_{1}}, I / g_{q_{2}} \}$,
+
+%   \[
+%     \inferrule
+%     {
+%       p : \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \vdash p :
+%         \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \\
+%       x_{1} : \simulsubst {g_{q_{2}}} {\gamma} = I \vdash x_{1} : I \\
+%       x_{2} : \simulsubst {I} {\gamma} = I \vdash x_{2} : I
+%     }
+%     {
+%       p : \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \vdash \mathsf{mfold}(x_{1}.x_{1} , x_{2}.x_{2})(p) : I
+%     }
+%   \]
+
+%   This concludes the proof for the case of the empty
+%   grammar. Let's now walk through the construction for
+%   literal grammars. Given a character $c$, we construct an
+%   NFA that recognizes only the string containing the single
+%   character $c$ as,
+
+
+%   \begin{figure}[h!]
+%   \begin{tikzpicture}[node distance = 25mm ]
+%     \node[state, initial] (1) {$1$};
+%     \node[state, right of=1, accepting] (2) {$2$};
+
+%     \path[->] (1) edge[below] node{$c$} (2);
+%   \end{tikzpicture}
+%   \caption{$NFA(c)$}
+%   \label{fig:literalNFA}
+%   \end{figure}
+
+%   The automaton in \cref{fig:literalNFA} induces the
+%   following type of traces from $q_{1}$ to $q_{2}$.
+
+%   \[
+%     \mathsf{Trace}_{NFA(c)}(q_{1}, q_{2}) = \mu
+%       \begin{pmatrix}
+%          g_{q_{1}} := c \otimes g_{q_{2}} \\
+%          g_{q_{2}} := I
+%       \end{pmatrix}. g_{q_{1}}
+%   \]
+
+%   Through the same argument as the empty grammar, the only
+%   state that is accepting is $q_{2}$ and thus,
+
+%   \[
+%     \mathsf{AccTrace}_{NFA(c)} \cong \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2})
+%   \]
+
+%   To show the desired isomorphism of $c \cong NFA(c)$ we
+%   make a similar argument as we did for the empty grammar
+%   $I$, except we leverage the $\mathsf{cons}$ rule instead
+%   of $\mathsf{\varepsilon cons}$. That is, the parse
+%   transformers in either direction are given as,
+
+%   \[
+%     \inferrule
+%     {\cdot \vdash \mathsf{nil} : \mathsf{Trace}(q_{2} , q_{2}) \\
+%      \exists \text{~transition~} q_{1} \overset{c}{\to} q_{2}
+%     }
+%     {p : c \vdash \mathsf{cons}(\mathsf{nil}) :
+%       \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2})}
+%   \]
+
+
+%   \[
+%     \inferrule
+%     {
+%       p : \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2}) \vdash p :
+%         \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2}) \\
+%       x_{1} : \simulsubst {(c \otimes g_{q_{2}})} {\gamma} = c \otimes I \vdash \mathsf{unitR}(x_{1}) : c \\
+%       x_{2} : \simulsubst {I} {\gamma} = I \vdash x_{2} : I
+%     }
+%     {
+%       p : \mathsf{Trace}_{NFA(c)}(q_{1} , q_{2}) \vdash \mathsf{mfold}(x_{1}.\mathsf{unitR}(x_{1}) , x_{2}.x_{2})(p) : c
+%     }
+%   \]
+
+%   Where $\gamma$ is the substitution
+%   $\{ c \otimes g_{q_{2}} / g_{q_{1}}, I / g_{q_{2}} \}$ and
+%   $\mathsf{unitR}$ is a witness to the isomorphism
+%   $c \otimes I \cong c$. Again, we may see that these do
+%   indeed mutually invert each other in the Agda code.
+
+%   It remains to show that the desired isomorphisms are
+%   preserved by $\otimes$, $\oplus$, and Kleene star. Here,
+%   we will give the argument for the disjunction case, the
+%   others are defined quite similarly.
+
+%   Given two NFAs $N$ and $M$, we may define a new NFA that
+%   encodes the disjunction of $N$ and $M$. Denote the
+%   internal states of $N$ by $q_{j}$'s and the internal states
+%   of $M$ by $r_{k}$'s,
+
+%   \begin{figure}[h!]
+%   \begin{tikzpicture}[node distance = 20mm ]
+%     \node[state] (2) {$q_{init}$};
+%     \node[state, initial, below left of=2] (1) {$init$};
+%     \node[state, below right of=1] (3) {$r_{init}$};
+%     \node[right of=2] (4) {$\cdots$};
+%     \node[right of=3] (5) {$\cdots$};
+%     % \node[state, below right of=1] (3) {$3$};
+%     % \node[state, below of=2] (4) {$4$};
+
+%     \path[->] (1) edge[below] node{$\varepsilon$} (2);
+%     \path[->] (1) edge[below] node{$\varepsilon$} (3);
+%     \path[->] (2) edge[below] node{} (4);
+%     \path[->] (3) edge[below] node{} (5);
+
+%     \node[label={[name=l] $N$}, draw,line width=2pt,rounded corners=5pt, fit=(2)(4)] {};
+%     \node[label={[name=l] $M$}, draw,line width=2pt,rounded corners=5pt, fit=(3)(5)] {};
+%   \end{tikzpicture}
+%   \caption{$N \oplus_{NFA} M$}
+%   \label{fig:disjunctionNFA}
+%   \end{figure}
+
+%   \Cref{fig:disjunctionNFA} shows the process of
+%   disjunctively combining NFAs. Precisely, we add a single
+%   new state and we included copies of the states from each of $N$
+%   and $M$. The new state acts as the initial state and has
+%   $\varepsilon$-transitions to the initial states of $N$ and
+%   $M$. We include all of the internal transitions from $N$
+%   and $M$, and the accepting states of $N \oplus_{NFA} M$
+%   are exactly the accepting states in each subautomaton.
+
+%   Let $g$ and $g'$ be two regular grammars such that
+%   $g \cong NFA(g)$ and $g' \cong NFA(g')$. As a matter of
+%   notation\footnote{We shall similarly abuse notation for
+%     $\otimes$ and Kleene. That is, for a regular grammar
+%     $g$, when we write $NFA(g)$ we mean the NFA inductively
+%     built up with the NFA-analogues to the constructors that
+%     built up $g$.}, we will write $NFA(g \oplus g')$ for
+%   $NFA(g) \oplus_{NFA} NFA(g')$. The traces of
+%   $NFA(g \oplus g')$ are then given by,
+
+%   \[
+%     \mathsf{Trace}_{NFA(g \oplus g')}(src , dst) = \mu
+%       \begin{pmatrix}
+%         g_{init} := g_{q_{0}} \oplus g_{r_{0}} \\
+%         g_{q_{j}} := \mathsf{Trans}_{NFA(g)}(q_{j}) \oplus \mathsf{isDst}(q_{j}) \\
+%         g_{r_{k}} := \mathsf{Trans}_{NFA(g')}(r_{k}) \oplus \mathsf{isDst}(r_{k})
+%       \end{pmatrix}.g_{src}
+%     \]
+
+%   where $\mathsf{Trans}$ is used to echo the same syntactic
+%   definitions that appear in the $NFA(g)$ and $NFA(g')$.
+%   Also, $src$ and $dst$ may take on any value in
+%   $Q := \{init\} \cup \{q_{j}\} \cup \{r_{k}\}$, and
+%   $\mathsf{isDst}(q)$ checks if $q$ is equal to $dst$. Which
+%   is all to say, the traces of $NFA(g \oplus g')$ comprise
+%   either a trace of $NFA(g)$, or a trace of $NFA(g')$, and
+%   the transition coming out of $g_{init}$ determines which
+%   subautomaton we step into.
+
+%   The parse transformer from $g \oplus g'$ checks which side
+%   of the sum type we are on, then takes the appropriate step
+%   from $g_{init}$ in the automaton.
+
+%   \[
+%     \inferrule
+%     {
+%       u : g \vdash \iota (\phi (u)) : \mathsf{AccTrace}_{NFA(g \oplus g')} \\
+%       v : g' \vdash \iota' (\psi (v)) : \mathsf{AccTrace}_{NFA(g \oplus g')}
+%     }
+%     {p : g \oplus g' \vdash \mathsf{case}~p \{ \mathsf{inl}(u) \mapsto s , \mathsf{inr}(v) \mapsto r \} : \mathsf{AccTrace}_{NFA(g \oplus g')}}
+%   \]
+
+%   with $\iota$ and $\iota'$ as embeddings from $NFA(g)$ and
+%   $NFA(g')$, respectively, into $NFA(g \oplus g')$,
+%   $\phi: g \cong \mathsf{AccTrace}_{NFA(g)}$, and $\psi: g' \cong \mathsf{AccTrace}_{NFA(g')}$. On a
+%   high level, all this construction does is turn a parse of
+%   $g$ into a parse of $NFA(g)$ and then embeds that inside
+%   of the larger automaton $NFA(g \oplus g')$. Likewise for $g'$.
+
+%   In the other direction, recall that the data of an
+%   accepting trace for $NFA(g \oplus g')$ is a pair of a
+%   trace and a proof that
+%   the end state $q'$ of that trace is accepting. By
+%   multifolding over the first part of that pair, we turn the
+%   term of type
+%   $\mathsf{Trace}_{NFA(g \oplus g')}(init , q')$ into a
+%   trace of either of the subautomata,
+
+%   \[
+%     p : \mathsf{Trace}_{NFA(g \oplus g')}(init , q') \vdash \mathsf{mfold}_{NFA(g \oplus g')} : \mathsf{Trace}_{NFA(g)}(q_{0} , q') \oplus \mathsf{Trace}_{NFA(g')}(r_{0} , q')
+%   \]
+
+%   Additionally, we leverage the fact that the only accepting
+%   states for $NFA(g \oplus g')$ are those from the
+%   subautomata to extract that $q'$ must be an accepting
+%   state from a subautomaton.
+
+%   \[
+%     x : \mathsf{acc}_{NFA(g \oplus g')}(q') \vdash M : \mathsf{acc}_{NFA(g)}(q') \oplus \mathsf{acc}_{NFA(g')}(q')
+%   \]
+
+%   We then combine the trace and proof of acceptance into an
+%   accepting trace of one of the subautomata,
+
+%   \[
+%     p : \mathsf{AccTrace}_{NFA(g \oplus g')} \vdash N : \mathsf{AccTrace}_{NFA(g)} \oplus \mathsf{AccTrace}_{NFA(g')}
+%   \]
+
+%   Lastly, we then inductively use the isomorphisms $\phi$
+%   and $\psi$ to turn the accepting traces into a parse of
+%   $g$ or $g'$,
+
+%   \[
+%      N : \mathsf{AccTrace}_{NFA(g)} \oplus \mathsf{AccTrace}_{NFA(g')} \vdash \mathsf{case}~N~\{\mathsf{inl}(n) \mapsto \phi^{-1}(n), \mathsf{inr}(n') \mapsto \psi^{-1}(n')\} : g \oplus g'
+%   \]
+
+%   When you wish to show that these actually maps invert each other to form an isomorphism\max{jumbled sentence}, we invoke the
+%   universal properties of the $\mathsf{Trace}$ types. That is,
+%   $\mathsf{Trace}_{\oplus NFA}$, $\mathsf{Trace}_{N}$, and $\mathsf{Trace}_{M}$
+%   are \emph{initial} algebras to the the functors that define them. Thus, the
+%   embedding of traces through $N$ into $\oplus NFA$ and then mapped back down to $N$
+%   compose to a map from $\mathsf{Trace}_{N}$ to itself. Such a map is unique and
+%   thus must be the identity. The same reasoning shows that the desired
+%   composite do indeed invert each other to form an isomorphism.
+
+%   As discussed above, the other cases and
+%   follow through a similar argument. This
+%   concludes the proof of our variant of Thompson's construction.
+% \end{proof}
+
+% \subsection{Other Automata}
+% \subsubsection{Pushdown Automata}
+% \label{subsubsec:pda}
+% A (nondeterministic) \emph{pushdown automaton} is an automaton that employs a
+% stack. Just like NFAs, they have transitions labeled with characters from a
+% fixed string alphabet $\Sigma$. Additionally, they maintain a stack of
+% characters drawn from a stack alphabet $\Gamma$. They are often represented
+% formally as a 7-tuple $(Q, \Sigma, \Gamma, \delta, q_{0}, Z, F)$,
+
+% \begin{itemize}
+%   \item $Q$ a finite set of states
+%   \item $\Sigma$ a fixed, finite string alphabet
+%   \item $S$ a fixed, finite stack alphabet
+%   \item
+%         $\delta \subset Q \times (\Sigma \cup \{ \varepsilon \}) \times S \to \mathcal{P}(Q \times S^{*})$
+%         the transition function
+%   \item $q_{0} \in Q$ the start state
+%   \item $Z \in S$ the initial stack symbol
+%   \item $F \subset Q$ the accepting states
+% \end{itemize}
+
+% We encode the traces of a pushdown automaton very similarly to those of an NFA,
+% except the transitions of a PDA are instead encoded via the LNL product type
+% $\bigamp$. This is because when simply transitioning via character, a PDA must
+% also pop and push characters onto a stack, which is used as the argument to
+% these dependent functions. Thus, the appropriate formation of traces through a
+% PDA is dependent on a stack.
+
+% Let $S$ be a non-linear type encoding the stack
+% alphabet, and build lists over $S$ as the (non-linear) least fixed-point
+% $\mathsf{List}(S) := \mu X . 1 + S \times X$. Then, the type of states for a
+% PDA $P$ with stack alphabet $S$ are given as a functions that takes in lists $L$,
+% and then makes a case distinction between possible transitions based on what was witnessed as $\mathsf{head}(L)$. The choice of transition
+% will then determine which character to transition by and what word $w$ should be
+% pushed onto the stack. The word that is added to the top of the stack is
+% appended to $\mathsf{tail}(L)$ and then we recursively step into another state
+% called on argument $w \cdot \mathsf{tail}(L)$.
 
 % \begin{gather*}
 %   \mathsf{State} \in {g _{q} : q \in Q} \\
@@ -2240,20 +2276,20 @@ called on argument $w \cdot \mathsf{tail}(L)$.
 
 % That is to say, when transitioning a PDA pops off the head $hd$ of the stack
 
-\subsubsection{Turing Machines}
-\label{subsubsec:tm}
+% \subsubsection{Turing Machines}
+% \label{subsubsec:tm}
 
-Above we gave a grammar presentation of
-traces through a PDA by using a non-linear type $S$
-to encode the stack. We may similarly use pairs $S \times S$
-to encode the tape of a Turing machine. With two stacks we can simulate the behavior of the
-infinite tape of a Turing machine. The intuition behind this correspondence is
-that the left half of the tape is on one stack, the right
-half of the tape the other, and we treat the tops of stacks
-like the head of the tape.
+% Above we gave a grammar presentation of
+% traces through a PDA by using a non-linear type $S$
+% to encode the stack. We may similarly use pairs $S \times S$
+% to encode the tape of a Turing machine. With two stacks we can simulate the behavior of the
+% infinite tape of a Turing machine. The intuition behind this correspondence is
+% that the left half of the tape is on one stack, the right
+% half of the tape the other, and we treat the tops of stacks
+% like the head of the tape.
 
-\pedro{I like the overall structure of this section! Showing how the type theory
-can encode and reason about different kinds of languages is very instructive!}
+% \pedro{I like the overall structure of this section! Showing how the type theory
+% can encode and reason about different kinds of languages is very instructive!}
 
 \section{Semantics and Metatheory}
 \label{sec:semantics-and-metatheory}
