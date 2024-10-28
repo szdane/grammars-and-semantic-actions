@@ -424,8 +424,8 @@ restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 \begin{figure}
 \begin{align*}
 \data &~A^{*}: L_{i}~\where\\
-      & \nil : I \lto A^{*} \\
-      & \cons : A \otimes A^{*} \lto A^{*}
+      & \nil : \ltonl {A^{*}} \\
+      & \cons : \ltonl {(A \lto A^{*} \lto A^{*})}
 \end{align*}
 \caption{Kleene Star as an inductive type}
 \label{fig:kleenestarinductive}
@@ -466,6 +466,8 @@ matches $a^{*} \otimes b$ through repeated application of the Kleene star constr
 \caption{\stringquote{ab} matches $a^{*} \otimes b$}
 \label{fig:kleenestarderivation}
 \end{figure}
+
+\steven{TODO need to update the proof tree example derivations (\cref{fig:kleenestarderivation,fig:kleeneabstractproof}) to use the presentation of cons that is now in \cref{fig:kleenestarinductive}}
 
 We may also have derivations where the term in context is not simply a
 string of base types. For instance, by using the elimination principle for
@@ -565,18 +567,18 @@ of mutually recursive types over the indexing data.
 \begin{figure}
 \begin{align*}
 \data &~\Trace_{N}~1~(acc : \Bool) : L_{i}~\where\\
-      & \mathsf{stop}_{1} : I \lto \Trace_{N}~1~\true \\
-      & \mathsf{1to2} : \forall (acc : \Bool) \to b \otimes \Trace_{N}~2~acc \lto \Trace_{N}~1~acc \\
-      & \mathsf{1to3} : \forall (acc : \Bool) \to \Trace_{N}~3~acc \lto \Trace_{N}~1~acc \\
+      & \mathsf{stop}_{1} : \ltonl {\Trace_{N}~1~\true}  \\
+      & \mathsf{1to2} : \forall (acc : \Bool) \to \ltonl {(b \lto \Trace_{N}~2~acc \lto \Trace_{N}~1~acc)} \\
+      & \mathsf{1to3} : \forall (acc : \Bool) \to \ltonl {(\Trace_{N}~3~acc \lto \Trace_{N}~1~acc)} \\
 \\
 \data &~\Trace_{N}~2~(acc : \Bool) : L_{i}~\where\\
-      & \mathsf{stop}_{2} : I \lto \Trace_{N}~2~\false \\
-      & \mathsf{2to2} : \forall (acc : \Bool) \to a \otimes \Trace_{N}~2~acc \lto \Trace_{N}~2~acc \\
-      & \mathsf{2to3} : \forall (acc : \Bool) \to b \otimes \Trace_{N}~3~acc \lto \Trace_{N}~2~acc \\
+      & \mathsf{stop}_{2} : \ltonol {\Trace_{N}~2~\false} \\
+      & \mathsf{2to2} : \forall (acc : \Bool) \to \ltonl {(a \lto \Trace_{N}~2~acc \lto \Trace_{N}~2~acc)} \\
+      & \mathsf{2to3} : \forall (acc : \Bool) \to \ltonl {(b \lto \Trace_{N}~3~acc \lto \Trace_{N}~2~acc)}  \\
 \\
 \data &~\Trace_{N}~3~(acc : \Bool) : L_{i}~\where\\
-      & \mathsf{stop}_{3} : I \lto \Trace_{N}~3~\true \\
-      & \mathsf{3to1} : \forall (acc : \Bool) \to a \otimes \Trace_{N}~1~acc \lto \Trace_{N}~3~acc \\
+      & \mathsf{stop}_{3} : \ltonl {\Trace_{N}~3~\true} \\
+      & \mathsf{3to1} : \forall (acc : \Bool) \to \ltonl {(a \lto \Trace_{N}~1~acc \lto \Trace_{N}~3~acc)} \\
 \end{align*}
 \caption{$N$ as an indexed inductive type}
 \label{fig:nfainductive}
@@ -607,7 +609,7 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
                                                   N \\
     \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
     \textrm{linear types} & A , B , C & ::= &
-    c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M
+    c \pipe I \pipe A \otimes B \pipe \bigoplus\limits_{x:X} A \pipe \mu A_f M \pipe
     A \lto B \pipe B \tol A \pipe \bigwith\limits_{x:X} A \pipe \equalizer {a}{f}{g}\\
   \end{array}
   \]
@@ -637,14 +639,14 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     \inferrule{\Gamma ; \Delta \vdash e : A \otimes B \\ \Gamma ; \Delta'_1, a : A, b : B, \Delta'_2 \vdash e'}{\Gamma ;  \Delta_1', \Delta, \Delta'_2 \vdash \letin {a \otimes b} e {e'}}
     \\
     %
-    \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A\lto B}
+    \inferrule{\Gamma ; \Delta , a : A \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A\lto B}
     \and
-    \inferrule{\Gamma ; \Delta' \vdash e' : A \\ \Gamma ; \Delta \vdash e : A \lto B}{\Gamma ; \Delta', \Delta \vdash \applto {e'} {e} : B}
+    \inferrule{\Gamma ; \Delta' \vdash e' : A \\ \Gamma ; \Delta \vdash e : A \lto B}{\Gamma ; \Delta, \Delta' \vdash \applto {e'} {e} : B}
     \\
     %
-    \inferrule{\Gamma ; \Delta , a : A \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
+    \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
     \and
-    \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta, \Delta' \vdash \apptol e {e'} : B}
+    \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
     %
     \\
     %
@@ -1097,7 +1099,7 @@ types is standard, so below we focus on the linear syntax.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \lambtol a {\app e a} : A \tol B}
+    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \lambtol a {\app e a} : B \tol A}
 %
     \and
 %
