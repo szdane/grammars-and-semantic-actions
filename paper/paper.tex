@@ -416,6 +416,7 @@ Moreover, strings are not simply sets of characters, as they carry an inherent
 ordering. Thus, the rule of exchange is also omitted in this calculus so that
 the constituent characters of a string are not freely permuted.
 
+\max{Is this really true? I don't think it's accurate to say that the ordering restriction on variable usage actually dictates an order in processing variables. And I don't know what you mean by processed without modification.}
 Without the above structural rules we
 arrive at an ordered, linear type system, and to summarize this
 particular choice of substructural restrictions: when parsing, characters must
@@ -441,7 +442,7 @@ restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 \end{figure}
 
 For a grammar $A$, the recursive nature of $A^{*}$ is captured by defining
-$A^{*}$ to be an inductive\footnote{As we will soon see, our theory defines
+$A^{*}$ to be an \max{this footnote seems unnecessary}inductive\footnote{As we will soon see, our theory defines
   \emph{indexed} inductive types. We can recover non-indexed inductive types by
   indexing over the unit type.} linear
 type, as shown in \cref{fig:kleenestarinductive}. Just as in \cref{fig:fingram}, we can show that particular strings match a Kleene
@@ -496,6 +497,7 @@ trees of the output grammar.
 
 \steven{TODO : describe elimination principle somewhere. Maybe just in prose?}
 \steven{I probably can't get away with the inline definition of $f$ in \cref{fig:kleeneabstractproof}}
+\max{shouldn't the fold be applied to $x$ and shouldn't $f$ be $\lambda x.\lambda y.\cdots$?}
 \begin{figure}
 \begin{mathpar}
   \inferrule
@@ -529,16 +531,16 @@ can represent them internal to \theoryabbv.
 Our method of representing these automata internally is to provide an \emph{indexed}
 inductive type of traces through the machine. An ordered, linear theory is
 integral to our design of \theoryabbv ; however, there are some aspects of parsing that
-cannot be captured through linear types alone. Often one wants to define a
+cannot be captured through linear types\max{not exactly clear what you mean, maybe you mean ``simple'' linear types?} alone. Often one wants to define a
 \emph{family} of linear types varying over a set, which is a primary motivator
-for us to make \theoryabbv a linear-non-linear theory. For the NFA $N$, an indexed inductive
+for us to make \theoryabbv a linear-non-linear theory\max{jargon-y. Be more direct}. For the NFA $N$, an indexed inductive
 type of traces through $N$ is given in \cref{fig:nfainductive}.
 
 The type of traces in $N$ is indexed by two pieces of data: a state in $N$ and a
 Boolean. For each state $s : N.\mathsf{state}$ and $acc : \Bool$, we define
 $\Trace_{N}~s~acc$ which denotes the
 type of traces starting at state $s$ and terminating at an arbitrary state. The Boolean flag $acc$ marks if the trace
-ends in either an accepting or a rejecting state. Let us dissect the structure
+ends in either an accepting or a rejecting state\max{confusing. One sentence you say arbitrary state and then the next sentence you say it has to match $acc$}. Let us dissect the structure
 of this type in more detail for state 1 of $N$.
 
 $\Trace_{N}~1~acc$ has three constructors. The first constructor
@@ -581,6 +583,8 @@ $N.\mathsf{state} \times \Bool$.
   \label{fig:exampleNFA}
 \end{figure}
 
+\max{this notation is inconsistent with Agda syntax. You write $acc : \Bool$ but then in the $\mathsf{stop}$ cases you instantiate $\acc$ with a specific boolean}
+\max{is the boolean just overcomplicating stuff here?}
 \begin{figure}
 \begin{align*}
 \data &~\Trace_{N}~1~(acc : \Bool) : L_{i}~\where\\
@@ -606,6 +610,7 @@ $N.\mathsf{state} \times \Bool$.
 \section{Syntax and Typing for \theoryname}
 \label{sec:tt}
 
+\max{was this paragraph supposed to be deleted?}
 Next we present the full details of the syntax and typing of \theoryname.
 \theoryname has two kinds of types, linear types $A$ which represent formal
 grammars, and non-linear types $X$, which act like ordinary types or sets. Both
@@ -869,10 +874,10 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
 
 In this section we go on a tour of \theoryabbv. We start by presenting its syntax.
 In order to avoid a notion of raw-term, we present it in an intrinsically-typed fashion,
-where only well-typed terms are meaningful. Next, we show how it admits a model in $\Set^{\String}$
+where only well-typed terms are meaningful\max{this sentence says the same thing multiple times}. Next, we show how it admits a model in $\Set^{\String}$
 where the linear types have natural interpretation in terms of formal grammars --- for instance,
 the tensor corresponds to grammar concatenation. We conclude the section by showing how
-classes of grammars correspond to certain sub-type-theories inside \theoryabbv.
+classes of grammars correspond to certain sub-type-theories inside \theoryabbv.\max{why are you putting the entire paper into this section?}
 
 \subsection{Syntax}
 \label{subsec:syntax}
@@ -886,10 +891,10 @@ specify and construct parsers.
 The structural judgments are shown in \cref{fig:structjdg}, the typing
 well-formedness in \cref{fig:typewf}, and the intuitionistic typing
 rules in \cref{fig:inttyping}. These are mostly just as they appear in
-\cite{krishnaswami_integrating_2015}. It has two main differences. The
+\cite{krishnaswami_integrating_2015}. It has two main differences\max{you absolutely cannot just describe the differences between our calculus and one from prior work. This paper needs to be self-contained}. The
 first one it the presence of two-distinct arrow types, one for adding
 variables to the beginning of contexts and another one for adding
-variables to the end of contexts. This is an adequate change in the
+variables to the end of contexts. This is an adequate\max{adequate?} change in the
 context of grammars, which are inherently non-symmetric. The second
 change is the introduction of inductive types, which allows for the definition
 of recursive grammars. The treatment of the non-linear
@@ -1194,6 +1199,7 @@ types is standard, so below we focus on the linear syntax.
 
 \subsection{Formal Grammars as Linear Types}
 \label{sec:formaltype}
+\max{this should be in its own section on semantics}
 
 % The linear typing judgment in our syntax takes on the following schematic form
 % $\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
@@ -1232,7 +1238,6 @@ types is standard, so below we focus on the linear syntax.
 %   earlier. So what you write needs to take that into account}
 % \pedro{In which case we should introduce it in the previous section. I suggest
 %   adding this right after ``and the intuitionistic typing rules in fig 3''}
-
 Now that we have specified the syntactic aspect of \theoryabbv, we must justify
 its connections to formal grammars in order to show that it is a sound methodology
 for reasoning about parsers. We do this by showing that $\mathbf{Gr}$ is a model
@@ -1389,7 +1394,7 @@ particular, via a dependence on $\Bool$.
 \]
 where $C(\true) = A, C(\false) = B$.
 
-\paragraph{Universal Type}
+\paragraph{Universal Type}\max{this is absolutely not the right terminology. Universal type means multiple other completely different things}
 \steven{Definable as nullary product}
 The universal type $\top$ may be formed in any context.
 %
