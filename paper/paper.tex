@@ -2825,6 +2825,39 @@ theorem. Could also be done before stating the theorem.}
 
 \section{Discussion and Future Work}
 \label{sec:discussion}
+\paragraph{Lambek Calculus and Categorial Grammar}
+In 1958 \cite{lambek1958mathematics}, Joachim Lambek introduced his syntactic
+calculus as a logical system for linguistic derivations. In fact, one may view
+the subtheory of our calculus generated over $\otimes, \lto, \tol$ to be a proof
+relevant presentation of Lambek's original system.
+
+\steven{Should discussion of this connection to lambek calculus be spread
+  throughout the paper?}
+
+Lambek later explicitly connects his syntactic calculus to the structure of a
+non-commutative biclosed monoidal category \cite{lambek1988categorial}. There is
+a rich line of subsequent research after these revelations by Lambek, including
+the study of pregroup grammars
+\cite{coeckeMathematicalFoundationsCompositional2010}, the presentation of
+abstract categorial grammars \cite{degrooteAbstractCategorialParsing2015}, and
+even Lambek calculus with dependent types \cite{luoLambekCalculusDependent}. As
+far as the authors can tell, these works seem to be primarily interested in natural
+language semantics in the style of Montague grammars, rather than parsing formal
+languages. That is, they seem to try to give a functorial semantic
+interpretation of natrual language.
+
+There seem to be some implementations from the abstract categorial grammar
+toolkit, but again they seem natural language focused and not up to the task of
+verified formal language parsing.
+
+Also mention here that \cite{luoLambekCalculusDependent} seems similar at first
+glance, but isn't as similar as it might look because the judgements and
+dependent types seem to
+take on a different interpretation of ours. Say something here like, ``as we
+understand it, it differs in x,y,z ways''
+
+\steven{TODO Edit the above}
+\steven{Even though the above sounds bad, are there lambek/categorial things that are missed?}
 
 %% 1. More practical: integrating it into a larger verified development
 %%    - verified imperative implementation: Lambek logic ala separation
@@ -2832,27 +2865,16 @@ theorem. Could also be done before stating the theorem.}
 %% 2. Semantic actions
 %% 3. Type systems as tree grammars
 
-
-The core objects of study in the theory of formal grammars have stood stalwart
-for decades. Study of interesting extensions or restrictions of particular
-grammar formalisms has remained consistent line of research over the years.
-Occasionally, researchers will either explicitly create a type system for their
-formalism, or researchers will leverage the same underlying structure of their
-systems. In this paper, we have not
-done much \emph{per se}, other than gather these ideas, abstract over their
-commonalities, and give the common language between formalisms.
-
-\paragraph{Typed Approaches to Grammars}
+\paragraph{Typed Approaches to Regular Expressions}
 The usage of a simple type system to reason about regular expressions was
 introduced by Frisch and Cardelli in 2004 \cite{frischCardelli}, and later expanded
 by Hengelin and Nielsen in 2011 \cite{henglein_regular_2011} to handle proofs of regular expression
-containment.
-
-In 1992, while investigating the addition of arbitrary recursion to Kleene
+containment. In 1992, while investigating the addition of arbitrary recursion to Kleene
 algebra \cite{leiss},
 Lei{\ss} used a least fixed-point operator instead of the Kleene star. Although
 he did not explicitly make use of a type system, or have access to the view of Frisch and
-Cardelli, Lei{\ss} had added the full power of inductive types to a type system of regular expressions.
+Cardelli, Lei{\ss} had added the full power of inductive types to a type system
+of regular expressions.
 
 Pratt's work on the residuation of action algebras in \cite{prattActionLogicPure1991} closely mirrors
 our observation that Brzozowski derivatives mirror linear function types.
@@ -2861,19 +2883,27 @@ composition. This is precisely a posetal --- or \emph{thin} --- version of the
 adjunction between
 linear function types and tensor product in \theoryabbv.
 
-In \cite{firsovCertifiedNormalizationContextFree2015}, Firsov and Uustalu
-constructed a verified normalization procedure to turn a
-context-free grammar into an equivalent grammar in Chomsky normal form.
-Combining their work with a CYK parser, they have built a verified context-free
-grammar parser, \emph{up to weak equivalence}. To upgrade from a weak
-equivalence to a strong equivalence, they suggest updating their grammar
-formalism to treat parse trees as first-class proofs of language membership.
-That is, without explicitly stating so, they suggest that they next natural step
-is to reason about grammars in a system where parse trees are terms, as we have
-given in this paper.
+Our primary observation in this paper can be summarized as saying that all of
+these above works can embed naturally into a rich, unifying theory.
 
-\steven{Make the above paragraph shorter. Also idk if its worth including, but I
-like that they practically ask for a type theory}
+\steven{I'd like to synthesize the discussion of these works with the categorial
+grammar works, but I am not sure how. It seems as though there are these
+parallel tracks of research that have missed each other for decades}
+
+
+% In \cite{firsovCertifiedNormalizationContextFree2015}, Firsov and Uustalu
+% constructed a verified normalization procedure to turn a
+% context-free grammar into an equivalent grammar in Chomsky normal form.
+% Combining their work with a CYK parser, they have built a verified context-free
+% grammar parser, \emph{up to weak equivalence}. To upgrade from a weak
+% equivalence to a strong equivalence, they suggest updating their grammar
+% formalism to treat parse trees as first-class proofs of language membership.
+% That is, without explicitly stating so, they suggest that they next natural step
+% is to reason about grammars in a system where parse trees are terms, as we have
+% given in this paper.
+
+% \steven{Make the above paragraph shorter. Also idk if its worth including, but I
+% like that they practically ask for a type theory}
 
 \steven{Mention Neel's typed algebraic approach paper here. Say it is similar at
   first glance, as its parsing with types, but that he actually is representing
@@ -2912,23 +2942,26 @@ parsing as well.
 \steven{I don't know if it worth discussing the different influences of
   categorical model here? We take Neel's model and add to it as necessary}
 
-Vakar might be worth citing to discuss different characterizations of the
-notion of model \cite{vakarSyntaxSemanticsLinear2015}
+% Vakar might be worth citing to discuss different characterizations of the
+% notion of model \cite{vakarSyntaxSemanticsLinear2015}
+
+% \cite{fu2023twolevellineardependenttype} give a compiler for a two-level
+% linear dependent type theory. This could serve as a template for a
+% compiler implementation of \theoryname that is not just inference rules
+% embedded in Agda.
+
+\paragraph{Implementations in Parsing}
+\steven{Talk about future implementation-side work}
 
 \cite{fu2023twolevellineardependenttype} give a compiler for a two-level
 linear dependent type theory. This could serve as a template for a
 compiler implementation of \theoryname that is not just inference rules
 embedded in Agda.
 
-\paragraph{Implementations in Parsing}
-Talk about how we have a DFA parser in Agda and want to to get out a regex
-parser. Then context free, etc
-
-future work related to building a usable correct-by-construction parser
-combinator/semantic action combinator library in this language.
-
-Contrast this
-potential library with existing verified parsers. Citations for some in prelim presentation
+%%    - verified imperative implementation: Lambek logic ala separation
+%%      logic?
+\paragraph{Verified Imperative Implementations}
+Lambek logic ala separation logic
 
 \paragraph{Applications to Type Checking}
 While parsing typically refers to the generation of semantic
@@ -2943,17 +2976,11 @@ particular, \emph{type checking}
 producing a semantic object subject to some analysis. Just
 as our string grammars were given as functors from $\String$
 to $\Set$, we envision adapting the same philosophy
-to functors from $\String$ to some \emph{category of trees} to craft a syntax
+to functors from a \emph{category of trees} to $\Set$ to craft a syntax
 that natively captures typed elaboration. This suggests an
 unusual sort of bunched type theory, where context extension
 no longer resembles concatenation of strings but instead
 takes on the form of tree constructors.
-
-\steven{condense the future work section?}
-\steven{Put the 2 category stuff here?}
-
-\paragraph{Other Future Work}
-Backtracking parsing: via (delimited) continuations? effect handlers?
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}
