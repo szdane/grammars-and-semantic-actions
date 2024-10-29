@@ -1197,358 +1197,6 @@ types is standard, so below we focus on the linear syntax.
 \steven{Do we need to say anything about the equalizer proofs being unique in
   judgemental equality figure?}
 
-\subsection{Formal Grammars as Linear Types}
-\label{sec:formaltype}
-\max{this should be in its own section on semantics}
-
-% The linear typing judgment in our syntax takes on the following schematic form
-% $\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
-% our syntax. The intended semantics of these linear types are formal grammars.
-% That is, the linear typing system is designed to syntactically reflect the
-% behavior of formal grammars. For this reason, we may often interchangeably use
-% the terms ``linear type'' and ``grammar''.
-
-% The term $a$ is an inhabitant of type $A$, which is thought of as a parse tree of
-% the grammar $A$. The core idea of this entire paper follows precisely from this
-% single correspondence: grammars are types, and the inhabitants of these types
-% are parse trees for the grammars.
-
-% $\Gamma$ represents a non-linear context, while $\Delta$ represents a
-% \emph{linear context} dependent on $\Gamma$. These linear contexts behave
-% substructurally. As stated earlier, they are linear --- they do not obey
-% weakening or contraction --- because a character is exhausted once read by a
-% parsing procedure. Moreover, the characters in strings appear in the order in
-% which we read them. We do not have the freedom to freely permute characters,
-% therefore any type theory that is used to reason about formal grammars ought to
-% omit the structural rule of exchange as well. This means that every variable
-% within $\Delta$ must be used \emph{exactly once} and \emph{in order of
-%   occurrence}. Thus, we can think of the linear contexts as an ordered list of
-% limited resources. Once a resource is consumed, we cannot make reference to it
-% again. Variables in a linear context then act like building
-% blocks for constructing patterns over strings.
-
-% We give the base types and type constructors for linear terms. As the
-% interpretation of types as grammars in $\Grammar$ serves as our intended
-% semantics, we simultaneously give the interpretation $\sem \cdot$ of the
-% semantics as grammars.
-
-% \pedro{The paragraphs above are a bit circular, what about the following alternative?}
-% \steven{I am in favor of cutting what's above, but we haven't introduced the
-%   syntax in the main body of the paper yet, even if the figures appeared
-%   earlier. So what you write needs to take that into account}
-% \pedro{In which case we should introduce it in the previous section. I suggest
-%   adding this right after ``and the intuitionistic typing rules in fig 3''}
-Now that we have specified the syntactic aspect of \theoryabbv, we must justify
-its connections to formal grammars in order to show that it is a sound methodology
-for reasoning about parsers. We do this by showing that $\mathbf{Gr}$ is a model
-to our type theory.
-
-Most of the non-linear semantics is standard \pedro{We should either cite something or add the non-linear semantics in the appendix}, so let us investigate in more
-depth the linear semantics.
-
-\begin{enumerate}
-  \item A non-linear context $\Gamma$ denotes a set $\sem \Gamma$
-  \item A non-linear type $\Gamma \vdash X : U_{i}$ denotes a family of sets
-        $\sem X : \sem \Gamma \to \Set_{i}$
-  \item A non-linear term $\Gamma \vdash e : X$ denotes a section
-        $\sem e : \Pi(\gamma : \sem \Gamma)\sem{X} \gamma$ \pedro{we have not defined what sections are}
-  \item Linear contexts $\Gamma \vdash \Delta$ and types
-        $\Gamma \vdash A : L_{i}$ both denote families of grammars
-        $\sem \Gamma \to \Gr_{i}$
-  \item A linear term $\Gamma ; \Delta \vdash M : A$ denotes a family of parse
-        transformers
-        $\sem M : \Pi(\gamma : \sem \Gamma)\Pi(w : \String) \sem \Delta \gamma w \Rightarrow \sem M \gamma w$
-\end{enumerate}
-
-\paragraph{Linear Unit}
-First, the linear unit $I$ may be built in the empty linear
-context\footnote{When appropriate, statements like ``the empty linear context''
-  may be taken polymorphically over all non-linear contexts that they might
-  depend on.} $\cdot \dashv I$. $I$ serves as the unit for the operation
-$\otimes$ described below.
-
-As a grammar,
-%
-\[
-  \sem {I} \gamma w = \{ () ~|~ w = \varepsilon \}
-\]
-%
-That is, $I$ maps strings to the proposition that they are the empty string. $I$
-is clearly only inhabited by the empty string $\varepsilon$, for which the
-outputted set contains a single parse tree.
-
-
-\paragraph{Base Types}
-For each character $c$ in the alphabet $\Sigma$, we include a base type at the
-lowest universe level $c : L_{0}$.
-
-The grammar interpretation for characters is quite similar to that of $I$.
-%
-\[
-  \sem {c} \gamma w = \{ () ~|~ w = c \}
-\]
-%
-The grammar for the character $c$ likewise maps strings $w$ to the proposition that
-they are equal to $c$.
-
-\paragraph{Tensor Product}
-The tensor product of two linear types is the first place where the ordering on
-contexts really takes effect. That is, the tensor product of two types is
-non-commutative.
-When context $\Delta$ forms a linear term of
-type $A$, and $\Delta'$ forms a linear term of type $B$, then the context
-extension $\Delta, \Delta'$ forms a linear term of type $A \otimes B$.
-
-As stated above, the type $I$ serves as the unit for $\otimes$. That is, for all
-linear types $A$, the following equalities hold:
-%
-\[ I \otimes A \equiv A \otimes I \equiv A \]
-%
-In the grammar semantics,
-%
-\[
-  \sem {A \otimes B} = \Sigma_{w_{1}, w_{2} : \String} (w_{1}w_{2} = w) \land \left(  \sem {A} \gamma w_{1} \times \sem {B} \gamma w_{2} \right)
-\]
-%
-The string $w$ matches $A \otimes B$
-precisely when it may be split into two
-pieces such that the left one matches $A$
-and the right one matches $B$.
-
-\paragraph{Linear Function Types}
-The monoidal structure provided by $\otimes$ is both left and right closed and
-this is denoted by the left and right linear function types. Further,
-for linear types $A$ and $B$ the left linear function type $A \lto B$
-enjoys an elimination principle similar to function application or modus ponens.
-%
-\[
-\inferrule{\Delta \vdash A \otimes A \lto B}{\Delta \vdash B}
-\]
-%
-The interpretation of linear function types at a string $w$ is a linear function
-that takes in parses of $A$ on a string $w_{a}$ and outputs parses of $B$ on the
-string $w_{a} w$.
-%
-\[
-  \sem{A \lto B} \gamma w = \Pi(w_a:\String) \left( A \gamma w_a \Rightarrow B\gamma (w_a w) \right)
-\]
-%
-That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
-complete to parses of $B$. In this manner, the linear function types generalize
-Brzozowksi's notion of derivative
-\cite{brzozowskiDerivativesRegularExpressions1964}.
-Brzozowski initially only gave an accounting of this operation for
-generalized regular expressions, but later work from Might et al.\ demonstrates that the same
-construction can be generalized to context free grammars
-\cite{mightParsingDerivativesFunctional2011}. Here, via the linear function
-types, the same notion of derivative extends to the grammars of \theoryabbv.
-
-Note, to ensure that the linear function types do indeed generalize Brzozowski
-derivatives, we must include the equalities in \cref{fig:brzozowskideriv} as axioms\max{we must? why must we}.
-\pedro{We should further explain why these equations are required, or at the very
-least give some intuition}
-
-Of course, all the above statements for the left function type also have
-corresponding analogues for the
-right-handed counterpart.
-
-\begin{figure}
-\begin{align*}
-  c\lto c &\equiv I\\
-  c\lto d &\equiv \bot\\
-  c\lto I &\equiv \bot\\
-  c\lto 0 &\equiv \bot\\
-  c\lto (A \otimes B) & \equiv (c\lto A) \otimes B + (A \amp I) \otimes (c\lto B)\\
-  c\lto A^* &\equiv (A \amp I)^{*} \otimes (c \lto A) \otimes A^* \\
-  c\lto (A + B) &\equiv (c\lto A) + (c\lto B)
-\end{align*}
-\caption{Equality for Brzozowski Derivatives}
-\label{fig:brzozowskideriv}
-\end{figure}
-
-\paragraph{LNL Dependent Types}
-\steven{talk about how binary sum and binary with are definable over $\Bool$}
-Given a non-linear type $X$, we may form both the dependent product type
-$\LinPiTy x X A$ and the dependent pair type $\LinSigTy x X A$ as linear types
-where $x$ is free in $A$.
-
-$\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
-
-$\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
-
-The grammar semantics of the linear product type is
-indeed a dependent function out of the
-semantics of $X$. Likewise, the grammar semantics of the linear dependent pair type is a dependent
-pair in $\Set$.\pedro{The connection to grammar semantics needs to be better explained. For instance,
-we should explain that disjunction corresponds to ``or'' of grammars}
-
-Note that even though we do not take the binary additive conjunction and
-disjunction as primitive, we may define them via these LNL dependent types. In
-particular, via a dependence on $\Bool$.
-%
-\[
-  A \amp B := \LinPiTy b \Bool {C(b)}
-\]
-\[
-  A \oplus B := \LinSigTy b \Bool {C(b)},
-\]
-where $C(\true) = A, C(\false) = B$.
-
-\paragraph{Universal Type}\max{this is absolutely not the right terminology. Universal type means multiple other completely different things}
-\steven{Definable as nullary product}
-The universal type $\top$ may be formed in any context.
-%
-\[ \sem{\top} \gamma w = \{ \ast \}\]
-%
-Its grammar semantics in set outputs the unit type in $\Set$ for all input strings in all contexts.
-
-\paragraph{Empty Type}
-\steven{Definable as nullary sum}
-The empty type $\bot$ has no inhabitants. The elimination for the empty type
-witnesses the principle of explosion --- i.e.\ from a term of type $\bot$ we may
-introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
-%
-\[ \sem {\bot} \gamma w = \emptyset \]
-%
-\paragraph{The $G$ Modality}
-\steven{Rename this}
-\steven{Compare to persistance modalities from separation logic}
-The $G$ modality provides the embedding of linear types in the empty context
-into non-linear types. The introduction and elimination forms for $G A$ obey the
-same rules as given in \cite{bentonMixedLinearNonlinear1995} and \cite{krishnaswami_integrating_2015}.
-
-The left adjoint $F$ from non-linear types back to linear types may be defined
-as,
-%
-\[
-  F X := \LinSigTy a A I
-\]
-%
-\steven{Elaborate on $G$ more and rename $G A$to $\ltonl A$ in this section}
-
-\pedro{Agreed :) maybe mention connections to persistent propositions from the
-separation logic literature}
-
-The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\varepsilon$.
-%
-\[ \sem{G A} \gamma = \sem{A} \gamma \varepsilon \]
-%
-%
-\paragraph{Recursive Types}
-\steven{reflavor this section as ``indexed inductive'' instead of ``recursive'',
-and entirely rework with the new inductive definition}
-\steven{The non-indexed inductive are definable as being trivially indexed over unit}
-Recursive linear types may be defined via the least-fixed point operator $\mu$.
-% The grammar semantics of which are the fixed-point of sets induced by the
-% grammar semantics of $A$.
-% %
-% \[ \sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x) \]
-% %
-% \pedro{We should justify, even if briefly, the existence of this
-%   fixed-point}
-
-% Observe that we need not take the Kleene star as a primitive
-% grammar constructor, as it is definable as a fixed point.
-% The Kleene star of a grammar $g$ is given as,
-
-% \[
-%   g^{*} := \mu X . I \oplus (g \otimes X)
-% \]
-
-% \begin{figure}[h!]
-% \begin{mathpar}
-%   \inferrule
-%   {\Gamma ; \Delta \vdash p : I}
-%   {\Gamma ; \Delta \vdash \mathsf{nil} : g^{*}}
-
-%   \and
-
-%   \inferrule
-%   {\Gamma ; \Delta \vdash p : g \\ \Gamma ; \Delta' \vdash q
-%   : g^{*}}
-%   {\Gamma ; \Delta \vdash \mathsf{cons}(p , q) : g^{*}}
-
-%   \\
-
-%   \inferrule
-%   {
-%     \Gamma ; \Delta \vdash p : g^{*} \\
-%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
-%     \Gamma ; x : g , y : h \vdash p_{\ast} : h
-%   }
-%   {\Gamma ; \Delta \vdash \mathsf{foldr}(p_{\varepsilon} , p_{\ast}) : g^{*}}
-% \end{mathpar}
-% \caption{Kleene Star Rules}
-% \label{fig:star}
-% \end{figure}
-
-% Likewise, $g^{*}$ has admissible introduction and
-% elimination rules, shown in \cref{fig:star}. Note that this
-% definition of $g^{*}$ and these
-% rules arbitrarily assigns a handedness to the Kleene star.
-% We could have just as well took it to be a fixed point of
-% $I \oplus (X \otimes g)$. In fact, the definitions are
-% equivalent, as the existence of the $\mathsf{foldl}$ term below
-% shows that $g^{*}$ is also a fixed point of
-% $I \oplus (X \otimes g)$.
-% This is a marked point of difference from Kleene
-% algebra with recursion, where the fixed points for the left and right variants
-% of Kleene star need not agree \cite{leiss}.
-
-% \begin{equation}
-%   \label{eq:foldl}
-%   \inferrule
-%   {
-%     \Gamma ; \Delta \vdash p : g^{*} \\
-%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
-%     \Gamma ; y : h , x : h \vdash p_{\ast} : h
-%   }
-%   {\Gamma ; \Delta \vdash \mathsf{foldl}(p_{\varepsilon} , p_{\ast}) : g^{*}}
-% \end{equation}
-
-% In fact, the $\mathsf{foldl}$ term is defined using
-% $\mathsf{foldr}$ --- much in the same way one
-% may define a left fold over lists in terms of a right fold
-% in a functional programming language.
-% The underlying trick is to fold over a list of linear functions
-% instead of the original string. We curry each character $c$
-% of the string into a function that concatenates $c$, and
-% right fold over this list of linear functions. Because function
-% application is left-associative, this results in a left
-% fold over the original string.
-
-% We only take fixed points of a single variable as a
-% primitive operation in the type theory, but we may apply
-% Beki\`c's theorem \cite{Bekić1984} to define an admissible
-% notion of multivariate fixed point. This is particularly
-% useful for defining grammars that encode the states of an
-% automaton, as we will see in \cref{sec:automata}. In \cref{fig:multifix} we provide the
-% introduction and elimination principles for such a fixed
-% point, where $\sigma$ is the substitution that unrolls the
-% mutually recursive definitions one level. That is,
-
-% \begin{align*}
-%   \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
-% \end{align*}
-
-% \begin{figure}
-% \begin{mathpar}
-%   \inferrule
-%   {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
-%   {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
-
-%   \and
-
-%   \inferrule
-%   {\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
-%              \Gamma ; x_{j} : \simulsubst {A_{j}}{\sigma} \vdash e_{j} : B_{j}\quad \forall j
-%   }
-%   {\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
-% \end{mathpar}
-% \caption{Multi-fixed Points}
-% \label{fig:multifix}
-% \end{figure}
-
 \subsection{Subtheories}
 Each choice of connective has direct implications on the expressivity of
 \theoryabbv. In particular, the set of connectives used will determine where the
@@ -2298,6 +1946,359 @@ $\Delta X = \LinSigTy x X \top$.
 
 \section{Semantics and Metatheory}
 \label{sec:semantics-and-metatheory}
+
+\subsection{Formal Grammars as Linear Types}
+\label{sec:formaltype}
+\max{this should be in its own section on semantics}
+
+% The linear typing judgment in our syntax takes on the following schematic form
+% $\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
+% our syntax. The intended semantics of these linear types are formal grammars.
+% That is, the linear typing system is designed to syntactically reflect the
+% behavior of formal grammars. For this reason, we may often interchangeably use
+% the terms ``linear type'' and ``grammar''.
+
+% The term $a$ is an inhabitant of type $A$, which is thought of as a parse tree of
+% the grammar $A$. The core idea of this entire paper follows precisely from this
+% single correspondence: grammars are types, and the inhabitants of these types
+% are parse trees for the grammars.
+
+% $\Gamma$ represents a non-linear context, while $\Delta$ represents a
+% \emph{linear context} dependent on $\Gamma$. These linear contexts behave
+% substructurally. As stated earlier, they are linear --- they do not obey
+% weakening or contraction --- because a character is exhausted once read by a
+% parsing procedure. Moreover, the characters in strings appear in the order in
+% which we read them. We do not have the freedom to freely permute characters,
+% therefore any type theory that is used to reason about formal grammars ought to
+% omit the structural rule of exchange as well. This means that every variable
+% within $\Delta$ must be used \emph{exactly once} and \emph{in order of
+%   occurrence}. Thus, we can think of the linear contexts as an ordered list of
+% limited resources. Once a resource is consumed, we cannot make reference to it
+% again. Variables in a linear context then act like building
+% blocks for constructing patterns over strings.
+
+% We give the base types and type constructors for linear terms. As the
+% interpretation of types as grammars in $\Grammar$ serves as our intended
+% semantics, we simultaneously give the interpretation $\sem \cdot$ of the
+% semantics as grammars.
+
+% \pedro{The paragraphs above are a bit circular, what about the following alternative?}
+% \steven{I am in favor of cutting what's above, but we haven't introduced the
+%   syntax in the main body of the paper yet, even if the figures appeared
+%   earlier. So what you write needs to take that into account}
+% \pedro{In which case we should introduce it in the previous section. I suggest
+%   adding this right after ``and the intuitionistic typing rules in fig 3''}
+Now that we have specified the syntactic aspect of \theoryabbv, we must justify
+its connections to formal grammars in order to show that it is a sound methodology
+for reasoning about parsers. We do this by showing that $\mathbf{Gr}$ is a model
+to our type theory.
+
+Most of the non-linear semantics is standard \pedro{We should either cite something or add the non-linear semantics in the appendix}, so let us investigate in more
+depth the linear semantics.
+
+\begin{enumerate}
+  \item A non-linear context $\Gamma$ denotes a set $\sem \Gamma$
+  \item A non-linear type $\Gamma \vdash X : U_{i}$ denotes a family of sets
+        $\sem X : \sem \Gamma \to \Set_{i}$
+  \item A non-linear term $\Gamma \vdash e : X$ denotes a section
+        $\sem e : \Pi(\gamma : \sem \Gamma)\sem{X} \gamma$ \pedro{we have not defined what sections are}
+  \item Linear contexts $\Gamma \vdash \Delta$ and types
+        $\Gamma \vdash A : L_{i}$ both denote families of grammars
+        $\sem \Gamma \to \Gr_{i}$
+  \item A linear term $\Gamma ; \Delta \vdash M : A$ denotes a family of parse
+        transformers
+        $\sem M : \Pi(\gamma : \sem \Gamma)\Pi(w : \String) \sem \Delta \gamma w \Rightarrow \sem M \gamma w$
+\end{enumerate}
+
+\paragraph{Linear Unit}
+First, the linear unit $I$ may be built in the empty linear
+context\footnote{When appropriate, statements like ``the empty linear context''
+  may be taken polymorphically over all non-linear contexts that they might
+  depend on.} $\cdot \dashv I$. $I$ serves as the unit for the operation
+$\otimes$ described below.
+
+As a grammar,
+%
+\[
+  \sem {I} \gamma w = \{ () ~|~ w = \varepsilon \}
+\]
+%
+That is, $I$ maps strings to the proposition that they are the empty string. $I$
+is clearly only inhabited by the empty string $\varepsilon$, for which the
+outputted set contains a single parse tree.
+
+
+\paragraph{Base Types}
+For each character $c$ in the alphabet $\Sigma$, we include a base type at the
+lowest universe level $c : L_{0}$.
+
+The grammar interpretation for characters is quite similar to that of $I$.
+%
+\[
+  \sem {c} \gamma w = \{ () ~|~ w = c \}
+\]
+%
+The grammar for the character $c$ likewise maps strings $w$ to the proposition that
+they are equal to $c$.
+
+\paragraph{Tensor Product}
+The tensor product of two linear types is the first place where the ordering on
+contexts really takes effect. That is, the tensor product of two types is
+non-commutative.
+When context $\Delta$ forms a linear term of
+type $A$, and $\Delta'$ forms a linear term of type $B$, then the context
+extension $\Delta, \Delta'$ forms a linear term of type $A \otimes B$.
+
+As stated above, the type $I$ serves as the unit for $\otimes$. That is, for all
+linear types $A$, the following equalities hold:
+%
+\[ I \otimes A \equiv A \otimes I \equiv A \]
+%
+In the grammar semantics,
+%
+\[
+  \sem {A \otimes B} = \Sigma_{w_{1}, w_{2} : \String} (w_{1}w_{2} = w) \land \left(  \sem {A} \gamma w_{1} \times \sem {B} \gamma w_{2} \right)
+\]
+%
+The string $w$ matches $A \otimes B$
+precisely when it may be split into two
+pieces such that the left one matches $A$
+and the right one matches $B$.
+
+\paragraph{Linear Function Types}
+The monoidal structure provided by $\otimes$ is both left and right closed and
+this is denoted by the left and right linear function types. Further,
+for linear types $A$ and $B$ the left linear function type $A \lto B$
+enjoys an elimination principle similar to function application or modus ponens.
+%
+\[
+\inferrule{\Delta \vdash A \otimes A \lto B}{\Delta \vdash B}
+\]
+%
+The interpretation of linear function types at a string $w$ is a linear function
+that takes in parses of $A$ on a string $w_{a}$ and outputs parses of $B$ on the
+string $w_{a} w$.
+%
+\[
+  \sem{A \lto B} \gamma w = \Pi(w_a:\String) \left( A \gamma w_a \Rightarrow B\gamma (w_a w) \right)
+\]
+%
+That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
+complete to parses of $B$. In this manner, the linear function types generalize
+Brzozowksi's notion of derivative
+\cite{brzozowskiDerivativesRegularExpressions1964}.
+Brzozowski initially only gave an accounting of this operation for
+generalized regular expressions, but later work from Might et al.\ demonstrates that the same
+construction can be generalized to context free grammars
+\cite{mightParsingDerivativesFunctional2011}. Here, via the linear function
+types, the same notion of derivative extends to the grammars of \theoryabbv.
+
+Note, to ensure that the linear function types do indeed generalize Brzozowski
+derivatives, we must include the equalities in \cref{fig:brzozowskideriv} as axioms\max{we must? why must we}.
+\pedro{We should further explain why these equations are required, or at the very
+least give some intuition}
+
+Of course, all the above statements for the left function type also have
+corresponding analogues for the
+right-handed counterpart.
+
+\begin{figure}
+\begin{align*}
+  c\lto c &\equiv I\\
+  c\lto d &\equiv \bot\\
+  c\lto I &\equiv \bot\\
+  c\lto 0 &\equiv \bot\\
+  c\lto (A \otimes B) & \equiv (c\lto A) \otimes B + (A \amp I) \otimes (c\lto B)\\
+  c\lto A^* &\equiv (A \amp I)^{*} \otimes (c \lto A) \otimes A^* \\
+  c\lto (A + B) &\equiv (c\lto A) + (c\lto B)
+\end{align*}
+\caption{Equality for Brzozowski Derivatives}
+\label{fig:brzozowskideriv}
+\end{figure}
+
+\paragraph{LNL Dependent Types}
+\steven{talk about how binary sum and binary with are definable over $\Bool$}
+Given a non-linear type $X$, we may form both the dependent product type
+$\LinPiTy x X A$ and the dependent pair type $\LinSigTy x X A$ as linear types
+where $x$ is free in $A$.
+
+$\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+
+$\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+
+The grammar semantics of the linear product type is
+indeed a dependent function out of the
+semantics of $X$. Likewise, the grammar semantics of the linear dependent pair type is a dependent
+pair in $\Set$.\pedro{The connection to grammar semantics needs to be better explained. For instance,
+we should explain that disjunction corresponds to ``or'' of grammars}
+
+Note that even though we do not take the binary additive conjunction and
+disjunction as primitive, we may define them via these LNL dependent types. In
+particular, via a dependence on $\Bool$.
+%
+\[
+  A \amp B := \LinPiTy b \Bool {C(b)}
+\]
+\[
+  A \oplus B := \LinSigTy b \Bool {C(b)},
+\]
+where $C(\true) = A, C(\false) = B$.
+
+\paragraph{Universal Type}\max{this is absolutely not the right terminology. Universal type means multiple other completely different things}
+\steven{Definable as nullary product}
+The universal type $\top$ may be formed in any context.
+%
+\[ \sem{\top} \gamma w = \{ \ast \}\]
+%
+Its grammar semantics in set outputs the unit type in $\Set$ for all input strings in all contexts.
+
+\paragraph{Empty Type}
+\steven{Definable as nullary sum}
+The empty type $\bot$ has no inhabitants. The elimination for the empty type
+witnesses the principle of explosion --- i.e.\ from a term of type $\bot$ we may
+introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
+%
+\[ \sem {\bot} \gamma w = \emptyset \]
+%
+\paragraph{The $G$ Modality}
+\steven{Rename this}
+\steven{Compare to persistance modalities from separation logic}
+The $G$ modality provides the embedding of linear types in the empty context
+into non-linear types. The introduction and elimination forms for $G A$ obey the
+same rules as given in \cite{bentonMixedLinearNonlinear1995} and \cite{krishnaswami_integrating_2015}.
+
+The left adjoint $F$ from non-linear types back to linear types may be defined
+as,
+%
+\[
+  F X := \LinSigTy a A I
+\]
+%
+\steven{Elaborate on $G$ more and rename $G A$to $\ltonl A$ in this section}
+
+\pedro{Agreed :) maybe mention connections to persistent propositions from the
+separation logic literature}
+
+The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\varepsilon$.
+%
+\[ \sem{G A} \gamma = \sem{A} \gamma \varepsilon \]
+%
+%
+\paragraph{Recursive Types}
+\steven{reflavor this section as ``indexed inductive'' instead of ``recursive'',
+and entirely rework with the new inductive definition}
+\steven{The non-indexed inductive are definable as being trivially indexed over unit}
+Recursive linear types may be defined via the least-fixed point operator $\mu$.
+% The grammar semantics of which are the fixed-point of sets induced by the
+% grammar semantics of $A$.
+% %
+% \[ \sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x) \]
+% %
+% \pedro{We should justify, even if briefly, the existence of this
+%   fixed-point}
+
+% Observe that we need not take the Kleene star as a primitive
+% grammar constructor, as it is definable as a fixed point.
+% The Kleene star of a grammar $g$ is given as,
+
+% \[
+%   g^{*} := \mu X . I \oplus (g \otimes X)
+% \]
+
+% \begin{figure}[h!]
+% \begin{mathpar}
+%   \inferrule
+%   {\Gamma ; \Delta \vdash p : I}
+%   {\Gamma ; \Delta \vdash \mathsf{nil} : g^{*}}
+
+%   \and
+
+%   \inferrule
+%   {\Gamma ; \Delta \vdash p : g \\ \Gamma ; \Delta' \vdash q
+%   : g^{*}}
+%   {\Gamma ; \Delta \vdash \mathsf{cons}(p , q) : g^{*}}
+
+%   \\
+
+%   \inferrule
+%   {
+%     \Gamma ; \Delta \vdash p : g^{*} \\
+%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
+%     \Gamma ; x : g , y : h \vdash p_{\ast} : h
+%   }
+%   {\Gamma ; \Delta \vdash \mathsf{foldr}(p_{\varepsilon} , p_{\ast}) : g^{*}}
+% \end{mathpar}
+% \caption{Kleene Star Rules}
+% \label{fig:star}
+% \end{figure}
+
+% Likewise, $g^{*}$ has admissible introduction and
+% elimination rules, shown in \cref{fig:star}. Note that this
+% definition of $g^{*}$ and these
+% rules arbitrarily assigns a handedness to the Kleene star.
+% We could have just as well took it to be a fixed point of
+% $I \oplus (X \otimes g)$. In fact, the definitions are
+% equivalent, as the existence of the $\mathsf{foldl}$ term below
+% shows that $g^{*}$ is also a fixed point of
+% $I \oplus (X \otimes g)$.
+% This is a marked point of difference from Kleene
+% algebra with recursion, where the fixed points for the left and right variants
+% of Kleene star need not agree \cite{leiss}.
+
+% \begin{equation}
+%   \label{eq:foldl}
+%   \inferrule
+%   {
+%     \Gamma ; \Delta \vdash p : g^{*} \\
+%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
+%     \Gamma ; y : h , x : h \vdash p_{\ast} : h
+%   }
+%   {\Gamma ; \Delta \vdash \mathsf{foldl}(p_{\varepsilon} , p_{\ast}) : g^{*}}
+% \end{equation}
+
+% In fact, the $\mathsf{foldl}$ term is defined using
+% $\mathsf{foldr}$ --- much in the same way one
+% may define a left fold over lists in terms of a right fold
+% in a functional programming language.
+% The underlying trick is to fold over a list of linear functions
+% instead of the original string. We curry each character $c$
+% of the string into a function that concatenates $c$, and
+% right fold over this list of linear functions. Because function
+% application is left-associative, this results in a left
+% fold over the original string.
+
+% We only take fixed points of a single variable as a
+% primitive operation in the type theory, but we may apply
+% Beki\`c's theorem \cite{Bekić1984} to define an admissible
+% notion of multivariate fixed point. This is particularly
+% useful for defining grammars that encode the states of an
+% automaton, as we will see in \cref{sec:automata}. In \cref{fig:multifix} we provide the
+% introduction and elimination principles for such a fixed
+% point, where $\sigma$ is the substitution that unrolls the
+% mutually recursive definitions one level. That is,
+
+% \begin{align*}
+%   \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
+% \end{align*}
+
+% \begin{figure}
+% \begin{mathpar}
+%   \inferrule
+%   {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
+%   {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
+
+%   \and
+
+%   \inferrule
+%   {\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
+%              \Gamma ; x_{j} : \simulsubst {A_{j}}{\sigma} \vdash e_{j} : B_{j}\quad \forall j
+%   }
+%   {\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
+% \end{mathpar}
+% \caption{Multi-fixed Points}
+% \label{fig:multifix}
+% \end{figure}
+
 %% \section{Categorical Semantics of \theoryabbv}
 %% \label{sec:categorify}
 
