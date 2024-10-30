@@ -91,7 +91,7 @@
 \newcommand{\GrTy}{\mathsf{Gr}}
 
 \newcommand{\equalizer}[3]{\{#1\,|\,\applto {#2}{#1} = \applto{#3}{#1} \}}
-\newcommand{\equalizerpair}[2]{\langle #1 , #2 \rangle}
+\newcommand{\equalizerin}[1]{\langle #1 \rangle}
 \newcommand{\equalizerpi}[1]{#1.\pi}
 
 \newcommand{\ctxwff}[1]{#1 \,\, \mathsf{ok}}
@@ -373,33 +373,39 @@ for the single character $a$ has a single parse tree for the string \stringquote
 and no parse trees at any other strings.
 
 \paragraph{Finite Grammars}
+\newcommand{\fingram}{$(a \otimes b) \oplus c$}
+
 First consider finite grammars --- those built from base types via disjunctions $\oplus$ and
-concatenations $\otimes$. For instance, $(a \oplus b) \otimes c$.
+concatenations $\otimes$. For instance, \fingram.
 In \cref{fig:fingram} we find a proof tree that constructs a term of type
-$(a \oplus b) \otimes c$ in the context $x : a, y : c$. We think of this term as
+\fingram in the context $x : a, y : b$. We think of this term as
 a parse tree internal to \theoryabbv.
 
 Parses of a fixed string $w$ into a grammar $A$ are internally represented as
 terms of type $A$ in the context $\internalize w$, where $\internalize w$ is a
 comma-separated list of the constituent characters of $w$. In particular, to
 parse \stringquote{ac}, we build parse trees in the context
-$\internalize{\stringquote{ac}} = x : A , y : C$. Thus the term
-$\inl(x) \otimes y$ from \cref{fig:fingram} details the
-manner by which \stringquote{ac} matches the grammar $(a \oplus b) \otimes c$.
+$\internalize{\stringquote{ab}} = x : a , y : b$. Thus the term
+$\inl(x \otimes y)$ from \cref{fig:fingram} details the
+manner by which \stringquote{ac} matches the grammar \fingram.
 
 \begin{figure}
 \begin{mathpar}
   \inferrule
   {
     \inferrule
-    {~}
-    {x : a \vdash \inl(x) : a \oplus b}
-    \\
-    \inferrule
-    {~}
-    {y : c \vdash y : c}
+    {
+      \inferrule
+      {~}
+      {x : a \vdash x : a}
+      \\
+      \inferrule
+      {~}
+      {y : b \vdash y : b}
+    }
+    {x : a , y : b \vdash x \otimes y : a \otimes b}
   }
-  {x : a , y : c \vdash \inl(x) \otimes y : (a \oplus b) \otimes c}
+  {x : a , y : b \vdash \inl(x \otimes y) : \fingram}
 \end{mathpar}
 \caption{\stringquote{ac} matches $(a \oplus b) \otimes c$}
 \label{fig:fingram}
@@ -414,14 +420,8 @@ for duplication of characters. Omission of these rules offers a
 resource-sensitive view that ensures only the inputted characters are parsed.
 Moreover, strings are not simply sets of characters, as they carry an inherent
 ordering. Thus, the rule of exchange is also omitted in this calculus so that
-the constituent characters of a string are not freely permuted.
-
-\max{Is this really true? I don't think it's accurate to say that the ordering restriction on variable usage actually dictates an order in processing variables. And I don't know what you mean by processed without modification.}
-Without the above structural rules we
-arrive at an ordered, linear type system, and to summarize this
-particular choice of substructural restrictions: when parsing, characters must
-be processed
-without modification and in the order in which they were written.
+the constituent characters of a string are not freely permuted. Without the above structural rules we
+arrive at an ordered, linear type system.
 
 \paragraph{Regular Expressions}
 Next, we demonstrate how to parse a regular expression in \theoryabbv. Similar
@@ -433,7 +433,7 @@ restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 % TODO this should be beter formatted but can't use listings with \otimes ^{\ast}
 \begin{figure}
 \begin{align*}
-\data &~A^{*}: L_{i}~\where\\
+\data &~A^{*}~\where\\
       & \nil : \ltonl {A^{*}} \\
       & \cons : \ltonl {(A \lto A^{*} \lto A^{*})}
 \end{align*}
@@ -442,40 +442,64 @@ restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 \end{figure}
 
 For a grammar $A$, the recursive nature of $A^{*}$ is captured by defining
-$A^{*}$ to be an \max{this footnote seems unnecessary}inductive\footnote{As we will soon see, our theory defines
-  \emph{indexed} inductive types. We can recover non-indexed inductive types by
-  indexing over the unit type.} linear
-type, as shown in \cref{fig:kleenestarinductive}. Just as in \cref{fig:fingram}, we can show that particular strings match a Kleene
+$A^{*}$ to be an inductive linear
+type, as shown in \cref{fig:kleenestarinductive}. $A^{*}$ has two constructors:
+$\nil$, which builds a parse of type $A^{*}$ in the empty context; and $\cons$,
+which takes in of $A$ and a parse of $A^{*}$ and linearly combines them to build
+a parse of $A^{*}$.
+
+The arrow, $\uparrow$, wrapping these constructors denotes
+an interaction between the linear and nonlinear parts of the theory.
+In short, a nonlinear term
+$M : \ntonl A^{*}$ denotes a linear term in the empty context
+$\cdot \vdash M : A^{*}$. Later in
+this paper, we will further discuss the behavior of $\uparrow$.
+At this moment,
+it suffices to read these arrows as allow us to use the reuse the names
+``$\nil$'' and ``$\cons$''
+as symbols for contructors. That is, the $\nil$ constructor is not linearly
+consumed at usage time
+
+Just as in \cref{fig:fingram}, we can show that particular strings match a Kleene
 star. In \cref{fig:kleenestarderivation}, we demonstrate that \stringquote{ab}
-matches $a^{*} \otimes b$ through repeated application of the Kleene star constructors.
+matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene star constructors.
+
 
 \begin{figure}
 \begin{mathpar}
+\inferrule
+{
   \inferrule
   {
     \inferrule
     {
       \inferrule
-      {~}
-      {x : a \vdash x : a}
-      \\
-      \inferrule
       {
         \inferrule
+        {\cdot \vdash \cons : \ltonl {(a \lto a^* \lto a^*)}}
+        {\cdot ; \cdot \vdash \cons : a \lto a^* \lto a^*}
+        \\
+        \inferrule
         {~}
-        {I \vdash \nil : a^{*}}
+        {\cdot ; x : a \vdash x : a}
       }
-      {\cdot \vdash \nil : a^{*}}
+      {\cdot ; x : a \vdash \cons~x : a^* \lto a^*}
+      \\
+      \inferrule
+      {~}
+      {\cdot ; \cdot \vdash \nil : a^*}
     }
-    {x : a \vdash \cons (x , \nil) : a^{*}}
+    {\cdot ; x : a \vdash \cons (x , \nil) : a^{*}}
     \\
     \inferrule
     {~}
-    {y : b \vdash y : b}
+    {\cdot ; y : b \vdash y : b}
   }
-  {x : a , y : b \vdash \cons(x ) \otimes y : a^{*} \otimes b}
+  {\cdot ; x : a , y : b \vdash \cons(x, \nil) \otimes y : a^{*} \otimes b}
+}
+{\cdot ; x : a , y : b \vdash \inl (\cons(x) \otimes y) : (a^{*} \otimes b) \oplus c}
 \end{mathpar}
-\caption{\stringquote{ab} matches $a^{*} \otimes b$}
+\caption{\stringquote{ab} matches $(a^{*} \otimes b) \oplus c$}
 \label{fig:kleenestarderivation}
 \end{figure}
 
@@ -498,24 +522,24 @@ trees of the output grammar.
 \steven{TODO : describe elimination principle somewhere. Maybe just in prose?}
 \steven{I probably can't get away with the inline definition of $f$ in \cref{fig:kleeneabstractproof}}
 \max{shouldn't the fold be applied to $x$ and shouldn't $f$ be $\lambda x.\lambda y.\cdots$?}
+
 \begin{figure}
 \begin{mathpar}
   \inferrule
   {
     \inferrule
     {~}
-    {x_I : I \vdash \nil : A^*}
+    {\cdot \vdash \nil : A^*}
     \\
     \inferrule
     {
       \inferrule
-      {~}
-      {x_1 : A , x_2 : A , y : A* \vdash \cons (x_1 , \cons(x_2 , y)) : A^*}
+      {x_1 : A, x_2 : A , y : A^* \vdash \cons (x_1 , \cons(x_2 , y)) : A^*}
+      {x' : A \otimes A , y : A^* \vdash g := \letin {x_1 \otimes x_2} {x'} {\cons (x_1 , \cons(x_2 , y)) : A^*}}
     }
-    {x : A \otimes A , y : A^*  \vdash f := \letin {x_1 \otimes x_2} {x} {\cons(x_1 ,
-        \cons(x_2 , y))} : A^*}
+    {\cdot \vdash f := \lamblto x {\lamblto y {\app {\app g x} {y} }} : (A \otimes A) \lto A^* \lto A^*}
   }
-  {x : (A \otimes A)^* \vdash \fold(\nil , f) : A^* }
+  {x : (A \otimes A)^* \vdash \fold(\nil , f)(x) : A^* }
 \end{mathpar}
 \caption{An example mapping out of abstract grammars}
 \label{fig:kleeneabstractproof}
@@ -567,39 +591,34 @@ for defining the traces of $N$ as a family
 of mutually recursive types varying coherently over indexing data drawn from
 $N.\mathsf{state} \times \Bool$.
 
+
 \begin{figure}
   \begin{tikzpicture}[node distance = 25mm ]
-    \node[state, initial, accepting] (1) {$1$};
+    \node[state, initial] (1) {$1$};
     \node[state, below left of=1] (2) {$2$};
-    \node[state, right of=2] (3) {$3$};
+    \node[state, right of=2, accepting] (3) {$3$};
 
-    \path[->] (1) edge[above] node{$b$} (2)
-              (1) edge[below, bend right, left=0.3] node{$\epsilon$} (3)
+    \path[->] (1) edge[above] node{$\epsilon$} (2)
+              (1) edge[right] node{$c$} (3)
               (2) edge[loop left] node{$a$} (2)
-              (2) edge[below] node{$b$} (3)
-              (3) edge[above, bend right, right=0.3] node{$a$} (1);
+              (2) edge[below] node{$b$} (3);
   \end{tikzpicture}
-  \caption{NFA $N$}
+  \caption{NFA for $(a^{*} \otimes b) \oplus c$}
   \label{fig:exampleNFA}
 \end{figure}
 
-\max{this notation is inconsistent with Agda syntax. You write $acc : \Bool$ but then in the $\mathsf{stop}$ cases you instantiate $\acc$ with a specific boolean}
+\max{this notation is inconsistent with Agda syntax. You write $acc : \Bool$ but then in the $\mathsf{stop}$ cases you instantiate $acc$ with a specific boolean}
 \max{is the boolean just overcomplicating stuff here?}
+
+
 \begin{figure}
 \begin{align*}
-\data &~\Trace_{N}~1~(acc : \Bool) : L_{i}~\where\\
-      & \mathsf{stop}_{1} : \ltonl {\Trace_{N}~1~\true}  \\
-      & \mathsf{1to2} : \forall (acc : \Bool) \to \ltonl {(b \lto \Trace_{N}~2~acc \lto \Trace_{N}~1~acc)} \\
-      & \mathsf{1to3} : \forall (acc : \Bool) \to \ltonl {(\Trace_{N}~3~acc \lto \Trace_{N}~1~acc)} \\
-\\
-\data &~\Trace_{N}~2~(acc : \Bool) : L_{i}~\where\\
-      & \mathsf{stop}_{2} : \ltonl {\Trace_{N}~2~\false} \\
-      & \mathsf{2to2} : \forall (acc : \Bool) \to \ltonl {(a \lto \Trace_{N}~2~acc \lto \Trace_{N}~2~acc)} \\
-      & \mathsf{2to3} : \forall (acc : \Bool) \to \ltonl {(b \lto \Trace_{N}~3~acc \lto \Trace_{N}~2~acc)}  \\
-\\
-\data &~\Trace_{N}~3~(acc : \Bool) : L_{i}~\where\\
-      & \mathsf{stop}_{3} : \ltonl {\Trace_{N}~3~\true} \\
-      & \mathsf{3to1} : \forall (acc : \Bool) \to \ltonl {(a \lto \Trace_{N}~1~acc \lto \Trace_{N}~3~acc)} \\
+\data &~\Trace : (s : N.\mathsf{state}) \to L~\where\\
+      & \mathsf{stop} : \ltonl {(\Trace~3)}  \\
+      & \mathsf{1to2} : \ltonl {(\Trace~2 \lto \Trace~1)} \\
+      & \mathsf{2to2} : \ltonl {(a \lto \Trace~2 \lto \Trace~2)} \\
+      & \mathsf{2to3} : \ltonl {(b \lto \Trace~3 \lto \Trace~2)}  \\
+      & \mathsf{1to3} : \ltonl {(c \lto \Trace~3\lto \Trace~1)} \\
 \end{align*}
 \caption{$N$ as an indexed inductive type}
 \label{fig:nfainductive}
@@ -640,7 +659,7 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
 
 \begin{figure}
   \begin{mathpar}
-    \boxed{\Gamma ; \Delta \vdash a : A}
+    \boxed{\Gamma ; \Delta \vdash e : A}
 
     \inferrule{~}{\Gamma ; a : A \vdash a : A}
     \and
@@ -688,38 +707,21 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     \and
     %
     \inferrule
-    {~}
-    {\Gamma , x : \ltonl A ; \cdot \vdash x : A}
+    {\Gamma \vdash M : \ltonl A}
+    {\Gamma ; \cdot \vdash M : A}
     %
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \ltonl {(A \lto B)} \\
-      \Gamma \vdash g : \ltonl { (A \lto B) } \\
-      \Gamma ; \Delta \vdash a : A \\
-      \Gamma ; \Delta \vdash p : \applto {f}{a} = \applto {g}{a}}
-    {\Gamma ; \Delta \vdash \equalizerpair{a}{p} : \equalizer {a}{f}{g}}
+    { \Gamma ; \Delta \vdash e : A \\
+      \Gamma ; \Delta \vdash \applto {f}{e} \equiv \applto {g}{e}}
+    {\Gamma ; \Delta \vdash \equalizerin{e} : \equalizer {e}{f}{g}}
     %
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \ltonl { (A \lto B) } \\
-      \Gamma \vdash g : \ltonl { (A \lto B) } \\
-      \Gamma ; \Delta \vdash e : \equalizer{a}{f}{g}}
+    {\Gamma ; \Delta \vdash e : \equalizer{a}{f}{g}}
     {\Gamma ; \Delta \vdash \equalizerpi {e} : A}
-    %% \\
-    %% %
-    %% \inferrule{~}{\Gamma ; \Delta \vdash () : \top}
-
-    %% \and
-
-    %% \inferrule{~}{\Gamma ; x : \bot \vdash \mathsf{absurd}_A : A}
-    %% %
-    %% \and
-    %% %
-    %% %
-    %% \inferrule{\Gamma \vdash e : \mathsf{G} A}{\Gamma ; \cdot \vdash \mathsf{G}^{-1}\, e : A}
-    %% %
   \end{mathpar}
   \caption{Linear typing}
   \label{fig:linsyntax}
@@ -770,7 +772,7 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     \el(\bigoplus_{y:Y} A) B = \bigoplus_{y:Y}\el(A)B\and
     \el(\bigamp_{y:Y} A) B = \bigamp_{y:Y}\el(A)B\and
     \el(A \otimes A') B = \el(A)B \otimes \el(A')B
-    
+
   \inferrule
   {A : \textrm{SPF} X\and
   \Gamma,x:X;b: B x \vdash f : C x\and
@@ -1020,7 +1022,7 @@ types is standard, so below we focus on the linear syntax.
     %
     \and
     \inferrule
-    {\Gamma ; \Delta \vdash f : A \\ \Gamma \vdash g : \ltonl { (A \lto B) }}
+    {\Gamma ; \Delta \vdash f : \ltonl {(A \lto B)} \\ \Gamma \vdash g : \ltonl { (A \lto B) }}
     {\Gamma ; \Delta \vdash \equalizer {a}{f}{g} : L_i}
   \end{mathpar}
   \caption{Type well-formedness}
@@ -1029,13 +1031,13 @@ types is standard, so below we focus on the linear syntax.
 
 \begin{figure}
   \begin{mathpar}
-  \boxed{\Gamma \vdash x : X}
+  \boxed{\Gamma \vdash M : X}
 
   \inferrule{~}{\Gamma, x : X, \Gamma' \vdash x : X}
   %
   \and
   %
-  \inferrule{\Gamma \vdash e : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash e : X}
+  \inferrule{\Gamma \vdash M : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash M : X}
   %
   \and
   %
@@ -1043,25 +1045,25 @@ types is standard, so below we focus on the linear syntax.
   %
   \and
   %
-  \inferrule{\Gamma \vdash e : X \\ \Gamma \vdash e : \subst Y e x}{\Gamma \vdash (e, e') : \SigTy x X Y}
+  \inferrule{\Gamma \vdash M : X \\ \Gamma \vdash N : \subst Y M x}{\Gamma \vdash (M, N) : \SigTy x X Y}
   %
   \and
 %
-  \inferrule{\Gamma \vdash e : \SigTy x X Y}{\Gamma \vdash \pi_1\, e : X}
+  \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_1\, M : X}
   %
   \and
   %
-  \inferrule{\Gamma \vdash e : \SigTy x X Y}{\Gamma \vdash \pi_2\, e : \subst Y {\pi_1\, e} x}
+  \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_2\, M : \subst Y {\pi_1\, M} x}
   \and
-  \inferrule{\Gamma, x : X \vdash e : Y}{\Gamma \vdash \lamb x e : \PiTy x X Y}
-  %
-  \and
-  %
-  \inferrule{\Gamma \vdash e : \PiTy x X Y \\ \Gamma \vdash e' : X}{\Gamma \vdash \app e {e'} : \subst Y {e'} x}
+  \inferrule{\Gamma, x : X \vdash M : Y}{\Gamma \vdash \lamb x M : \PiTy x X Y}
   %
   \and
   %
-  \inferrule{\Gamma \vdash e \equiv e' : X}{\Gamma \vdash \mathsf{refl} : e =_X e'}
+  \inferrule{\Gamma \vdash M : \PiTy x X Y \\ \Gamma \vdash N : X}{\Gamma \vdash \app M {N} : \subst Y {N} x}
+  %
+  \and
+  %
+  \inferrule{\Gamma \vdash M \equiv N : X}{\Gamma \vdash \mathsf{refl} : M =_X N}
   \and
   \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash e : \ltonl A}
 
@@ -1071,38 +1073,37 @@ types is standard, so below we focus on the linear syntax.
   \label{fig:inttyping}
 \end{figure}
 
-
 \begin{figure}
   \begin{mathpar}
-    \boxed{\Gamma \vdash e \equiv e' : X}
+    \boxed{\Gamma \vdash M \equiv N : X}
 
-    \inferrule{\Gamma \vdash p : e =_X e'}{\Gamma \vdash e \equiv e' : X}
+    \inferrule{\Gamma \vdash p : M =_X N}{\Gamma \vdash M \equiv N : X}
 %
     \and
 %
-    \inferrule{~}{\Gamma \vdash \app {(\lamb x e)} {e'} \equiv \subst x e {e'} : X}
+    \inferrule{~}{\Gamma \vdash \app {(\lamb x M)} {N} \equiv \subst x M {N} : X}
 %
     \and
 %
-    \inferrule{~}{\Gamma \vdash e \equiv \lamb x {\app e x} : \PiTy x X Y}
+    \inferrule{~}{\Gamma \vdash m \equiv \lamb x {\app M x} : \PiTy x X Y}
 %
     \and
 %
-    \inferrule{~}{\Gamma \vdash \pi_1\, (e_1, e_2) \equiv e_1 : X}
+    \inferrule{~}{\Gamma \vdash \pi_1\, (M, N) \equiv M : X}
 %
     \and
 %
-    \inferrule{~}{\Gamma \vdash \pi_2\, (e_1, e_2) \equiv e_2 : \subst x {e_1} Y}
+    \inferrule{~}{\Gamma \vdash \pi_2\, (M , N) \equiv N : \subst x {M} Y}
 %
     \and
 %
-    \inferrule{~}{\Gamma \vdash e \equiv (\pi_1\, e, \pi_2\, e) : \SigTy x X Y}
+    \inferrule{~}{\Gamma \vdash M \equiv (\pi_1\, M, \pi_2\, M) : \SigTy x X Y}
 %
     \and
 %
-    \inferrule{~}{}
+    % \inferrule{~}{}
 %
-    \inferrule{~}{\Gamma \vdash t \equiv t' : 1}
+    \inferrule{~}{\Gamma \vdash M \equiv N : 1}
 %
     % \and
 %
@@ -1110,12 +1111,12 @@ types is standard, so below we focus on the linear syntax.
 
     \\
 
-    \boxed{\Gamma ; \Delta \vdash a \equiv a' : A}
+    \boxed{\Gamma ; \Delta \vdash e \equiv e' : A}
 
     % \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
 %
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lamblto a e)} {e'} \equiv \subst e x {e'} : C}
+    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lamblto a e)} {e'} \equiv \subst e {e'} a : C}
 %
     \and
 %
@@ -1123,7 +1124,7 @@ types is standard, so below we focus on the linear syntax.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lambtol a e)} {e'} \equiv \subst e x {e'} : C}
+    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lambtol a e)} {e'} \equiv \subst e {e'} a : C}
 %
     \and
 %
@@ -1131,7 +1132,7 @@ types is standard, so below we focus on the linear syntax.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \app {(\dlamb x e)} {e'} \equiv \subst x a {e'} : C}
+    \inferrule{~}{\Gamma; \Delta \vdash \app {(\dlamb x e)} {M} \equiv \subst {e} M x : C}
 %
     \and
 %
@@ -1139,15 +1140,15 @@ types is standard, so below we focus on the linear syntax.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash e \equiv e' : \top}
+%     \inferrule{~}{\Gamma; \Delta \vdash e \equiv e' : \top}
+% %
+%     \and
 %
-    \and
-%
-    \inferrule{~}{\Gamma; \Delta \vdash e_i \equiv \pi_i (e_1, e_2) : A_i}
-%
-    \and
-%
-    \inferrule{~}{\Gamma; \Delta \vdash e \equiv (\pi_1 e, \pi_2 e) : A\& B}
+%     \inferrule{~}{\Gamma; \Delta \vdash e_i \equiv \pi_i (e_1, e_2) : A_i}
+% %
+%     \and
+% %
+%     \inferrule{~}{\Gamma; \Delta \vdash e \equiv (\pi_1 e, \pi_2 e) : A\& B}
 %
     \and
 %
@@ -1155,19 +1156,19 @@ types is standard, so below we focus on the linear syntax.
     %
     \and
     %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {()} e {\subst {e'} {()} a} \equiv \subst {e'} a e : C}
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {()} e {\subst {e'} {()} a} \equiv \subst {e'} e a : C}
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {e \otimes e'} {a \otimes a'} e'' \equiv \subst {e''} {a, a'} {e, e'} : C}
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {a \otimes b} {e \otimes e'} e'' \equiv e'' \{ e/a , e'/b \} : C}
 %
     \and
     %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {a \otimes b} e {\subst {e'} {a \otimes b} c} \equiv \subst {e'} c e : C}
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {a \otimes b} e {\subst {e'} {a \otimes b} c} \equiv \subst {e'} e c : C}
 %
     \and
 %
-    \inferrule{~}{\Gamma;\Delta \vdash \letin {(x, a)} {(e, e')} {e''} \equiv \subst {e''} {x, a} {e, e'} : C}
+    \inferrule{~}{\Gamma;\Delta \vdash \letin {(x, a)} {(M, e)} {e'} \equiv e' \{ M/x , e/a \} : C}
     %
     \and
     %
@@ -1175,20 +1176,14 @@ types is standard, so below we focus on the linear syntax.
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \ltonl { (A \lto B) } \\
-      \Gamma \vdash g : \ltonl { (A \lto B) } \\
-      \Gamma ; \Delta \vdash a : A \\
-      \Gamma ; \Delta \vdash p : \apptol {f}{a} \equiv \apptol {g}{a}}
-    {\Gamma ; \Delta \vdash \equalizerpi {\equalizerpair {a}{p}} \equiv a : A}
+    {~}
+    {\Gamma ; \Delta \vdash \equalizerpi {\equalizerin {e}} \equiv e : A}
     %
     \and
     %
     \inferrule
-    {\Gamma \vdash f : \ltonl { (A \lto B) } \\
-      \Gamma \vdash g : \ltonl { (A \lto B) } \\
-      \Gamma ; \Delta \vdash p : \apptol {f}{a} = \apptol {g}{a} \\
-      \Gamma ; \Delta \vdash e : \equalizer{a}{f}{g}}
-    {\Gamma ; \Delta \vdash \equalizerpair {\equalizerpi {e}} {p} \equiv e : A}
+    {~}
+    {\Gamma ; \Delta \vdash \equalizerin {\equalizerpi {e}} \equiv e : A}
 \end{mathpar}
   \caption{Judgmental equality}
   \label{fig:jdgeq}
