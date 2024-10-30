@@ -373,12 +373,10 @@ for the single character $a$ has a single parse tree for the string \stringquote
 and no parse trees at any other strings.
 
 \paragraph{Finite Grammars}
-\newcommand{\fingram}{$(a \otimes b) \oplus c$}
-
 First consider finite grammars --- those built from base types via disjunctions $\oplus$ and
-concatenations $\otimes$. For instance, \fingram.
+concatenations $\otimes$. For instance, $(a \otimes b) \oplus c$.
 In \cref{fig:fingram} we find a proof tree that constructs a term of type
-\fingram in the context $x : a, y : b$. We think of this term as
+$(a \otimes b) \oplus c$ in the context $x : a, y : b$. We think of this term as
 a parse tree internal to \theoryabbv.
 
 Parses of a fixed string $w$ into a grammar $A$ are internally represented as
@@ -387,7 +385,7 @@ comma-separated list of the constituent characters of $w$. In particular, to
 parse \stringquote{ac}, we build parse trees in the context
 $\internalize{\stringquote{ab}} = x : a , y : b$. Thus the term
 $\inl(x \otimes y)$ from \cref{fig:fingram} details the
-manner by which \stringquote{ac} matches the grammar \fingram.
+manner by which \stringquote{ac} matches the grammar $(a \otimes b) \oplus c$.
 
 \begin{figure}
 \begin{mathpar}
@@ -405,7 +403,7 @@ manner by which \stringquote{ac} matches the grammar \fingram.
     }
     {x : a , y : b \vdash x \otimes y : a \otimes b}
   }
-  {x : a , y : b \vdash \inl(x \otimes y) : \fingram}
+  {x : a , y : b \vdash \inl(x \otimes y) : (a \otimes b) \oplus c}
 \end{mathpar}
 \caption{\stringquote{ac} matches $(a \oplus b) \otimes c$}
 \label{fig:fingram}
@@ -433,7 +431,7 @@ restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 % TODO this should be beter formatted but can't use listings with \otimes ^{\ast}
 \begin{figure}
 \begin{align*}
-\data &~A^{*}~\where\\
+\data &~A^{*} : L~\where\\
       & \nil : \ltonl {A^{*}} \\
       & \cons : \ltonl {(A \lto A^{*} \lto A^{*})}
 \end{align*}
@@ -446,7 +444,8 @@ $A^{*}$ to be an inductive linear
 type, as shown in \cref{fig:kleenestarinductive}. $A^{*}$ has two constructors:
 $\nil$, which builds a parse of type $A^{*}$ in the empty context; and $\cons$,
 which takes in of $A$ and a parse of $A^{*}$ and linearly combines them to build
-a parse of $A^{*}$.
+a parse of $A^{*}$. The type defined by these constructors belong to the
+universe of linear types $L$.
 
 The arrow, $\uparrow$, wrapping these constructors denotes
 an interaction between the linear and nonlinear parts of the theory.
@@ -462,7 +461,16 @@ consumed at usage time
 
 Just as in \cref{fig:fingram}, we can show that particular strings match a Kleene
 star. In \cref{fig:kleenestarderivation}, we demonstrate that \stringquote{ab}
-matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene star constructors.
+matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene
+star constructors. In this proof tree we expand some syntactic details that are often
+left implicit. For instance, every linear context is parametrized by a nonlinear
+context, which is syntactically separate by a semicolon. If the nonlinear
+context is empty, we may often omit it; however, in this figure we make this
+distinction explicit. Further consider the leaves of the tree. First, the
+leaves involving the constructors are nonlinear terms, and thus they occur in
+the nonlinear empty context. Then we explicit cast from
+an nonlinear $uparrow$-wrapped type into a linear one. Such casts may often be
+made implicitly, such as in $\cref{fig:kleeneabstractproof}$.
 
 
 \begin{figure}
@@ -476,7 +484,11 @@ matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene 
       \inferrule
       {
         \inferrule
-        {\cdot \vdash \cons : \ltonl {(a \lto a^* \lto a^*)}}
+        {
+          \inferrule
+          {~}
+          {\cdot \vdash \cons : \ltonl {(a \lto a^* \lto a^*)}}
+        }
         {\cdot ; \cdot \vdash \cons : a \lto a^* \lto a^*}
         \\
         \inferrule
@@ -486,7 +498,11 @@ matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene 
       {\cdot ; x : a \vdash \cons~x : a^* \lto a^*}
       \\
       \inferrule
-      {~}
+      {
+        \inferrule
+        {~}
+        {\cdot \vdash \nil : \ltonl {(a^*)}}
+      }
       {\cdot ; \cdot \vdash \nil : a^*}
     }
     {\cdot ; x : a \vdash \cons (x , \nil) : a^{*}}
@@ -503,15 +519,14 @@ matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene 
 \label{fig:kleenestarderivation}
 \end{figure}
 
-\steven{TODO need to update the proof tree example derivations (\cref{fig:kleenestarderivation,fig:kleeneabstractproof}) to use the presentation of cons that is now in \cref{fig:kleenestarinductive}}
-
 We may also have derivations where the term in context is not simply a
-string of base types. For instance, by using the elimination principle for
-Kleene star, \cref{fig:kleeneabstractproof} builds a term of type
-$A^{*}$ in a context comprising abstract linear types. In these contexts, it is
+string of base types. For instance,
+in \cref{fig:kleeneabstractproof} we show that every parse of the grammar
+$(A \otimes A)^{*}$ induces a parse of $A^{*}$ for an arbitrary grammar $A$.
+
+The context $(A \otimes A)^{*}$ does not correspond directly to a string, so it is
 not quite appropriate
-to treat linear terms as parse \textit{trees}, because the information in
-context is not a string. Instead, it is more
+to treat linear terms here as parse \textit{trees}. Instead, it is more
 appropriate to think of such terms as parse \textit{transformers}. That is, in
 \cref{fig:kleeneabstractproof} the
 inhabitant $x : (A \otimes A)^{*}$ in the context is not itself data to be parsed; rather,
@@ -520,8 +535,6 @@ type $A^{*}$ is a transformation of parse trees of the input grammar into parse
 trees of the output grammar.
 
 \steven{TODO : describe elimination principle somewhere. Maybe just in prose?}
-\steven{I probably can't get away with the inline definition of $f$ in \cref{fig:kleeneabstractproof}}
-\max{shouldn't the fold be applied to $x$ and shouldn't $f$ be $\lambda x.\lambda y.\cdots$?}
 
 \begin{figure}
 \begin{mathpar}
@@ -534,7 +547,11 @@ trees of the output grammar.
     \inferrule
     {
       \inferrule
-      {x_1 : A, x_2 : A , y : A^* \vdash \cons (x_1 , \cons(x_2 , y)) : A^*}
+      {
+        \inferrule
+        {~}
+        {x_1 : A, x_2 : A , y : A^* \vdash \cons (x_1 , \cons(x_2 , y)) : A^*}
+      }
       {x' : A \otimes A , y : A^* \vdash g := \letin {x_1 \otimes x_2} {x'} {\cons (x_1 , \cons(x_2 , y)) : A^*}}
     }
     {\cdot \vdash f := \lamblto x {\lamblto y {\app {\app g x} {y} }} : (A \otimes A) \lto A^* \lto A^*}
@@ -546,51 +563,51 @@ trees of the output grammar.
 \end{figure}
 
 \paragraph{Non-deterministic Finite Automata}
-As a final example, consider the non-deterministic finite
-automaton (NFA) $N$ from \cref{fig:exampleNFA}. Such automata play a critical
+Automata play a critical
 role in defining parsers, as they often serve as an operationalized and
 executable presentation of a formal grammar. Therefore, it is crucial that we
-can represent them internal to \theoryabbv.
+can represent them internal to \theoryabbv. As a final example, consider the
+representation of $(a^{*} \otimes b) \oplus c$ as a non-deterministic finite
+automaton (NFA), shown in \cref{fig:exampleNFA}.
 
 Our method of representing these automata internally is to provide an \emph{indexed}
 inductive type of traces through the machine. An ordered, linear theory is
 integral to our design of \theoryabbv ; however, there are some aspects of parsing that
-cannot be captured through linear types\max{not exactly clear what you mean, maybe you mean ``simple'' linear types?} alone. Often one wants to define a
-\emph{family} of linear types varying over a set, which is a primary motivator
-for us to make \theoryabbv a linear-non-linear theory\max{jargon-y. Be more direct}. For the NFA $N$, an indexed inductive
-type of traces through $N$ is given in \cref{fig:nfainductive}.
+cannot be captured through simple linear types alone. Often one wants to define a
+\emph{family} of linear types varying over a set, such as a type of traces through an
+NFA parametrized by the first state in the trace. For the example NFA, the data
+type $\Trace$ is provided in \cref{fig:nfainductive}.
 
-The type of traces in $N$ is indexed by two pieces of data: a state in $N$ and a
-Boolean. For each state $s : N.\mathsf{state}$ and $acc : \Bool$, we define
-$\Trace_{N}~s~acc$ which denotes the
-type of traces starting at state $s$ and terminating at an arbitrary state. The Boolean flag $acc$ marks if the trace
-ends in either an accepting or a rejecting state\max{confusing. One sentence you say arbitrary state and then the next sentence you say it has to match $acc$}. Let us dissect the structure
-of this type in more detail for state 1 of $N$.
+$\Trace~s$ denotes traces through the NFA beginning in state $s$ and ending in
+an accepting state. In this instance there is only a sinlge accepting state, and
+thus the traces necessarily end in state 3. Let us dissect the structure
+of $\Trace~s$ in more detail.
 
-$\Trace_{N}~1~acc$ has three constructors. The first constructor
-$\mathsf{stop}_{1}$ allows a trace to end at state one, and because state
-1 is accepting $acc$ is true when terminating at state 1.
-
-The constructor
-$\mathsf{1to2}$ denotes the $b$-labeled transition in $N$ from state 1 to state
-2. The character $b$ is consumed when taking this transition and then a trace
-beginning at state 2 must be produced, which is denoted by the tensor product of
-the grammar $b$ and $Trace_{N}~2~acc$. Finally, the constructor $\mathsf{1to2}$
-abstracts over the acceptance Boolean because it is not yet determined.
-Because the Boolean is set by the acceptance criteria of the \emph{final} state,
-it is provided inductively by the trace out of state 2.
-
-The constructor $\mathsf{1to3}$ is built quite similarly as $\mathsf{1to2}$;
-however, $\mathsf{1to3}$ does not involve a tensor product. This is because the
-transition from state 1 to state 3 is labeled by the empty string $\epsilon$, so
-the transition consumes no input. In this case, when building a trace out of
-state 1, it suffices to build a trace out of state 3 \emph{over the same string}.
+There are two kinds of constructors for a trace: those those modelling the
+termination of a trace at a given state and those modelling transitions in the
+NFA.\ The constructor $\mathsf{stop}$ denotes the first kind of constructor and
+terminates the trace in state 3. The constructor
+$\mathsf{2to3}$ denotes the $b$-labeled transition in the NFA from state 2 to state
+3. In this case, we build a trace beginning at state 2
+by consuming a parse of the label, $b$, and consuming a trace beginning at state 3.
+Finally, the constructor $\mathsf{1to2}$ is built quite similarly as $\mathsf{2to3}$;
+however, $\mathsf{1to2}$  may transition states without reading a character. This is because the
+transition from state 1 to state 2 is labeled by the empty string $\epsilon$, so
+transition consumes no input. In this case, when building a trace out of
+state 1, it suffices to build a trace out of state 2 \emph{over the same string}.
 
 Overall, leveraging the \emph{indexed} inductive types provides a concise interface
-for defining the traces of $N$ as a family
+for defining the traces of the NFA as a family
 of mutually recursive types varying coherently over indexing data drawn from
-$N.\mathsf{state} \times \Bool$.
+the states of the NFA.
 
+Just as in \cref{fig:kleenestarderivation} shows the \stringquote{ab} matches
+$(a^{*} \otimes b) \oplus c$, we show in TODO CREF that \stingquote{ab} is
+accepted by the NFA representation of this regular expression. This is denote by
+showing that \stringquote{ab} matches the trace grammar where the index is the
+initial state of the NFA.\ Further, as we
+will see in LATER SECTION, we can derive an isomorphism between parses of the
+regular expression and accepting traces of the corresponding NFA.
 
 \begin{figure}
   \begin{tikzpicture}[node distance = 25mm ]
@@ -607,13 +624,9 @@ $N.\mathsf{state} \times \Bool$.
   \label{fig:exampleNFA}
 \end{figure}
 
-\max{this notation is inconsistent with Agda syntax. You write $acc : \Bool$ but then in the $\mathsf{stop}$ cases you instantiate $acc$ with a specific boolean}
-\max{is the boolean just overcomplicating stuff here?}
-
-
 \begin{figure}
 \begin{align*}
-\data &~\Trace : (s : N.\mathsf{state}) \to L~\where\\
+\data &~\Trace : (s : \mathsf{Fin}~3) \to L~\where\\
       & \mathsf{stop} : \ltonl {(\Trace~3)}  \\
       & \mathsf{1to2} : \ltonl {(\Trace~2 \lto \Trace~1)} \\
       & \mathsf{2to2} : \ltonl {(a \lto \Trace~2 \lto \Trace~2)} \\
@@ -622,6 +635,37 @@ $N.\mathsf{state} \times \Bool$.
 \end{align*}
 \caption{$N$ as an indexed inductive type}
 \label{fig:nfainductive}
+\end{figure}
+
+\begin{figure}
+\begin{mathpar}
+\inferrule
+{
+  \inferrule
+  {
+    \inferrule
+    {~}
+    {x : a \vdash x : a}
+    \\
+    \inferrule
+    {
+      \inferrule
+      {~}
+      {y : b \vdash y : b}
+      \\
+      \inferrule
+      {~}
+      {\cdot \vdash \mathsf{stop} : \Trace~3}
+    }
+    {y : b \vdash \mathsf{2to3}(y , \mathsf{stop}) : \Trace~2}
+  }
+  {x : a , y : b \vdash \mathsf{2to2}(x , \mathsf{2to3}(y , \mathsf{stop})) : \Trace~2}
+}
+{x : a , y : b \vdash \mathsf{1to2}(\mathsf{2to2}(x , \mathsf{2to3}(y ,
+  \mathsf{stop}))) : \Trace~1}
+\end{mathpar}
+\caption{\stringquote{ab} is accepted by the NFA for $(a^{*} \otimes b) \oplus c$}
+\label{fig:kleenestarderivation}
 \end{figure}
 
 %% 3. Third example: NFA traces to show the indexed inductive types
