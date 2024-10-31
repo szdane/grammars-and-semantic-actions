@@ -1,4 +1,3 @@
-
 % -*- fill-column: 80; -*-
 \documentclass[review,anonymous,screen,acmsmall,nonacm]{acmart}
 \usepackage{mathpartir}
@@ -61,6 +60,7 @@
 \newcommand{\ltonl}[1]{~\uparrow #1}
 \newcommand{\nil}{\mathsf{nil}}
 \newcommand{\cons}{\mathsf{cons}}
+\newcommand{\epscons}{\epsilon\mathsf{cons}}
 \newcommand{\data}{\mathsf{data}}
 \newcommand{\where}{\mathsf{where}}
 \newcommand{\Trace}{\mathsf{Trace}}
@@ -120,6 +120,13 @@
   \country{USA}
 }
 \email{stschaef@umich.edu}
+
+\author{Nathan Varner}
+\affiliation{\department{Electrical Engineering and Computer Science}
+  \institution{University of Michigan}
+  \country{USA}
+}
+\email{nvarner@umich.edu}
 
 \author{Max S. New}
 \affiliation{
@@ -428,7 +435,6 @@ expressions are built inductively using base types, $\oplus$, and $\otimes$ ;
 however, unlike finite grammars, regular expressions additionally have a
 restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 
-% TODO this should be better formatted but can't use listings with \otimes ^{\ast}
 \begin{figure}
 \begin{align*}
 \data &~A^{*} : L~\where\\
@@ -450,7 +456,7 @@ universe of linear types $L$.
 The arrow, $\uparrow$, wrapping these constructors denotes
 an interaction between the linear and nonlinear parts of the theory.
 In short, a nonlinear term
-$M : \ntonl A^{*}$ denotes a linear term in the empty context
+$M : \ltonl A^{*}$ denotes a linear term in the empty context
 $\cdot \vdash M : A^{*}$. Later in
 this paper, we will further discuss the behavior of $\uparrow$.
 At this moment,
@@ -602,7 +608,7 @@ of mutually recursive types varying coherently over indexing data drawn from
 the states of the NFA.
 
 Just as \cref{fig:kleenestarderivation} shows the \stringquote{ab} matches
-$(a^{*} \otimes b) \oplus c$, we show in \cref{fig:nfaderivation} that \stingquote{ab} is
+$(a^{*} \otimes b) \oplus c$, we show in \cref{fig:nfaderivation} that \stringquote{ab} is
 accepted by the NFA representation of this regular expression. This is denoted by
 showing that \stringquote{ab} matches the trace grammar when the index is the
 initial state of the NFA.\ Further, as we
@@ -1284,11 +1290,11 @@ whereas Aho's grammars can only manipulate it in a particular way.
 
 %% 1. Basic concepts: unambiguity, parseability, weak and strong equivalence
 \paragraph{Unambiguity}
-In the grammars model, we say that a grammar is unambiguous if there is at most
+In the grammars-as-presheaves model of \theoryabbv, we say that a grammar is unambiguous if there is at most
 one parse tree for any input string. There are several ways to capture this
 concept inside of the theory of \theoryabbv.
 
-In the presence of distributive coproducts (which we probably add a) the following are equivalent:
+In the presence of distributive coproducts, the following are equivalent:
 \begin{itemize}
   \item $A$ is an unambiguous grammar
   \item The morphism $! : A \to \top$ is a monomorphism
@@ -1329,12 +1335,99 @@ naturally.
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
 
+\newcommand{\states}{\mathsf{states}}
+\newcommand{\labelt}{\mathsf{label}}
+\newcommand{\transitions}{\mathsf{transitions}}
+\newcommand{\epstransitions}{\epsilon\mathsf{transitions}}
+\newcommand{\isAcc}{\mathsf{isAcc}}
+\newcommand{\init}{\mathsf{init}}
+\newcommand{\src}{\mathsf{src}}
+\newcommand{\dst}{\mathsf{dst}}
+\newcommand{\epssrc}{\epsilon\mathsf{src}}
+\newcommand{\epsdst}{\epsilon\mathsf{dst}}
+
+\paragraph{Nondeterministic Finite Automata} In \cref{sec:type-theory-examples}, we saw the demonstration of
+one particular NFA corresponding to the regular expression
+$(a^{*} \otimes b) \oplus c$. The definition of the linear type of traces
+through this
+NFA, as
+presented in \cref{fig:nfainductive}, inspects the concrete structure of the
+NFA.\ When generalizing from this example to an arbitrary NFA, we do not have the
+luxury of inspecting a concrete defintion. Therefore, we abstract over the
+specification of an arbitrary NFA and define traces with respect to that
+specification.
+
+Let the data of an NFA $N$ be given by the following nonlinear data,
+\begin{itemize}
+\item $N.\states$ --- a finite set of states
+\item $N.\init$ --- the initial state
+\item $N.\isAcc$ --- a decidable proposition over $N.\states$ denoting which
+        states are accepting
+\item $N.\transitions$ --- a finite set of labeled transitions
+\item $N.\labelt$ --- a mapping from $N.\transitions$ to the character labeling
+        the transition
+\item $N.\src$ --- a mapping from $N.\transitions$ to source state of a transition
+\item $N.\dst$ --- a mapping from $N.\transitions$ to destination state of a transition
+\item $N.\epstransitions$ --- a finite set of $\epsilon$-transitions
+\item $N.\epssrc$ --- a mapping from $N.\epstransitions$ to source state of a $\epsilon$-transition
+\item $N.\epsdst$ --- a mapping from $N.\epstransitions$ to destination state of a $\epsilon$-transition
+\end{itemize}
+
+For the above definition of an NFA $N$, in \cref{fig:nfatrace} we define a linear type of traces
+through $N$. Traces in $N$ may be built through one of three constructors. We
+may terminate a trace at an accepting state with the constructor $\nil$. If we
+had a trace beginning at the destination state of a transition, then we may use
+the $\cons$ constructor to linearly combine that trace with a parse of the label
+of the transition to build a trace beginning at the source of the transition.
+Finally, if we had a trace beginning at the destination of an
+$\epsilon$-transition then we may use $\epscons$ to pull it back along the
+$\epsilon$-transition and construct a trace beginning at the source of the $\epsilon$-transition.
+
+\begin{figure}
+\begin{align*}
+\data &~\Trace_{N} : (s : N.\states) \to L~\where\\
+      & \nil : \ltonl {\left( \LinPiTy {s} {N.\states} {\LinPiTy {\mathsf{acc}} {N.\isAcc(s)} {\Trace_{N}~s}} \right)}  \\
+      & \cons : \ltonl {\left( \LinPiTy {t} {N.\transitions} {(N.\labelt~t) \lto \Trace_{N}~(N.\dst(t)) \lto \Trace_{N}(N.\src(t))} \right)} \\
+      & \epscons : \ltonl {\left( \LinPiTy {t} {N.\epstransitions} {\Trace_{N}~(N.\epsdst(t)) \lto \Trace_{N}(N.\epssrc(t))} \right)}
+\end{align*}
+\caption{Traces through the NFA $N$ as an indexed inductive type}
+\label{fig:nfatrace}
+\end{figure}
+
+\paragraph{Determinstic Finite Automata}
+Just as above, we provide a specification for an arbitrary DFA. A DFA $D$ is
+given by the following data,
+
+\begin{itemize}
+\item $D.\states$ --- a finite set of states
+\item $D.\init$ --- the initial state
+\item $D.\isAcc$ --- a decidable proposition over $D.\states$ denoting which
+      states are accepting
+\item $D.\delta$ --- a transition function. Given a character $c$ and a state
+        $s$, $D.\delta_{c}(s)$ is the state for which there is a transition $s \overset{c}{\to} D.\delta_{c}(s)$
+\end{itemize}
+
+The linear type of traces through $D$ is given in \cref{fig:dfatrace}. These
+traces are either terminated in an accepting state with the $\nil$ constructor,
+or the $\cons$ constructor builds a trace out of state $s$ by linearly combining
+a parse of some character $c$ with a
+trace out of the state $D.\delta_{c}(s)$.
+
+\begin{figure}
+\begin{align*}
+\data &~\Trace_{D} : (s : D.\states) \to L~\where\\
+      & \nil : \ltonl {\left( \LinPiTy {s} {D.\states} {\LinPiTy {\mathsf{acc}} {D.\isAcc(s)} {\Trace_{D}~s}} \right)}  \\
+      & \cons : \ltonl {\left( \LinPiTy {c} {\Sigma} {\LinPiTy {s} {D.\states} {c \lto \Trace_{D}~(D.\delta_{c}(s)) \lto \Trace_{D}(s)}} \right)}
+\end{align*}
+\caption{Traces through the DFA $D$ as an indexed inductive type}
+\label{fig:dfatrace}
+\end{figure}
+
 \paragraph{Regex-NFA/Thompson}
 
 \steven{TODO put regex-NFA iso here. Call it Thompson's construction?. Mention
   its mechanized}
 
-\paragraph{Determinization of an NFA}
 \newcommand{\Agda}{Formalized in Agda}
 \begin{theorem}[Determinization, \Agda]
   Given an NFA $N$, there exists a DFA $D$ such that
@@ -1380,7 +1473,7 @@ $s \in X$, then we first decompose the trace to a parse of the character $c$ and
 trace starting from $s'$ --- that is, to a term of type
 $c \otimes \Trace_{N}(s')$. We then inductively call $f$ on traces out of $s'$
 to get traces in a parse of $c$ concatenated with a family of traces
-parametrized by $\epslion$-closed subsets containing $s'$.
+parametrized by $\epsilon$-closed subsets containing $s'$.
 . We instantiate this family at $\delta_{c}(X)$, as
 $s'$ is reachable from $s$ by a single transition labelled by $c$, so
 $s' \in \overline{\epsilon}\overline{c}{X} = D.\delta_{c}(X)$. Therefore we can
@@ -1514,10 +1607,24 @@ be a type for us to interface with it.
 
 \steven{TODO impute LL(1) example, mention that its weak equivalence is mechanized}
 
-\subsection{Unrestricted Grammars}
+\subsection{Turing Machines}
 %% 5. Expressiveness: Turing Machines
 The expressive power of \theoryabbv spans the entire Chomsky hierachy, as we may
-encode the grammars accepted by Turing machines.
+encode the acccepting traces of Turing machines as linear types.
+
+\begin{figure}
+\begin{align*}
+\data &~\mathsf{Turing}~(t : \mathbb{Z} \to \Gamma): L~\where\\
+      & \mathsf{nil} : \ltonl {\left(\LinPiTy {t} {\mathbb{Z} \to \Gamma} {\mathsf{Turing}~t} \right)} \\
+      & \mathsf{snoc} : \ltonl {(\mathsf{Turing} \lto A^{*} \lto A^{*})}
+\end{align*}
+\caption{Kleene Star as an inductive non-linear type}
+\label{fig:turinginductive}
+\end{figure}
+
+However, unlike
+the traces through the automata we have seen until now, the encoding of Turing
+machines
 
 We nonlinearly encode the tape of the Turing machine as
 function from $\mathbb{Z} \to \Gamma$, where $\Gamma$ is your tape alphabet. The
