@@ -46,6 +46,12 @@
 \newcommand{\theoryname}{Dependent Lambek Calculus\xspace}
 \newcommand{\theoryabbv}{$\textrm{Lambek}^D$}
 
+\newcommand{\isTy}{\textrm{ type}}
+\newcommand{\isCtx}{\textrm{ ctx}}
+\newcommand{\isSmall}{\textrm{ small}}
+\newcommand{\isLinTy}{\textrm{ lin. type}}
+\newcommand{\isLinCtx}{\textrm{ lin. ctx.}}
+
 \newcommand{\gluedNL}{{\mathcal G}_S}
 \newcommand{\gluedNLUniv}{{\mathcal G}_{S,i}}
 \newcommand{\gluedL}{{\mathcal G}_L}
@@ -2436,12 +2442,22 @@ $\Delta X = \LinSigTy x X \top$.
 % \pedro{I like the overall structure of this section! Showing how the type theory
 % can encode and reason about different kinds of languages is very instructive!}
 
-\section{Semantics and Metatheory}
+\section{Denotational Semantics}
 \label{sec:semantics-and-metatheory}
 
-\subsection{Formal Grammars as Linear Types}
-\label{sec:formaltype}
-\max{this should be in its own section on semantics}
+To justify our intuitive explanation of linear types as formal
+grammars, we will now define a \emph{denotational semantics} that
+makes this mathematically precise. This semantics is the basis for our
+prototype implementation in Agda.
+
+\subsection{What is a formal grammar?}
+
+\begin{definition}
+  A \emph{formal language} $L$ is a function from strings to propositions.
+  A \emph{formal grammar} $A$ is a function from strings to small sets.
+\end{definition}
+
+\max{todo: need to decide if we need this section here or if it's in the intro already}.
 
 % The linear typing judgment in our syntax takes on the following schematic form
 % $\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
@@ -2485,15 +2501,47 @@ its connections to formal grammars in order to show that it is a sound methodolo
 for reasoning about parsers. We do this by showing that $\mathbf{Gr}$ is a model
 to our type theory.
 
+\begin{definition}
+  
+\end{definition}
+
+To handle our universe, we assume a universe of small sets in our
+metatheory that is closed under all of our type formers.
+\begin{definition}[Grammar Semantics]
+  We define the following interpretations by mutual recursion on the
+  judgments of \theoryabbv:
+  \begin{enumerate}
+  \item For each non-linear context $\Gamma \isCtx$, we define a set $\sem \Gamma$.
+  \item For each non-linear type $\Gamma \vdash X \isTy$, and element
+    $\gamma \in \sem\Gamma$, we define a set $\sem X \gamma$.
+  \item For each linear type $\Gamma A \isLinTy$ and element $\gamma
+    \in \sem\Gamma$, we define a formal grammar $\sem{A}\gamma$. We
+    similarly define a formal grammar $\sem\Delta\gamma$ for each
+    linear context $\Gamma \Delta\isLinCtx$.
+  \item For each non-linear term $\Gamma \vdash M : X$ and $\gamma \in \sem{\Gamma}$, we define an element $\sem{M}\gamma \in \sem{X}\gamma$.
+  \item For each linear term $\Gamma; \Delta \vdash e : A$ and $\gamma \in \sem{\Gamma}$ we define a parse transformer from $\sem{\Delta}\gamma$ to $\sem{A}\gamma$.
+  \end{enumerate}
+  And we verify the following conditions:
+  \begin{enumerate}
+  \item If $\Gamma \vdash X \isSmall$, then $\sem X \gamma$ is a small set.
+  \item If $\Gamma \vdash X \cong X'$ then for every $\gamma$, $\sem{X}\gamma = \sem{X'}\gamma$
+  \item If $\Gamma \vdash A \cong A'$ then for every $\gamma$, $\sem{A}\gamma = \sem{A'}\gamma$
+  \item If $\Gamma \vdash M \cong M' : X$ then for every $\gamma$, $\sem{M}\gamma = \sem{M'}\gamma$
+  \item If $\Gamma;\Delta \vdash e \cong e' : A$ then for every $\gamma$, $\sem{e}\gamma = \sem{e'}\gamma$
+  \end{enumerate}
+\end{definition}
+
+For reasons of brevity, we present only a selection of cases here. The full details are in the appendix.\max{todo: put the full details in the appendix}.
+
+
 Most of the non-linear semantics is standard \pedro{We should either cite something or add the non-linear semantics in the appendix}, so let us investigate in more
 depth the linear semantics.
-
 \begin{enumerate}
   \item A non-linear context $\Gamma$ denotes a set $\sem \Gamma$
   \item A non-linear type $\Gamma \vdash X : U_{i}$ denotes a family of sets
         $\sem X : \sem \Gamma \to \Set_{i}$
-  \item A non-linear term $\Gamma \vdash e : X$ denotes a section
-        $\sem e : \Pi(\gamma : \sem \Gamma)\sem{X} \gamma$ \pedro{we have not defined what sections are}
+  \item A non-linear term $\Gamma \vdash e : X$ denotes a dependently typed function
+        $\sem e : \prod_{\gamma : \sem \Gamma}\sem{X} \gamma$ \pedro{we have not defined what sections are}
   \item Linear contexts $\Gamma \vdash \Delta$ and types
         $\Gamma \vdash A : L_{i}$ both denote families of grammars
         $\sem \Gamma \to \Gr_{i}$
