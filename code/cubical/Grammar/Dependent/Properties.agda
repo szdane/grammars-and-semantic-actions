@@ -23,16 +23,27 @@ private
   variable
     ℓg ℓh ℓS : Level
 
+open StrongEquivalence
 module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
-  open StrongEquivalence
+  ⊕ᴰ-distL-inv : (⊕[ a ∈ A ] (h a ⊗ g)) ⊢ ((⊕[ a ∈ A ] h a) ⊗ g)
+  ⊕ᴰ-distL-inv = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ,⊗ id
+
+  -- This is nice because it's derivable but it has annoying
+  -- definitional behavior because of the ⟜
+  ⊕ᴰ-distL-fun' : ((⊕[ a ∈ A ] h a) ⊗ g) ⊢ (⊕[ a ∈ A ] (h a ⊗ g))
+  ⊕ᴰ-distL-fun' = ⟜-intro⁻ (⊕ᴰ-elim λ a → ⟜-intro (⊕ᴰ-in a))
   opaque
-    unfolding _⊗_
+    unfolding _⊗_ ⊗-intro
+    -- these definitions have better definitional behavior.
+    ⊕ᴰ-distL-fun : ((⊕[ a ∈ A ] h a) ⊗ g) ⊢ (⊕[ a ∈ A ] (h a ⊗ g))
+    ⊕ᴰ-distL-fun w (s , (a , x) , y) = a , ((s , (x , y)))
+
     ⊕ᴰ-distL :
       StrongEquivalence
         ((⊕[ a ∈ A ] h a) ⊗ g)
         (⊕[ a ∈ A ] (h a ⊗ g))
-    ⊕ᴰ-distL .fun w (s , (a , x) , y) = a , ((s , (x , y)))
-    ⊕ᴰ-distL .inv w (a , (s , (x , y))) = s , ((a , x) , y)
+    ⊕ᴰ-distL .fun = ⊕ᴰ-distL-fun
+    ⊕ᴰ-distL .inv = ⊕ᴰ-distL-inv
     ⊕ᴰ-distL .sec = refl
     ⊕ᴰ-distL .ret = refl
 
@@ -45,14 +56,29 @@ module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
     ⊕ᴰ-distR .sec = refl
     ⊕ᴰ-distR .ret = refl
 
-    &ᴰ-strengthL :
-        (&[ a ∈ A ] h a) ⊗ g ⊢ &[ a ∈ A ] (h a ⊗ g)
-    &ᴰ-strengthL w (s , f , pg) a = s , (f a , pg)
+  &ᴰ-strengthL : (&[ a ∈ A ] h a) ⊗ g ⊢ &[ a ∈ A ] (h a ⊗ g)
+  &ᴰ-strengthL = &ᴰ-intro λ a → &ᴰ-π a ,⊗ id
 
-    &ᴰ-strengthR :
-        g ⊗ (&[ a ∈ A ] h a) ⊢ &[ a ∈ A ] (g ⊗ h a)
-    &ᴰ-strengthR w (s , pg , f) a = s , (pg , f a)
+  &ᴰ-strengthR : g ⊗ (&[ a ∈ A ] h a) ⊢ &[ a ∈ A ] (g ⊗ h a)
+  &ᴰ-strengthR = &ᴰ-intro (λ a → id ,⊗ &ᴰ-π a)
 
+module _ {ℓ ℓ' ℓ''}{X : Type ℓ} {Y : X → Type ℓ'}{A : ∀ x → Y x → Grammar ℓ''}
+  where
+  ⊕ᴰ&ᴰ-dist-inv :
+    ⊕[ f ∈ (∀ x → Y x) ] &[ x ∈ X ] A x (f x) ⊢ &[ x ∈ X ] ⊕[ y ∈ Y x ] A x y
+  ⊕ᴰ&ᴰ-dist-inv = ⊕ᴰ-elim λ f → &ᴰ-intro λ x → ⊕ᴰ-in (f x) ∘g &ᴰ-π x
+  opaque
+    ⊕ᴰ&ᴰ-dist-fun :
+      &[ x ∈ X ] ⊕[ y ∈ Y x ] A x y ⊢ ⊕[ f ∈ (∀ x → Y x) ] &[ x ∈ X ] A x (f x)
+    ⊕ᴰ&ᴰ-dist-fun w f = (λ x → f x .fst) , λ x → f x .snd
+    
+    ⊕ᴰ&ᴰ-dist : StrongEquivalence
+      (&[ x ∈ X ] ⊕[ y ∈ Y x ] A x y)
+      (⊕[ f ∈ (∀ x → Y x) ] &[ x ∈ X ] A x (f x))
+    ⊕ᴰ&ᴰ-dist .fun = ⊕ᴰ&ᴰ-dist-fun
+    ⊕ᴰ&ᴰ-dist .inv = ⊕ᴰ&ᴰ-dist-inv
+    ⊕ᴰ&ᴰ-dist .sec = refl
+    ⊕ᴰ&ᴰ-dist .ret = refl
 module _
   {A : Type ℓS} {h : A → Grammar ℓh}
   (isSetA : isSet A)
