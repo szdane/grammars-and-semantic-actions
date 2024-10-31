@@ -674,6 +674,8 @@ regular expression and accepting traces of their corresponding NFA.
 \label{fig:nfaderivation}
 \end{figure}
 
+\steven{TODO the example figures need to changed to not use $x$'s for linear variables}
+
 %% 3. Third example: NFA traces to show the indexed inductive types
 
 \section{Syntax and Typing for \theoryname}
@@ -1423,11 +1425,6 @@ trace out of the state $D.\delta_{c}(s)$.
 \label{fig:dfatrace}
 \end{figure}
 
-\paragraph{Regex-NFA/Thompson}
-
-\steven{TODO put regex-NFA iso here. Call it Thompson's construction?. Mention
-  its mechanized}
-
 \newcommand{\Agda}{Formalized in Agda}
 \begin{theorem}[Determinization, \Agda]
   Given an NFA $N$, there exists a DFA $D$ such that
@@ -1554,53 +1551,116 @@ Therefore $\Trace_{N}(N.\mathsf{init})$ and $\Trace_{D}(D.\mathsf{init})$ are
 weakly equivalent, and thus $N$ and $D$ recognize the same language of strings.
 \end{proof}
 
+\begin{theorem}[Thompson's Construction, \Agda]
+  Given a regular expression $R$, there exists an NFA $N$ such that $R$ is
+  strongly equivalent to $\Trace_{N}(N.\init)$.
+\end{theorem}
 
-\subsection{The Dyck Grammar}
-%% 3. Dyck language
-The Dyck grammar $D$ for balanced parens (summarize what it is + citation)
-
-\steven{somewhere in here, sneak in the benchmark where the Dyck parser could
-  handle 10's of thousands of characters in about 30s}
-
-
-\steven{this is a VERY loose sketch of the things I want to say about $D$}
-\Cref{fig:DyckAutomaton} presents an automaton $M$ that recognizes $D$. We show this
-precisely by constructing an isomorphism between $D$ and $\Trace_{M}~0~\true$.
-Unlike the finite automata seen thus far, $M$ has infinitely many states --- one
-for each $n : \mathbb{N}$ with an additional fail state. This diverges a bit
-from classical language theory, where the recognizer for $D$ would be encoded as a
-pushdown automaton with finitely many
-states and stack of memory. Such PDAs are encodable in our theory, although they
-are a little cumbersome to use. Moreover, they
-seem overfit to classical reasoning as they don't preserve the grammar up to
-strong equivalence, only weak equivalence in general. \steven{cite Lambek
-  automata and state that is is a secondary goal to preserve as much structure as possible}
-By moving the stack of memory (the nats) into the
-state, we obtain infinitely many states, which is fine bc the states need only
-be a type for us to interface with it.
-
-\steven{TODO sketch proof of equivalence. Mention that it is mechanized}
+\begin{proof}
+In this proof, we present a variant of Thompson's construction
+\cite{thompsonProgrammingTechniquesRegular1968} in which we induct on the
+structure of $R$ to construct strongly equivalent NFAs. We will sketch this
+proof by walking through some of the inductive cases, the remaining cases follow
+similar reasoning and the details may be found in the formalized artifact.
 
 \begin{figure}
   \begin{tikzpicture}[node distance = 17mm ]
-    \node[state, initial, accepting] (0) {$0$};
-    \node[state, right of=0] (1) {$1$};
-    \node[state, right of=1] (2) {$2$};
-    \node[right of=2] (3) {$\dots$};
-    \node[state, below of=0] (fail) {$\mathsf{fail}$};
+    \node[state, initial] (0) {$0$};
+    \node[state, right of=0, accepting] (1) {$1$};
 
-    \path[->] (0) edge[above, bend left] node{\stringquote{(}} (1)
-              (1) edge[below, bend left] node{\stringquote{)}} (0)
-              (1) edge[above, bend left] node{\stringquote{(}} (2)
-              (2) edge[below, bend left] node{\stringquote{)}} (1)
-              (2) edge[above, bend left] node{\stringquote{(}} (3)
-              (3) edge[below, bend left] node{\stringquote{)}} (2)
-              (fail) edge[loop right] node{\stringquote{(}, \stringquote{)}} (fail)
-              (0) edge[left] node{\stringquote{)}} (fail);
+    \path[->] (0) edge[above] node{$c$} (1);
   \end{tikzpicture}
-  \caption{Automaton $M$ for the Dyck grammar}
-  \label{fig:DyckAutomaton}
+  \caption{NFA $N_{c}$ for a single character $c$}
+  \label{fig:litnfa}
 \end{figure}
+
+First handle the case where $R$ is a literal character $c$. The NFA $N_{c}$ pictured in
+\cref{fig:litnfa} is strongly equivalent to the grammar $c$. To demonstrate this
+strong equivalence, we build terms between $c$ and $\Trace_{N_{c}}(N_{c}.\init)$
+and show they are mutually inverse.
+
+Define $f : \ltonl {(c \lto \Trace_{N_{c}}(N_{c}.\init))}$ as follows,
+
+\[
+  a : c \vdash f := \cons(a, \nil) : \Trace_{N_{c}}(N_{c}.\init)
+\]
+
+Define $g : \ltonl {(\Trace_{N_{c}}(N_{c}.\init) \lto c)}$ via induction on the
+trace. Map traces beginning in state 1, which are necessarily built via $\nil$,
+to the linear unit $I$. Then we must handle traces beginning in state 0, which
+are necessarily built via $\cons$. We decompose such a trace into a parse of the
+character $c$ and a trace beginning in state 1. We inductively transform the
+trace beginning in state 1 into a term of type $I$. Finally, we use the right
+unitor to turn a term of type $c \otimes I$ into one of type $c$.
+
+\[\begin{tikzcd}
+    {c \otimes \mathsf{Trace}_{N_{c}}(1)} &
+    {c \otimes I} &
+    c
+	\arrow["{id\otimes g}", from=1-1, to=1-2]
+	\arrow["{}", from=1-2, to=1-3]
+\end{tikzcd}\]
+
+Note that the grammar $c$ is unambiguous, so $g \circ f$ is equal to the
+identity on $c$. Additionally, we can show that $f$ carries the structure of an
+indexed algebra homomorphism for the family of functors defining the trace type
+$\Trace_{N_{c}}$. Because $g$ is defined via induction, it carries the structure
+of an algebra homomorphism as well. Thus, $f \circ g$ is also an algebra
+homomorphism. $f \circ g$ and the identity map are both then algebra
+homomorphisms from $\Trace_{N_{c}}$ to itself. Because $\Trace_{N_{c}}$ is the
+initial algebra for the relevant family of functors, there is only one
+homomorphism from it to itself and thus $f \circ g = \mathsf{id}$. Therefore,
+$f$ and $g$ are mutually inverse and the regular expression is strongly
+equivalent to the traces through the NFA in this case.
+
+Now consider the case where $R$ is the disjunction of two regular expressions
+$R_{1}$ and $R_{2}$. Inductively, we may build NFAs $N_{1}$ and $N_{2}$ that are
+strongly equivalent to $R_{1}$ and $R_{2}$, respectively. We define $N_{\oplus}$
+as a new NFA built as the disjunction of $N_{1}$ and $N_{2}$.
+$N_{\oplus}.\states$ comprises the states from $N_{1}$, the states from
+$N_{2}$, and a new marked initial state. The accepting states are precisely
+those that were accepting in the subautomata. The initial state has an
+$\epsilon$-transition to each of the initial states of the subautomata. Once in
+$N_{1}.\init$, the downstream transitions are a copy of those in $N_{1}$,
+likewise for $N_{2}.\init$.  That is, $N_{\oplus}$ contains a copy of each
+$N_{1}$ and $N_{2}$, and we choose which copy to inhabit by deciding which
+$\epsilon$-transition out of the initial state to take. A schematic
+representation of this automaton is given in \cref{fig:disjunctionnfa}.
+
+\begin{figure}
+  \begin{tikzpicture}[node distance = 17mm ]
+    \node[state, initial] (init) {$\init$};
+    \node[state, above right of=init] (init1) {$N_{1}.\init$};
+    \node[state, below right of=init] (init2) {$N_{2}.\init$};
+    \node[right of=init1] (dots1) {$\dots$};
+    \node[right of=init2] (dots2) {$\dots$};
+    \node[state, accepting, right of=dots1] (acc1) {$s_{1}$};
+    \node[state, accepting, right of=dots2] (acc2) {$s_{2}$};
+
+    \path[->] (init) edge[below] node{$\epsilon$} (init1)
+              (init) edge[above] node{$\epsilon$} (init2)
+              (init1) edge[above] node{} (dots1)
+              (init2) edge[above] node{} (dots2)
+              (dots1) edge[above] node{} (acc1)
+              (dots2) edge[above] node{} (acc2);
+  \end{tikzpicture}
+  \caption{NFA $N_{\oplus}$ as a disjunction of $N_{1}$ and $N_{2}$}
+  \label{fig:disjunctionnfa}
+\end{figure}
+
+Because $N_{1}$ and $N_{2}$ are each strongly equivalent to $R_{1}$ and $R_{2}$,
+it suffices to show that
+$\Trace_{N_{1}}(N_{1}.\init) \oplus \Trace_{N_{2}}(N_{2}.\init)$ is strongly
+equivalent to $\Trace_{N_{\oplus}}(N_{\oplus}.\init)$.
+
+Just like the case of a single character, we induct on traces when defining this
+strong equivalence. First we map out of $\Trace_{N_{\oplus}}(s)$. If $s$ is a
+state from $N_{1}$, then we send the trace from $N_{\oplus}$
+
+\steven{TODO finish this, my brain isn't working rn}
+
+
+\end{proof}
 
 \subsection{LL(1)}
 %% 4. LL(1) parser
