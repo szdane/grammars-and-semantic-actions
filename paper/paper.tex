@@ -1514,8 +1514,18 @@ be a type for us to interface with it.
 
 \steven{TODO impute LL(1) example, mention that its weak equivalence is mechanized}
 
-\subsection{UnReStRiCtEd}
+\subsection{Unrestricted Grammars}
 %% 5. Expressiveness: Turing Machines
+The expressive power of \theoryabbv spans the entire Chomsky hierachy, as we may
+encode the grammars accepted by Turing machines.
+
+We nonlinearly encode the tape of the Turing machine as
+function from $\mathbb{Z} \to \Gamma$, where $\Gamma$ is your tape alphabet. The
+grammar of traces for a Turing machine linear consumes the input string and
+writes it to the tape. From here, we nonlinear reason about machine transitions.
+We execute the machine and track its current state as part of the nonlinear
+indexing data.
+
 
 %% Make sure to say which results are mechanized
 
