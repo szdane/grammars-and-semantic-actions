@@ -211,7 +211,7 @@ ubiquitous nature of parsing, these would useful components of many
 formally verified software systems: compilers and servers most
 especially. However, language recognition is insufficient for specifying a
 parser, and for this task much of the structured foundations from the theory of
-formal languages is rendered moot. Rather than returning a propositon-valued result, a parser produces a
+formal languages is rendered moot. Rather than returning a proposition-valued result, a parser produces a
 structured \emph{parse tree} adherent to a \emph{formal grammar}.
 The research on such grammars is often performed atop an ad-hoc choice of grammar
 formalism, and results are proven with respect to that formalism. Critically,
@@ -363,7 +363,7 @@ programs in \theoryabbv look like.
 \steven{To save space, each of these example figures can be
   minified/potentially inlined}
 
-To gain intuiton for working in \theoryabbv, we study some examples of
+To gain intuition for working in \theoryabbv, we study some examples of
 grammars and parses of them internal to \theoryabbv. In each of our examples, we will look at
 grammars over the three character alphabet $\{ a , b , c\}$.
 
@@ -424,11 +424,11 @@ arrive at an ordered, linear type system.
 \paragraph{Regular Expressions}
 Next, we demonstrate how to parse a regular expression in \theoryabbv. Similar
 to finite grammars, regular
-expresssions are built inductively using base types, $\oplus$, and $\otimes$ ;
+expressions are built inductively using base types, $\oplus$, and $\otimes$ ;
 however, unlike finite grammars, regular expressions additionally have a
 restricted form of recursion via Kleene star $(\cdot)^{\ast}$.
 
-% TODO this should be beter formatted but can't use listings with \otimes ^{\ast}
+% TODO this should be better formatted but can't use listings with \otimes ^{\ast}
 \begin{figure}
 \begin{align*}
 \data &~A^{*} : L~\where\\
@@ -456,14 +456,14 @@ this paper, we will further discuss the behavior of $\uparrow$.
 At this moment,
 it suffices to read these arrows as allow us to use the reuse the names
 ``$\nil$'' and ``$\cons$''
-as symbols for contructors. That is, the $\nil$ constructor is not linearly
+as symbols for constructors. That is, the $\nil$ constructor is not linearly
 consumed at usage time
 
 Just as in \cref{fig:fingram}, we can show that particular strings match a Kleene
 star. In \cref{fig:kleenestarderivation}, we demonstrate that \stringquote{ab}
 matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene
 star constructors. In this proof tree we expand some syntactic details that are often
-left implicit. For instance, every linear context is parametrized by a nonlinear
+left implicit. For instance, every linear context is parameterized by a nonlinear
 context, which is syntactically separate by a semicolon. If the nonlinear
 context is empty, we may often omit it; however, in this figure we make this
 distinction explicit. Further consider the leaves of the tree. First, the
@@ -575,16 +575,16 @@ inductive type of traces through the machine. An ordered, linear theory is
 integral to our design of \theoryabbv ; however, there are some aspects of parsing that
 cannot be captured through simple linear types alone. Often one wants to define a
 \emph{family} of linear types varying over a set, such as a type of traces through an
-NFA parametrized by the first state in the trace. For the example NFA, the data
+NFA parameterized by the first state in the trace. For the example NFA, the data
 type $\Trace$ is provided in \cref{fig:nfainductive}.
 
 $\Trace~s$ denotes traces through the NFA beginning in state $s$ and ending in
-an accepting state. In this instance there is only a sinlge accepting state, and
+an accepting state. In this instance there is only a single accepting state, and
 thus the traces necessarily end in state 3. Let us dissect the structure
 of $\Trace~s$ in more detail.
 
-There are two kinds of constructors for a trace: those those modelling the
-termination of a trace at a given state and those modelling transitions in the
+There are two kinds of constructors for a trace: those those modeling the
+termination of a trace at a given state and those modeling transitions in the
 NFA.\ The constructor $\mathsf{stop}$ denotes the first kind of constructor and
 terminates the trace in state 3. The constructor
 $\mathsf{2to3}$ denotes the $b$-labeled transition in the NFA from state 2 to state
@@ -601,13 +601,13 @@ for defining the traces of the NFA as a family
 of mutually recursive types varying coherently over indexing data drawn from
 the states of the NFA.
 
-Just as in \cref{fig:kleenestarderivation} shows the \stringquote{ab} matches
-$(a^{*} \otimes b) \oplus c$, we show in TODO CREF that \stingquote{ab} is
-accepted by the NFA representation of this regular expression. This is denote by
-showing that \stringquote{ab} matches the trace grammar where the index is the
+Just as \cref{fig:kleenestarderivation} shows the \stringquote{ab} matches
+$(a^{*} \otimes b) \oplus c$, we show in \cref{fig:nfaderivation} that \stingquote{ab} is
+accepted by the NFA representation of this regular expression. This is denoted by
+showing that \stringquote{ab} matches the trace grammar when the index is the
 initial state of the NFA.\ Further, as we
 will see in LATER SECTION, we can derive an isomorphism between parses of the
-regular expression and accepting traces of the corresponding NFA.
+regular expression and accepting traces of their corresponding NFA.
 
 \begin{figure}
   \begin{tikzpicture}[node distance = 25mm ]
@@ -665,7 +665,7 @@ regular expression and accepting traces of the corresponding NFA.
   \mathsf{stop}))) : \Trace~1}
 \end{mathpar}
 \caption{\stringquote{ab} is accepted by the NFA for $(a^{*} \otimes b) \oplus c$}
-\label{fig:kleenestarderivation}
+\label{fig:nfaderivation}
 \end{figure}
 
 %% 3. Third example: NFA traces to show the indexed inductive types
@@ -1242,7 +1242,8 @@ Each choice of connective has direct implications on the expressivity of
 grammar semantics is placed in
 the Chomsky hierarchy.
 
-\paragraph{Regular Expressions} We may realize regular expression as a subtheory
+\paragraph{Regular Expressions}
+We may realize regular expression as a subtheory
 of our language by restricting the type constructors to the
 linear unit, characters, $\otimes$, $\oplus$, and Kleene star. Classically, the
 languages recognized by these are exactly the regular languages --- the lowest
@@ -1267,11 +1268,11 @@ calculus, which of course induces a semantics of unrestricted grammars.
 \paragraph{Indexed Grammars}
 The LNL dependent types can be used to encode Aho's indexed grammars
 \cite{AhoIndexed} internal to \theoryabbv. Although, we can define strictly more
-things with this non-linear index, as we have unstricted access to the index
+things with this non-linear index, as we have unrestricted access to the index
 whereas Aho's grammars can only manipulate it in a particular way.
 
 \steven{Elaborate on these, and note that they are bw context free and context
-  sensitive on the chomsky hierarchy}
+  sensitive on the Chomsky hierarchy}
 
 \section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
@@ -1310,7 +1311,7 @@ there's a map $\top \to A \oplus \neg A$ --- then call $A$ \emph{decidable}.
 Grammars $A$ and $B$ are \emph{weakly equivalent} if there exists maps
 $f : A \to B$ and $g : B \to A$.
 
-If $f$ and $g$ form an isomorphsim, then $A$ and $B$ are \emph{strongly
+If $f$ and $g$ form an isomorphism, then $A$ and $B$ are \emph{strongly
   equivalent}.
 \steven{TODO cite that these are the same as Chomsky's notions of equivalence}
 
@@ -1327,21 +1328,145 @@ naturally.
 
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
-\steven{How much is worth explicitly walking through? The examples from earlier
-  give motivation, and we are pressed for space}
 
 \paragraph{Regex-NFA/Thompson}
-\steven{TODO put regex-NFA iso here. Call it Thompson's constructon?. Mention
+
+\steven{TODO put regex-NFA iso here. Call it Thompson's construction?. Mention
   its mechanized}
 
 \paragraph{Determinization of an NFA}
-\steven{TODO put determinzation here. Mention its mechanized}
+\newcommand{\Agda}{Formalized in Agda}
+\begin{theorem}[Determinization, \Agda]
+  Given an NFA $N$, there exists a DFA $D$ such that
+  $\Trace_{N}~N.\mathsf{init}$ is weakly equivalent to $\Trace_{D}~D.\mathsf{init}$.
+\end{theorem}
+
+\begin{proof}
+  We present a variant of the classic powerset construction CITE. First, we build
+  the DFA $D$. Define the
+  states of $D$ to be the $\mathbb{P}_{\epsilon}(N.\mathsf{states})$ --- the type of $\epsilon$-closed subsets of
+  $N.\mathsf{states}$. A subset is accepting in $D$ if it contains an accepting state
+  from $N$. Construct the initial state of $D$ as the
+  $\epsilon$-closure of $N.\mathsf{init}$. Lastly define the transtion function
+  of $D$ to send the subset $X$ under the character $c$ to the
+  $\epsilon$-closure of all the states reachable from $X$ via a transition
+  labelled with the character $c$.
+
+  We demonstrate the weak equivalence between $\Trace_{N}~(N.\mathsf{init})$ and
+  $\Trace_{D}~(D.\mathsf{init})$ by constructing morphisms between the two
+  grammars.
+
+  To build a term
+  $\Trace_{N}~(N.\mathsf{init}) \vdash \Trace_{D}~(D.\mathsf{init})$, it
+  suffices to construct the stronger term
+
+  \[
+    f : \ltonl {\left(\Trace_{N}~(s) \lto \bigwith\limits_{X : D.\mathsf{states}} \bigwith\limits_{s \in X} \Trace_{D}~X\right)}
+  \]
+  where $s$ is arbitary and then instantiate it at $s = N.\mathsf{init}$, $X = D.\mathsf{init}$.
+
+Because
+the indexing state $s$ is now arbitrary, we can define the desired term via
+induction the trace through the NFA.
+
+If the NFA trace is terminating at
+accepting state
+$q$ and $q \in X$,
+then we return a trace in $D$ that terminates at
+$X$, which is accepting because it contains the accepting state $q$.
+
+If the NFA trace is a labeled transition $s \overset{c}{\to} s'$ such that
+$s \in X$, then we first decompose the trace to a parse of the character $c$ and a
+trace starting from $s'$ --- that is, to a term of type
+$c \otimes \Trace_{N}(s')$. We then inductively call $f$ on traces out of $s'$
+to get traces in a parse of $c$ concatenated with a family of traces
+parametrized by $\epslion$-closed subsets containing $s'$.
+. We instantiate this family at $\delta_{c}(X)$, as
+$s'$ is reachable from $s$ by a single transition labelled by $c$, so
+$s' \in \overline{\epsilon}\overline{c}{X} = D.\delta_{c}(X)$. Therefore we can
+linearly combine the parse of character $c$ and the trace out of $D.\delta_{c}(X)$
+to get a trace in $D$ rooted at $X$.
+
+
+\[\begin{tikzcd}
+    {c \otimes \mathsf{Trace}_{N}(s')} &
+    {c \otimes \bigwith\limits_{Y : D.\mathsf{states}} \bigwith\limits_{s' \in Y} \Trace_{D}~Y} &
+    {c \otimes \mathsf{Trace}_{D}(D.\delta_{c}(X))} & {\mathsf{Trace}_{D}(X)}
+	\arrow["{id\otimes f}", from=1-1, to=1-2]
+	\arrow["{id\otimes\pi}", from=1-2, to=1-3]
+	\arrow["{D.\mathsf{cons}}", from=1-3, to=1-4]
+\end{tikzcd}\]
+
+Lastly, if the NFA trace was an $\epsilon$-transition
+$s \overset{\epsilon}{\to} s'$ with $s \in X$, then the construction is quite similar. In this
+case, we again inductively call $f$ on traces out of $s'$ except we instantiate
+the choice of subset containing $s'$ with $X$ itself. We may do this as all
+states in $D$ are taken to be $\epsilon$-closed, therefore $s' \in X$ because
+$s$ is in $X$ and $\epsilon$-transitions to $s'$.
+
+\[\begin{tikzcd}
+    {\mathsf{Trace}_{N}(s')} &
+    {\bigwith\limits_{Y : D.\mathsf{states}} \bigwith\limits_{s' \in Y} \Trace_{D}~Y} &
+    {\mathsf{Trace}_{D}(X)}
+	\arrow["{id\otimes f}", from=1-1, to=1-2]
+	\arrow["{id\otimes\pi}", from=1-2, to=1-3]
+\end{tikzcd}\]
+
+This concludes the construction of $f$.
+
+To construct a term from DFA traces to NFA traces, we similarly strengthen our
+induction hypothesis and build a term
+\[
+  g : \ltonl {\left( \Trace_{D}(X) \lto \bigoplus\limits_{s : N.\mathsf{states}}\bigoplus\limits_{s \in X} \Trace_{N}(s) \right)}
+\]
+
+Let's turn our heads for a moment to the content behind the traces in $D$.
+Traces from subset $X$ to subset $Y$ denote the \emph{existence} of some trace
+in the $N$ from some $x \in X$ to some $y \in Y$. In general it is not clear how
+to extract out a choice of trace in $N$, which is what $g$ is asking of us.
+However, we may further take the states and transitions of $N$ to be ordered.
+This allows us to
+induce an order on traces in $D$ from $X$ to $Y$. From these orderings we can then
+define the necessary choice functions on each type by taking the smallest with
+respect to the ordering.
+
+We define $g$ by induction on traces through $D$. First if the trace stops at
+some accepting $\epsilon$-closed subset $X$, then we may choose some state
+$s \in X$ such that $s$ is accepting and terminate the trace in $N$ at $s$.
+
+Next if the trace in $D$ is defined via transition
+$X \overset{c}{\to} D.\delta_{c}(X)$ then we may choose some state in
+$s \in D.\delta_{c}(X)$. Inductively, $g$ sends the trace rooted at
+$D.\delta_{c}(X)$ to one rooted at $s$. By definition of $D.\delta_{c}(X)$,
+there exists some $s' \in X$ such that $s'$ tranitions to $s$ by some number of
+$\epsilon$-transitions followed by a transition labeled by $c$.
+We order all
+such traces of this form and choose the smallest one, which is then linearly
+combined with the parse of $c$ to build an $N$ trace. While using
+$N.\mathsf{cons}$ to build this final trace, we appropriately shift the indexing
+data to $s'$, which is adherent to the defintion of $D.\delta_{c}(X)$. This concludes the
+definition of $g$.
+
+\[\begin{tikzcd}
+    {c \otimes \mathsf{Trace}_{D}(D.\delta_{c}(X))} &
+    {c \otimes \bigoplus\limits_{s : N.\mathsf{states}} \bigoplus\limits_{s \in D.\delta_{c}(X)} \Trace_{N}~s} \\
+    {\bigoplus\limits_{s' : N.\mathsf{states}} \bigoplus\limits_{s' \in X} \Trace_{N}~s'} &
+    {\bigoplus\limits_{s : N.\mathsf{states}} \bigoplus\limits_{s \in D.\delta_{c}(X)} \left( c \otimes \Trace_{N}~s \right)}
+	\arrow["{id\otimes g}", from=1-1, to=1-2]
+	\arrow["{\mathsf{dist}}", from=1-2, to=2-2]
+	\arrow["{}", from=2-2, to=2-1]
+\end{tikzcd}\]
+
+Therefore $\Trace_{N}(N.\mathsf{init})$ and $\Trace_{D}(D.\mathsf{init})$ are
+weakly equivalent, and thus $N$ and $D$ recognize the same language of strings.
+\end{proof}
+
 
 \subsection{The Dyck Grammar}
 %% 3. Dyck language
 The Dyck grammar $D$ for balanced parens (summarize what it is + citation)
 
-\steven{somewhere in here, sneak in the benchmark where the dyck parser could
+\steven{somewhere in here, sneak in the benchmark where the Dyck parser could
   handle 10's of thousands of characters in about 30s}
 
 
@@ -1355,7 +1480,7 @@ pushdown automaton with finitely many
 states and stack of memory. Such PDAs are encodable in our theory, although they
 are a little cumbersome to use. Moreover, they
 seem overfit to classical reasoning as they don't preserve the grammar up to
-strong equivalence, only weak equivalnce in general. \steven{cite lambek
+strong equivalence, only weak equivalence in general. \steven{cite Lambek
   automata and state that is is a secondary goal to preserve as much structure as possible}
 By moving the stack of memory (the nats) into the
 state, we obtain infinitely many states, which is fine bc the states need only
@@ -1395,7 +1520,7 @@ be a type for us to interface with it.
 %% Make sure to say which results are mechanized
 
 \subsection{Semantic Actions}
-\steven{TODO edit this. synthesize it with the later presentation of sematnic
+\steven{TODO edit this. synthesize it with the later presentation of semantic
   actions as models, and then remove the model section}
 All constructions discussed until now detail how a string may be parsed into a
 \emph{concrete} syntax tree; however, this is often not the representation that later
@@ -1407,7 +1532,7 @@ structured representation of the underlying data. The procedure that takes in a
 concrete syntax tree and returns an abstract one is referred to as a
 \emph{semantic action}.
 
-Given a linear type $A$, the inhaitants of $A$ serve as concrete syntax. We may
+Given a linear type $A$, the inhabitants of $A$ serve as concrete syntax. We may
 then chose a non-linear type $X$ that serves as abstract syntax. A semantic
 action can then be defined as $\square (A \lto \Delta X)$ where
 $\Delta X = \LinSigTy x X \top$.
@@ -2201,7 +2326,7 @@ introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
 %
 \paragraph{The $G$ Modality}
 \steven{Rename this}
-\steven{Compare to persistance modalities from separation logic}
+\steven{Compare to persistence modalities from separation logic}
 The $G$ modality provides the embedding of linear types in the empty context
 into non-linear types. The introduction and elimination forms for $G A$ obey the
 same rules as given in \cite{bentonMixedLinearNonlinear1995} and \cite{krishnaswami_integrating_2015}.
@@ -2565,7 +2690,7 @@ languages. A significant difference between them is that while Kleene
 algebras can reason about language containment, Kleene categories can
 reason about \emph{ambiguity}, \emph{strong equivalence} of grammars.
 
-\subsection{Lambek Hyperdoctines and Chomsky Hyperdoctrines}
+\subsection{Lambek Hyperdoctrines and Chomsky Hyperdoctrines}
 
 Though Kleene categories are expressive enough to reason about
 concepts that are outside of reach of Kleene algebras, their
