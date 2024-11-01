@@ -473,12 +473,12 @@ star. In \cref{fig:kleenestarderivation}, we demonstrate that \stringquote{ab}
 matches $(a^{*} \otimes b) \oplus c$ through repeated application of the Kleene
 star constructors. In this proof tree we expand some syntactic details that are often
 left implicit. For instance, every linear context is parameterized by a nonlinear
-context, which is syntactically separate by a semicolon. If the nonlinear
+context, which is syntactically separated by a semicolon. If the nonlinear
 context is empty, we may often omit it; however, in this figure we make this
 distinction explicit. Further consider the leaves of the tree. First, the
 leaves involving the constructors are nonlinear terms, and thus they occur in
 the nonlinear empty context. Then we explicit cast from
-an nonlinear $uparrow$-wrapped type into a linear one. Such casts may often be
+an nonlinear $\uparrow$-wrapped type into a linear one. Such casts may often be
 made implicitly, such as in $\cref{fig:kleeneabstractproof}$.
 
 
@@ -1729,29 +1729,43 @@ elided details may be found in the Agda formalization.
 The expressive power of \theoryabbv spans the entire Chomsky hierachy, as we may
 encode the acccepting traces of Turing machines as linear types.
 
+\newcommand{\Turing}{\mathsf{Turing}}
+\newcommand{\snoc}{\mathsf{snoc}}
+
 \begin{figure}
 \begin{align*}
-\data &~\mathsf{Turing}~(t : \mathbb{Z} \to \Gamma): L~\where\\
-      & \mathsf{nil} : \ltonl {\left(\LinPiTy {t} {\mathbb{Z} \to \Gamma} {\mathsf{Turing}~t} \right)} \\
-      & \mathsf{snoc} : \ltonl {(\mathsf{Turing} \lto A^{*} \lto A^{*})}
+\data &~\Turing~(t : \mathbb{Z} \to \Gamma): L~\where\\
+      & \nil : \ltonl {\left(\LinPiTy {t} {\mathbb{N} \to \Gamma} {\Turing~t} \right)} \\
+      & \snoc : \ltonl {\left( \LinPiTy {c}{\Sigma}{\LinPiTy {t} {\mathbb{N} \to \Gamma} {\Turing(\mathsf{push}(c , t)) \lto c \lto \Turing(t)}} \right)}
 \end{align*}
 \caption{Kleene Star as an inductive non-linear type}
 \label{fig:turinginductive}
 \end{figure}
 
-However, unlike
-the traces through the automata we have seen until now, the encoding of Turing
-machines
+We nonlinearly encode the tape of a (one-sided) Turing machine as
+function from $\mathbb{N} \to \Gamma$, where $\Gamma$ is the tape alphabet.
 
-We nonlinearly encode the tape of the Turing machine as
-function from $\mathbb{Z} \to \Gamma$, where $\Gamma$ is your tape alphabet. The
-grammar of traces for a Turing machine linear consumes the input string and
-writes it to the tape. From here, we nonlinear reason about machine transitions.
-We execute the machine and track its current state as part of the nonlinear
-indexing data.
+We may then define a term of type
+$\mathsf{parseTape} : \ltonl {\left( \stringg \lto \LinSigTy {t} {\mathbb{N} \to \Gamma} {\Turing(t)} \right)}$.
+In this manner, all of the interesting computations that the Turing machine
+would do occur solely inside of the nonlinear index. That is,
+$\mathsf{parseTape}$ does not discern which strings are accepted by the Turing
+machine, nor does it do any computation. $\mathsf{parseTape}$ simply loads the
+input string into the initial spaces on the tape.
 
+Once the string has been loaded onto the tape, we may further define the
+following term to run the Turing machine.
+\[
+  \mathsf{run} : \ltonl {\left( \bigoplus\limits_{t : \mathbb{N} \to \Gamma} \Turing(t) \lto \bigwith\limits_{\mathsf{fuel} : \mathbb{N}} \mathsf{Maybe} \left( \bigoplus\limits_{t : \mathbb{N} \to \Gamma} \bigoplus\limits_{b : \Bool} \bigoplus\limits_{\mathsf{trace} : \mathsf{TuringTrace}(b , t)} \Turing(t) \right) \right)}
+\]
 
-%% Make sure to say which results are mechanized
+where $\mathsf{TuringTrace}$ is a nonlinear type denoting terminating traces
+through the Turing machine. Note that $\mathsf{run}$ returns a $\mathsf{Maybe}$
+type in a fuel parameter. Turing machines may not terminate. If they do
+terminate within $\mathsf{fuel}$-many steps, then we return the trace along with
+the current tape and a boolean denoting if the trace is accepting or rejcting.
+If the trace does not terminate within the alloted amount of fuel, then we
+timeout and return nothing.
 
 \subsection{Semantic Actions}
 \steven{TODO edit this. synthesize it with the later presentation of semantic
