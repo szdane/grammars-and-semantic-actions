@@ -30,6 +30,8 @@
 \newcommand{\lto}{\multimap}
 \newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
 \newcommand{\String}{\textbf{String}}
+\newcommand{\stringg}{\mathsf{string}}
+\newcommand{\charg}{\mathsf{char}}
 \newcommand{\Set}{\mathbf{Set}}
 \newcommand{\Syn}{\mathbf{Synx}}
 \newcommand{\SemAct}{\mathbf{SemAct}}
@@ -104,6 +106,7 @@
 \newcommand{\steven}[1]{\ifdraft{\color{orange}[{\bf Steven says}: #1]}\fi}
 \renewcommand{\max}[1]{\ifdraft{\color{blue}[{\bf Max says}: #1]}\fi}
 \newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro says}: #1]}\fi}
+\newcommand{\nathan}[1]{\ifdraft{\color{green}[{\bf Nathan says}: #1]}\fi}
 \newcommand{\pipe}{\,|\,}
 
 \begin{document}
@@ -697,8 +700,8 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
                                                   \mathsf{Empty} \pipe
                                                   \mathsf{Unit} \pipe
                                                   \mathsf{SPF}\,X\pipe U \pipe L
-                                                  \pipe \ltonl A \pipe \sum_{x:X} Y
-                                                  \pipe \prod_{x:X} Y\pipe M =_A
+                                                  \pipe \ltonl A \pipe \sum\limits_{x:X} Y
+                                                  \pipe \prod\limits_{x:X} Y\pipe M =_A
                                                   N \\
     \textrm{linear contexts} & \Delta & ::= & \cdot \pipe \Delta , a:A\\
     \textrm{linear types} & A , B , C & ::= &
@@ -1244,98 +1247,125 @@ types is standard, so below we focus on the linear syntax.
 \steven{Do we need to say anything about the equalizer proofs being unique in
   judgemental equality figure?}
 
-\subsection{Subtheories}
-Each choice of connective has direct implications on the expressivity of
-\theoryabbv. In particular, the set of connectives used will determine where the
-grammar semantics is placed in
-the Chomsky hierarchy.
+% \paragraph{Regular Expressions}
+% We may realize regular expression as a subtheory
+% of our language by restricting the type constructors to the
+% linear unit, characters, $\otimes$, $\oplus$, and Kleene star. Classically, the
+% languages recognized by these are exactly the regular languages --- the lowest
+% on the Chomsky hierarchy.
 
-\paragraph{Regular Expressions}
-We may realize regular expression as a subtheory
-of our language by restricting the type constructors to the
-linear unit, characters, $\otimes$, $\oplus$, and Kleene star. Classically, the
-languages recognized by these are exactly the regular languages --- the lowest
-on the Chomsky hierarchy.
+% \paragraph{$\mu$-Regular Expressions} Similarly, we may restrict the connectives
+% to be linear unit, characters, $\otimes$, $\oplus$, and arbitrary recursion via
+% left-fixed point rather than only Kleene star.
+% Instead of regular expressions these correspond to Lei{\ss}'s $\mu$-regular
+% expressions, which are known to be equivalent to context-free grammars
+% \cite{leiss,krishnaswami_typed_2019}.
 
-\paragraph{$\mu$-Regular Expressions} Similarly, we may restrict the connectives
-to be linear unit, characters, $\otimes$, $\oplus$, and arbitrary recursion via
-left-fixed point rather than only Kleene star.
-Instead of regular expressions these correspond to Lei{\ss}'s $\mu$-regular
-expressions, which are known to be equivalent to context-free grammars
-\cite{leiss,krishnaswami_typed_2019}.
+% \paragraph{Beyond Context-Free Grammars} The previous two subtheories induce as semantics
+% regular grammars and context-free grammars, respectively; however, by including
+% the LNL dependent types we may actually express the entirety of the Chomsky
+% hierarchy. Through use of the LNL dependent types, we may encode indexed
+% grammars, which are known to be properly between context-free and
+% context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
+% will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
+% calculus, which of course induces a semantics of unrestricted grammars.
 
-\paragraph{Beyond Context-Free Grammars} The previous two subtheories induce as semantics
-regular grammars and context-free grammars, respectively; however, by including
-the LNL dependent types we may actually express the entirety of the Chomsky
-hierarchy. Through use of the LNL dependent types, we may encode indexed
-grammars, which are known to be properly between context-free and
-context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
-will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
-calculus, which of course induces a semantics of unrestricted grammars.
+% \paragraph{Indexed Grammars}
+% The LNL dependent types can be used to encode Aho's indexed grammars
+% \cite{AhoIndexed} internal to \theoryabbv. Although, we can define strictly more
+% things with this non-linear index, as we have unrestricted access to the index
+% whereas Aho's grammars can only manipulate it in a particular way.
 
-\paragraph{Indexed Grammars}
-The LNL dependent types can be used to encode Aho's indexed grammars
-\cite{AhoIndexed} internal to \theoryabbv. Although, we can define strictly more
-things with this non-linear index, as we have unrestricted access to the index
-whereas Aho's grammars can only manipulate it in a particular way.
-
-\steven{Elaborate on these, and note that they are bw context free and context
-  sensitive on the Chomsky hierarchy}
+% \steven{Elaborate on these, and note that they are bw context free and context
+%   sensitive on the Chomsky hierarchy}
 
 \section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
-
-\steven{this section is mostly word vomit, need to edit}
+This section explores the applications of \theoryabbv to conducting formal
+gramamr theory. We demonstrate that several classical notions and constructions
+integral to the theory of formal languages are faithfully represented
+in \theoryname. By encoding well-established formal grammar concepts, we ensure
+that our framework remains grounded in the
+foundational principles of formal language theory while opening the door to
+compositional formal verification of parsers.
 
 \subsection{Grammar Properties}
-\steven{Mention that $\top$ and $\String$ are iso. Highlight this as a needed axiom}
+
+\steven{Need an intro for this subsection}
 
 %% 1. Basic concepts: unambiguity, parseability, weak and strong equivalence
 \paragraph{Unambiguity}
-In the grammars-as-presheaves model of \theoryabbv, we say that a grammar is unambiguous if there is at most
-one parse tree for any input string. There are several ways to capture this
-concept inside of the theory of \theoryabbv.
+Ordinarily, we think of a formal grammar as unambiguous when there is at most
+one parse tree for any input string; however, this description of unambiguity is
+a semantic property that is not expressible in the syntax of \theoryabbv. Rather
+than capturing this uniqueness aspect directly, we provide several notions
+internal to \theoryabbv that imply unambiguity in the grammars model.
 
-In the presence of distributive coproducts, the following are equivalent:
+We say that $A$ is \emph{unambiguous} if the unique map $! : A \to \top$ to the
+terminal object is a monomorphism. Further, in the presence of distributive coproducts, the following are equivalent:
 \begin{itemize}
   \item $A$ is an unambiguous grammar
-  \item The morphism $! : A \to \top$ is a monomorphism
   \item Given a grammar $B$, all morphisms $B \to A$ are equal
   \item $A \& A \cong A$
 \end{itemize}
 
-\paragraph{Parseability}
-We say $A$ is \emph{parseable} if there exists a type $B$ and a map
-$\top \to A \oplus B$. Because $\top \cong \String$, this says that any string
-can be parsed into either an $A$ or a $B$.
+\paragraph{A Grammar of Strings}
+Define $\charg$ to be the disjunction of characters in the alphabet $\Sigma$,
+$\charg = \LinSigTy {c} {\Sigma} c$. Then define a linear type of strings,
+$\stringg = \charg^{*}$. In the grammars model, we may construct an
+isomorphism between $\top$ and $\stringg$. Thus when building parsers, we may wish to enforce this
+syntactically by including $\top \cong \stringg$ as an axiom.
 
-If $\top \cong A \oplus B$, call $A$ \emph{unambiguously parseable}.
+\paragraph{Parseability}
+We say $A$ is \emph{parseable} if there exists a grammar $B$ and a map
+$\top \to A \oplus B$. Taking $\top \cong \stringg$, a grammar $A$ is parseable
+exactly when we may read an arbitrary string into a parse of $A$ or a $B$-valued
+refutation.
 
 \paragraph{Decidability}
-In the case that $A$ is parseable with respect to $\neg A$ --- i.e.
+In the case that $A$ is parseable with respect to $\neg A$ --- i.e.\
 there's a map $\top \to A \oplus \neg A$ --- then call $A$ \emph{decidable}.
 
 \paragraph{Equivalence}
-Grammars $A$ and $B$ are \emph{weakly equivalent} if there exists maps
-$f : A \to B$ and $g : B \to A$.
+In \cite{chom1963}, Chomsky differentiates between the weak generative capacity
+of a formal grammar --- the set of strings accepted by it --- and its strong
+generative capacity --- the set of ``structural descriptions'', or parse trees,
+that it generates. Two grammars are said to be \emph{weakly equivalent} if they
+agree in their weak generative capacity, and likewise \emph{strongly equivalent}
+if they agree in their strong generative capacity. We aim to recover each of
+these notions of equivalence internally.
 
-If $f$ and $g$ form an isomorphism, then $A$ and $B$ are \emph{strongly
-  equivalent}.
-\steven{TODO cite that these are the same as Chomsky's notions of equivalence}
+Internal to \theoryabbv, we define grammars $A$ and $B$ to be \emph{weakly equivalent} if there exists maps
+$f : A \to B$ and $g : B \to A$. Note that in the grammars model, this implies the expected equality on
+the set of accepted strings.
 
-The induced notion of isomorphism in $\Grammar$ encodes that two grammars are equivalent if there is
-a bijective translation of parses. In other words, two grammars are isomorphic
-if they capture the same structural descriptions of strings, which is
-precisely Chomsky's notion of \emph{strong equivalence} of
-grammars \cite{chom1963}. In works like
-\cite{yoshinaga2002formal}, this notion of strong equivalence is often treated
-like the appropriate choice of ``sameness'' for two grammars. When abstracting over the latent
+If $f$ and $g$ form an isomorphism, then $A$ and $B$ defined to be \emph{strongly
+  equivalent}. This implies Chomsky's notion of strong equivalence, as for any
+input string $w$
+$A \cong B$ induces a bijective translation of parses $A w \cong B w$.
+When abstracting over the latent
 structure of formal grammars and describing it in the the language of
-categories, it is encouraging to see the same definition of equivalence arise
-naturally.
+categories, it is encouraging to see the same definition of strong equivalence
+emerge naturally.
 
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
+
+Regular expressions
+are among one of the most studied and
+well-understood concepts in all of computer science. Pratically, they are
+essential tools for lexical analysis and many text
+processing tasks. So they are a natural concept to encoding into our
+domain-specific grammars language.
+
+Nearly every theoretical discussion of regular expressions is accompanied by a
+discussion of finite automata, as it is well known that regular expressions and finite automata are
+equivalent as grammar formalisms. In this section, we make the equivalences
+between regular expressions and finite automata precise by encoding two theorems
+from classical language theory: (1) every regular expression is strongly equivalent
+to the traces through some nondeterministic finite automaton (NFA); and, (2) for
+every NFA, there is some deterministic finite automaton (DFA) such that the type
+of traces through the NFA is weakly equivalent to the type of traces through the DFA.
 
 \newcommand{\states}{\mathsf{states}}
 \newcommand{\labelt}{\mathsf{label}}
@@ -1347,6 +1377,10 @@ naturally.
 \newcommand{\dst}{\mathsf{dst}}
 \newcommand{\epssrc}{\epsilon\mathsf{src}}
 \newcommand{\epsdst}{\epsilon\mathsf{dst}}
+
+\paragraph{Regular Expressions} The theory of regular expressions emerges as a
+subtheory of \theoryabbv by restricting the typing connectives to only use
+$\otimes$ and $\oplus$ generated over $\bot$, $I$, and characters drawn from $\Sigma$.
 
 \paragraph{Nondeterministic Finite Automata} In \cref{sec:type-theory-examples}, we saw the demonstration of
 one particular NFA corresponding to the regular expression
@@ -1397,7 +1431,7 @@ $\epsilon$-transition and construct a trace beginning at the source of the $\eps
 \end{figure}
 
 \paragraph{Determinstic Finite Automata}
-Just as above, we provide a specification for an arbitrary DFA. A DFA $D$ is
+Just as above, we provide a specification for an arbitrary DFA.\ A DFA $D$ is
 given by the following data,
 
 \begin{itemize}
@@ -1432,7 +1466,7 @@ trace out of the state $D.\delta_{c}(s)$.
 \end{theorem}
 
 \begin{proof}
-  We present a variant of the classic powerset construction CITE. First, we build
+  We present a variant of the Rabin and Scotts's classic powerset construction \cite{rabinFiniteAutomataTheir1959}. First, we build
   the DFA $D$. Define the
   states of $D$ to be the $\mathbb{P}_{\epsilon}(N.\mathsf{states})$ --- the type of $\epsilon$-closed subsets of
   $N.\mathsf{states}$. A subset is accepting in $D$ if it contains an accepting state
@@ -1510,7 +1544,7 @@ induction hypothesis and build a term
   g : \ltonl {\left( \Trace_{D}(X) \lto \bigoplus\limits_{s : N.\mathsf{states}}\bigoplus\limits_{s \in X} \Trace_{N}(s) \right)}
 \]
 
-Let's turn our heads for a moment to the content behind the traces in $D$.
+For a moment, let us turn our attention to the content behind the traces in $D$.
 Traces from subset $X$ to subset $Y$ denote the \emph{existence} of some trace
 in the $N$ from some $x \in X$ to some $y \in Y$. In general it is not clear how
 to extract out a choice of trace in $N$, which is what $g$ is asking of us.
@@ -1653,13 +1687,36 @@ it suffices to show that
 $\Trace_{N_{1}}(N_{1}.\init) \oplus \Trace_{N_{2}}(N_{2}.\init)$ is strongly
 equivalent to $\Trace_{N_{\oplus}}(N_{\oplus}.\init)$.
 
-Just like the case of a single character, we induct on traces when defining this
-strong equivalence. First we map out of $\Trace_{N_{\oplus}}(s)$. If $s$ is a
-state from $N_{1}$, then we send the trace from $N_{\oplus}$
+Just like the case of a single character, when building the maps in either
+direction, we strengthen the induction hypothesis by mapping out of traces
+beginning with an arbitrary state then proceed by induction on traces.
 
-\steven{TODO finish this, my brain isn't working rn}
+First, define the
+mapping out of $\Trace_{N_{\oplus}}(s)$. If $s$ is a state from $N_{1}$ then
+send the trace to a trace in $N_{1}$ beginning at $s$. Likewise, if $s$ is from
+$N_{2}$, then we map to a trace in $N_{2}$ beginning at $s$. If $s$ is
+$N_{\oplus}.\init$, then we map the trace to a disjunction of traces
+$\Trace_{N_{1}}(N_{1}.\init) \oplus \Trace_{N_{2}}(N_{2}.\init)$.
 
+In the other direction, we need to map a disjunction of traces through $N_{1}$
+or $N_{2}$ to a trace in $N_{\oplus}$. Without loss of generality, assume that
+the trace came from $N_{1}$. That is, assume we currently have a term of type
+$\Trace_{{N_{1}}}(N_{1}.\init)$ and we aim to construct a term of type
+$\Trace_{N_{\oplus}}(N_{\oplus}.\init)$. We induct on the trace $N$ trace an map
+it over to a trace beginning at the copy of $N_{1}.\init$ in $N_{\oplus}$, and
+then we conclude by using the $\epscons$ constructor to turn this trace into one
+beginning at $N_{\oplus}.\init$.
 
+We show that these maps mutually invert each other by the same sort of argument
+we used with the single character NFA.\ That is, we prove that the each map is a
+homomorphism of algebras and then appeal to the initiality of each of
+$\Trace_{N_{1}}$, $\Trace_{N_{2}}$, and $\Trace_{N_{\oplus}}$ to prove that the
+relevant maps compose to the identity.
+
+In this sketch, we elide the proof that these maps do indeed form homomorphisms.
+Further, we are eliding the needed NFAs for the cases where the regular
+expression is $I$, $\bot$, a Kleene star, or a concatenation. All of these
+elided details may be found in the Agda formalization.
 \end{proof}
 
 \subsection{LL(1)}
