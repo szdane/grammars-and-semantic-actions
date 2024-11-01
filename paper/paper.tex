@@ -93,7 +93,9 @@
 \newcommand{\PiTy}[3]{\textstyle\prod (#1 : #2). #3}
 \newcommand{\SigTy}[3]{\textstyle\sum (#1 : #2). #3}
 \newcommand{\LinPiTy}[3]{\textstyle\bigamp (#1 : #2). #3}
+\newcommand{\LinPiTyLimit}[3]{\bigwith\limits_{#1 : #2} #3}
 \newcommand{\LinSigTy}[3]{\textstyle\bigoplus (#1 : #2). #3}
+\newcommand{\LinSigTyLimit}[3]{\bigoplus\limits_{#1 : #2} #3}
 %% \newcommand{\DepWith}[2]{{\textstyle\bigamp}\limits_{#1}{#2}
 %% \newcommand{\DepPlus}[2]{{\textstyle\bigoplus}\limits_{#1}{#2}
 \newcommand{\GrTy}{\mathsf{Gr}}
@@ -755,7 +757,7 @@ $\Gamma$ containing \emph{only} non-linear variables $\Gamma = x:X,\ldots$.
     \inferrule{\Gamma, x : X ; \Delta  \vdash e : A}
               {\Gamma ; \Delta \vdash \dlamb x e : \LinPiTy x X A}
     \and
-    \inferrule{\Gamma ; \Delta \vdash e : \LinPiTy x X A \\ \Gamma \vdash e' : X}{\Gamma ; \Delta \vdash e\,.\pi\,M : \subst A {e'} x}
+    \inferrule{\Gamma ; \Delta \vdash e : \LinPiTy x X A \\ \Gamma \vdash M : X}{\Gamma ; \Delta \vdash e\,.\pi\,M : \subst A {e'} x}
     %
     \\
     %
@@ -1322,6 +1324,9 @@ $\stringg = \charg^{*}$. In the grammars model, we may construct an
 isomorphism between $\top$ and $\stringg$. Thus when building parsers, we may wish to enforce this
 syntactically by including $\top \cong \stringg$ as an axiom.
 
+Through inclusion of this axiom, $! : \stringg \to \top$ is an isomorphism, and
+thus also a monomorphism. That is, $\stringg$ is unambiguous.
+
 \paragraph{Parseability}
 We say $A$ is \emph{parseable} if there exists a grammar $B$ and a map
 $\top \to A \oplus B$. Taking $\top \cong \stringg$, a grammar $A$ is parseable
@@ -1382,6 +1387,8 @@ of traces through the NFA is weakly equivalent to the type of traces through the
 \newcommand{\init}{\mathsf{init}}
 \newcommand{\src}{\mathsf{src}}
 \newcommand{\dst}{\mathsf{dst}}
+\newcommand{\parse}{\mathsf{parse}}
+\newcommand{\print}{\mathsf{print}}
 \newcommand{\epssrc}{\epsilon\mathsf{src}}
 \newcommand{\epsdst}{\epsilon\mathsf{dst}}
 
@@ -1446,24 +1453,78 @@ given by the following data,
 \item $D.\init$ --- the initial state
 \item $D.\isAcc$ --- a decidable proposition over $D.\states$ denoting which
       states are accepting
-\item $D.\delta$ --- a transition function. Given a character $c$ and a state
+\item $D.\delta$ --- a deterministic transition function. Given a character $c$ and a state
         $s$, $D.\delta_{c}(s)$ is the state for which there is a transition $s \overset{c}{\to} D.\delta_{c}(s)$
 \end{itemize}
 
-The linear type of traces through $D$ is given in \cref{fig:dfatrace}. These
-traces are either terminated in an accepting state with the $\nil$ constructor,
-or the $\cons$ constructor builds a trace out of state $s$ by linearly combining
-a parse of some character $c$ with a
-trace out of the state $D.\delta_{c}(s)$.
-
 \begin{figure}
 \begin{align*}
-\data &~\Trace_{D} : (s : D.\states) \to L~\where\\
-      & \nil : \ltonl {\left( \LinPiTy {s} {D.\states} {\LinPiTy {\mathsf{acc}} {D.\isAcc(s)} {\Trace_{D}~s}} \right)}  \\
-      & \cons : \ltonl {\left( \LinPiTy {c} {\Sigma} {\LinPiTy {s} {D.\states} {c \lto \Trace_{D}~(D.\delta_{c}(s)) \lto \Trace_{D}(s)}} \right)}
+\data &~\Trace_{D} : (s : D.\states) (b : \Bool) \to L~\where\\
+      & \nil : \ltonl {\left( \LinPiTyLimit {s} {D.\states} {\Trace_{D}(s , D.\isAcc(s))} \right)}  \\
+      & \cons : \ltonl {\left( \LinPiTyLimit {c} {\Sigma} {\LinPiTyLimit {s} {D.\states} {c \lto \LinSigTyLimit {b}{\Bool}{\Trace_{D}~(D.\delta_{c}(s), b)} \lto \Trace_{D}(s, b)}} \right)}
 \end{align*}
 \caption{Traces through the DFA $D$ as an indexed inductive type}
 \label{fig:dfatrace}
+\end{figure}
+
+\steven{TODO make the DFA parser figure fit}
+
+The linear type of traces through $D$ is given in \cref{fig:dfatrace}. These
+traces are either terminated in a state $s$ with the $\nil$ constructor. When
+terminating a trace, we tag it with a Boolean that marks if the end state was
+accepting or not. The $\cons$ constructor builds a trace out of state $s$ by linearly combining
+a parse of some character $c$ with a
+trace out of the state $D.\delta_{c}(s)$. The trace built with $\cons$ is
+accepting if and only if the trace out of $D.\delta_{c}(s)$ is accepting.
+
+Because DFAs are deterministic, we are able to prove that their type of traces
+are unambiguous and define a parser for them. In particular we show that
+$\LinPiTy {s} {D.\states} {\LinSigTy {b} {\Bool} \Trace_{D}(s , b)}$ is isomorphic to
+$\stringg$, which simultaneously constructs a parser and demonstrates that
+traces through $D$ is unambiguous. This isomorphism intuitively says that we pay
+unambiguously build traces through $D$ beginning at any state $s$, and further
+that from any trace through $D$ we can uniquely recover the string that built
+the trace.
+
+The first half of the isomorphism,
+$\parse_{D} : \ltonl {\left( \stringg \lto \LinPiTy {s} {D.\states} {\Trace_{D}(s)} \right)}$,
+is defined by induction on strings in \cref{fig:dfaparser}. If this string is empty, then $\parse_{D}$
+defines a linear function that terminates a trace at the input state $s$. If the
+string is nonempty, then $\parse_{D}$ walks forward from the input state $s$ by
+the character at the head of the string.
+
+\begin{figure}
+\[
+\inferrule
+{
+  \cdot \vdash mt := \withlamb {s} {\sigma~(D.\isAcc(b))~(\nil.\pi~s)}   : \LinPiTyLimit {s} {D.\states} {\LinSigTyLimit {b} {\Bool} {\Trace_{D}(s, b)}}
+  \\
+  ch : \charg , tr : \LinPiTyLimit {s} {D.\states} {\LinSigTyLimit {b} {\Bool } {\Trace_{D}(s, b)}} \vdash
+  f := \withlamb {s} {\letin {\sigma~c~p_{c}} {ch} {\letin {\sigma~b~t} {tr(D.\delta_{c}(s))} {\sigma~b~(\cons(p_{c} , t))}}}
+  : \LinPiTyLimit {s} {D.\states} {\LinSigTyLimit {b} {\Bool } {\Trace_{D}(s, b)}}
+}
+{w : \stringg \vdash \parse_{D} := \fold(mt, f)(w) : \LinPiTyLimit {s} {D.\states} {\LinSigTyLimit {b} {\Bool } {\Trace_{D}(s, b)}}}
+\]
+\caption{Parser for DFA traces}
+\label{fig:dfaparser}
+\end{figure}
+
+The second half of the isomorphism,
+$\print_{D} : \ltonl {\left( \LinPiTy {s} {D.\states} {\Trace_{D}(s)} \lto \stringg \right)}$,
+is given in \cref{fig:printdfa} by induction on traces. If the trace is defined
+via $\nil$, then $\print_{D}$ returns the empty string. Otherwise, if the trace
+is defined by $\cons$ then $\parse_{D}$ appends the character $c$ to the output
+string and recurses.
+
+\begin{figure}
+\[
+\inferrule
+{
+}
+{tr : \LinPiTyLimit {s} {D.\states} {\LinSigTyLimit {b} {\Bool } {\Trace_{D}(s, b)}} \vdash asdf : \stringg}
+\]
+\caption{Parser for DFA traces}
+\label{fig:printdfa}
 \end{figure}
 
 \newcommand{\Agda}{Formalized in Agda}
