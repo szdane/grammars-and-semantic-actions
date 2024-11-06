@@ -1065,7 +1065,7 @@ types, terms and axioms that allow us to reason about formal grammars.
 \item (Characters) For each character of our alphabet $c \in \Sigma$, we add a linear type $c \isLinTy$.
 \item (Strings are total) The function $\ltonl{(\String \lto \top)}$ is an isomorphism.\max{for this need to define $\String$, and isomorphism, and possibly we should define $\top$ in more detail earlier? idk}
 \item (Distributivity of $\oplus,\&$) The function  $\ltonl{(\bigoplus\limits_{f : \prod_{x:X} Y(x)}\bigamp\limits_{x:X}A\,x\,(f\,x) \lto \bigamp\limits_{x:X}\bigoplus\limits_{y:Y(x)}A\,x\,y)}$ is an isomorphism.
-\item ($\ltonl$ preserves $\oplus$) The function $\ltonl{(\sum_{x:X}\ltonl{(A\,x)} \lto \ltonl{(\bigoplus\limits_{x:X}A\,x)})}$ is an isomorphism
+\item ($\ltonl$ preserves $\oplus$) The function $\sum_{x:X}\ltonl{(A\,x)} \to \ltonl{(\bigoplus\limits_{x:X}A\,x)}$ is an isomorphism.
 \end{enumerate}
 
 % \steven{TODO the intro to this section is to be condensed based on what is
