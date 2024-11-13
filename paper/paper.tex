@@ -754,9 +754,8 @@ for this type is that its elements are the linear terms that are
 ``resource free'': its introduction rule says we can construct an
 $\ltonl A$ when we have a linear term of type $A$ with no free linear
 variables. This type is used extensively in our examples, playing a
-similar role to the $!$ modality of ordinary linear logic.
-\pedro{We should also reference the persistence modality $\square$
-from separation logic}
+similar role to the $!$ modality of ordinary linear logic or the
+persitent modality $\square$ from separation logic.
 
 %% \begin{figure}
 %%   \[
@@ -2028,10 +2027,21 @@ functor} on the category of sets, also sometimes called an
 \begin{definition}
   Let $I$ and $O$ be sets. A (dependent) \emph{polynomial} (of sets)
   from $I$ to $O$ consists of a set of shapes $S$, a set of positions
-  $P$ and functions $I \leftarrow P \to S \to O$. The \emph{extension}
-  of a polynomial is a functor $\Set/I \to \Set/O$ defined by
-  \max{TODO: fill in details}.
-
+  $P$ and functions $I \xleftarrow f P \xrightarrow g S  \xrightarrow h O$. The \emph{extension}
+  of a polynomial is a functor $\Set/I \to \Set/O$ defined as the
+  composite
+  % https://q.uiver.app/#q=WzAsNCxbMCwwLCJcXFNldC9JIl0sWzMsMCwiXFxTZXQvTyJdLFsxLDAsIlxcU2V0L1AiXSxbMiwwLCJcXFNldC9TIl0sWzAsMiwiZl4qIl0sWzIsMywiXFxQaV9nIl0sWzMsMSwiXFxTaWdtYV9oIl1d
+  \[\begin{tikzcd}
+	    {\Set/I} & {\Set/P} & {\Set/S} & {\Set/O}
+	    \arrow["{f^*}", from=1-1, to=1-2]
+	    \arrow["{\Pi_g}", from=1-2, to=1-3]
+	    \arrow["{\Sigma_h}", from=1-3, to=1-4]
+  \end{tikzcd}\]
+  Where $f^*$ is the pullback functor along $f$; $\Pi_g$ is the depedent
+  product operation and $\Sigma_h$ is the dependent sum operation, which
+  are, respectively, the right and left adjoint of their pullback functors
+  $g^*$ and $h^*$.
+  
   A dependent polynomial functor from $I$ to $O$ is a functor $\Set/I
   \to \Set/O$ that is nautrally isomorphic to the extension of a
   dependent polynomial from $I$ to $O$.
@@ -2907,15 +2917,16 @@ Since the early works in the theory of formal languages, Kleene
 algebras have played an important role in its development. They
 generalize the operations known from regular languages by introducing
 operations generalizing language composition, language union and the
-Kleene star.  More generally, they are defined as inequational theory
+Kleene star.  More generally, they are defined as an inequational theory
 where the inequality is meant to capture language containment. This
-theory is extremely successful, having found applications in algebraic
-path problems, theory of programming languages, compiler optimizations
-and more.
+theory is extremely successful, having found applications in concurrency theory
+\cite{hoare2000concurrent}, software-defined networks \cite{anderson2014netkat},
+theory of programming languages \cite{angus2001kleene}, compiler optimizations
+\cite{kozen2000certification} and more.
 
 A frequently fruitful research direction is exploring varying
 extensions of Kleene algebras, Kleene algebra with tests (KAT) being
-one of the most notable ones. Our approach is radically different from
+one of the most notable ones \cite{kozen1997kleene}. Our approach is radically different from
 most extensions, which usually aim at modifying or adding new
 operations to Kleene algebras, but still keeping it as an inequational
 theory. By adopting a category-theoretic treatment and allowing the
@@ -2927,7 +2938,8 @@ parsing as well.
   poor first pass: perhaps a Kleene category with a full involutive
   subcategory that corresponds to the Boolean algebra?.}
 \steven{What can we say about internalizing Kleene algebra proofs or extensions?}
-\steven{any KA citations needed above?}
+\pedro{As a rule of thumb, I don't think that sketching these ideas
+will get us anything...}
 
 %%    - verified imperative implementation: Lambek logic ala separation
 %%      logic?
