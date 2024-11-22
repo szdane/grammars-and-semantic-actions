@@ -236,6 +236,10 @@ upquote=true
   },
 }
 
+\newif\ifpresenter
+\presentertrue
+\newcommand{\talknotebool}[1]{\ifpresenter{\talknote{1}\fi}}
+
 \author{Steven \inst{1} \and author2 \inst{2}}
 \author{\textbf{Steven Schaefer} \inst{1} \and Nathan Varner \inst{1} \and Pedro
   H. Azevedo de Amorim \inst{2} \\ Max S. New \inst{1}}
@@ -273,9 +277,9 @@ upquote=true
 \metroset{block=fill}
 
 \begin{frame}{Parsing is Everywhere!}
-  \talknote{A parser transforms user input into a machine-readable format}
-  \talknote{Anytime we execute high-level PLs, we rely on a parser}
-  \talknote{Parsers ought to be verified in all verified projects}
+  \talknotebool{A parser transforms user input into a machine-readable format}
+  \talknotebool{Anytime we execute high-level PLs, we rely on a parser}
+  \talknotebool{Parsers ought to be verified in all verified projects}
   \begin{center}
   \begin{tikzpicture}[
     treenode/.style = {shape=rectangle, rounded corners,
@@ -332,7 +336,7 @@ If a parse tree of $w$ for $A$ exists, then $f(w)$ is defined
 \end{block}
 }
 
-\talknote<5>{Completeness is not for free, but is easy to achieve in practice}
+\talknotebool>{Completeness is not for free, but is easy to achieve in practice}
 \onslide<5->{
 \begin{alertblock}{Our Approach}
 Define a domain-specific language in which all parsers are
@@ -350,7 +354,7 @@ Define a domain-specific language in which all parsers are
 \section{A DSL for Verified Parsing}
 
 \begin{frame}{Domain-Specific Language for Verified Parsers}
-   Extends Joachim Lambek's \emph{Syntactic Calculus}
+   Dependent Lambek Calculus
    \begin{itemize}
      \item Non-commutative linear logic
    \end{itemize}
@@ -376,18 +380,14 @@ Define a domain-specific language in which all parsers are
 
 \begin{frame}{Why Linearity?}
   \onslide<1->{An \emph{ordered} and \emph{linear} type system}
-  \begin{itemize}
-    \item<2-> The context is an ordered list of resources
-    \item<3-> Using a linear resource consumes it, no duplication or discarding
-  \end{itemize}
   \[
     \onslide<4->{\boxed{\stringquote{cat} \vdash A}}
   \]
   \vspace{-0.7cm}
   \begin{align*}
-    \onslide<5->{x : {\literal c}, y : {\literal a}, z : {\literal t} & \vdash ((x,y),z) : {\literal c} \otimes {\literal a} \otimes {\literal t}} \\
-    \onslide<6->{{\color{red} x : {\literal c}, y : {\literal a}, z : {\literal t}} & {~\color{red} \not \vdash ((y,x),z) : {\literal a} \otimes {\literal c} \otimes {\literal t}}} \\
-    \onslide<7->{{\color{red} x : {\literal c}, y : {\literal a}, z : {\literal t}} & {~\color{red} \not \vdash (((x,y),z),z) : {\literal c} \otimes {\literal a} \otimes {\literal t} \otimes {\literal t}}} \\
+    \onslide<5->{x : {\literal c}, y : {\literal a}, z : {\literal t} & \vdash (x,(y,z)) : {\literal c} \otimes {\literal a} \otimes {\literal t}} \\
+    \onslide<6->{{\color{red} x : {\literal c}, y : {\literal a}, z : {\literal t}} & {~\color{red} \not \vdash (y,(x,z)) : {\literal a} \otimes {\literal c} \otimes {\literal t}}} \\
+    \onslide<7->{{\color{red} x : {\literal c}, y : {\literal a}, z : {\literal t}} & {~\color{red} \not \vdash (x, (y , (z , z))) : {\literal c} \otimes {\literal a} \otimes {\literal t} \otimes {\literal t}}} \\
     \onslide<8->{{\color{red} x : {\literal c}, y : {\literal a}, z : {\literal t}} & {~\color{red} \not \vdash (y,z) : {\literal a} \otimes {\literal t}}}
   \end{align*}
 
@@ -405,7 +405,7 @@ Linear Types
 \item<+-> Empty string $I$
 \item<+-> Concatenation $\otimes$
 \item<+-> Linear function types $\lto$, $\tol$
-\item<+-> Disjunction $\oplus$, conjunction $\amp$
+\item<+-> Disjunction $(\oplus, 0)$, conjunction $(\amp, \top)$
 
 
 \item<+-> Indexed disjunction $\LinSigTyLimit {x} {X} {A~x}$, indexed conjunction $\LinPiTyLimit {x} {X} {A~x}$ over a non-linear type $X$
@@ -427,8 +427,8 @@ Linear Types
 \section{An Example Parser}
 
 \begin{frame}[fragile]{Dyck Grammar}
-\talknote{This is how you configure arbitary CFGs. With productions as constructors}
-\talknote{Dyck is either empty, or a parse of open paren, a Dyck parse, close
+\talknotebool{This is how you configure arbitary CFGs. With productions as constructors}
+\talknotebool{Dyck is either empty, or a parse of open paren, a Dyck parse, close
   paren, and then another Dyck parse}
 \vspace{-2cm}
 \begin{itemize}
@@ -501,12 +501,12 @@ treenode/.style = {shape=rectangle, rounded corners,
 \end{frame}
 
 \begin{frame}[fragile]{Dyck Traces}
-\talknote{boolean tags accepting/rejecting}
-\talknote{nat marks which state the trace begins in}
-\talknote{push/pop allow us to describe transitions. To construct a trace from the
+\talknotebool{boolean tags accepting/rejecting}
+\talknotebool{nat marks which state the trace begins in}
+\talknotebool{push/pop allow us to describe transitions. To construct a trace from the
 src of a transition, parse the label and a trace from the destination}
-\talknote{unexpected fails at 0 when trying to use an unwritten transition }
-\talknote{This same strategy can encode the traces of other automata}
+\talknotebool{unexpected fails at 0 when trying to use an unwritten transition }
+\talknotebool{This same strategy can encode the traces of other automata}
 \begin{center}
 \onslide<1-8>{
 \begin{tikzpicture}[node distance = 15mm ]
@@ -539,8 +539,8 @@ data Trace : Bool (*@$\to$@*) (*@$\mathbb{N}$@*) (*@$\to$@*) LinTy where
 \end{frame}
 
 \begin{frame}{A Parser for the Dyck Grammar}
-\talknote{Soundness guaranteed by the type system}
-\talknote{Completeness guaranteed by the second iso}
+\talknotebool{Soundness guaranteed by the type system}
+\talknotebool{Completeness guaranteed by the second iso}
   \onslide<1->{
   \begin{exampleblock}{Deterministic Automaton}
     \[ String \cong Trace~true~0 \oplus Trace~false~0 \]
@@ -640,16 +640,27 @@ Regular expressions
   \onslide<+->{Typechecking}
 \end{frame}
 
-\begin{frame}{}
-\begin{alertblock}{Remember}
-  Grammar is fundamentally ordered and linear.
+\begin{frame}{Dependent Lambek Calculus}
+\begin{center}
+  \begin{tabular}{cc}
+    \textbf{Grammars} & \textbf{Linear Types} \\
+    \hline
+    Grammar $A$ & Linear type $A$ \\
+    \onslide<1->{ Parse of string $w$} & \onslide<1->{$w \vdash A$} \\
+    \onslide<1->{ Parser } & \onslide<1->{$String \vdash A \oplus A_{\neg}$} \\
+    \onslide<1->{ Parse transformer } & \onslide<1->{$\Delta \vdash A$} \\
+  \end{tabular}
+\end{center}
 
-  We may leverage this to design better tools for building parsers.
-\end{alertblock}
+Implemented in Cubical Agda \agdalogo
+\begin{itemize}
+  \item {\small \url{https://github.com/maxsnew/grammars-and-semantic-actions}}
+\end{itemize}
 
-Please take a look at
-\href{https://github.com/maxsnew/grammars-and-semantic-actions}{our code} and at
-\href{https://maxsnew.com/docs/lambek.pdf}{a preprint} of this work
+Preprint of this work
+\begin{itemize}
+  \item {\small \url{https://maxsnew.com/docs/lambek.pdf}}
+\end{itemize}
 \end{frame}
 
 \end{document}
