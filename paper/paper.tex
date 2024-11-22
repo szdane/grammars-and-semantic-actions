@@ -1,5 +1,5 @@
 % -*- fill-column: 80; -*-
-\documentclass[review,anonymous,screen,acmsmall,nonacm]{acmart}
+\documentclass[screen,acmsmall,nonacm]{acmart}
 \usepackage{mathpartir}
 \usepackage{tikz-cd}
 \usepackage{lipsum}
@@ -1892,8 +1892,6 @@ data Dyck : L where
   nil : (*@$\uparrow$@*) Dyck
   bal : (*@$\uparrow$@*)('(' (*@$\lto$@*) Dyck (*@$\lto$@*) ')' (*@$\lto$@*) Dyck (*@$\lto$@*) Dyck)
 \end{lstlisting}
-\caption{The Dyck grammar as an inductive linear type}
-\label{fig:dyckinductive}
 \end{figure}
 
 The Dyck language is an example of an $\textrm{LL}(0)$ language, one
