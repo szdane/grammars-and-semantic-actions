@@ -166,7 +166,7 @@ module Test where
   csv1-data = runWeakParserΔ parser csv1
 
   opaque
-    unfolding ⊗-unit-r' ⊗-assoc internalize ⌈w⌉→string runWeakParserΔ ⊕ᴰ-distR ⊗-unit-r ⊗-unit-l⁻ ⊤* ⊤ ε ⊗-intro internalize' ⊕-elim runWeakParser literal ⟜-intro ⊸-intro ⟜-app ⊸-app
+    unfolding DiscreteASCIIChar ⊗-unit-r' ⊗-assoc internalize ⌈w⌉→string runWeakParserΔ ⊕ᴰ-distR ⊗-unit-r ⊗-unit-l⁻ ⊤* ⊤ ε ⊗-intro internalize' ⊕-elim runWeakParser literal ⟜-intro ⊸-intro ⟜-app ⊸-app
     _ : p ≡ Maybe.nothing
     _ = refl
 
@@ -179,5 +179,5 @@ module Test where
     _ : csv1 ≡ a^ ∷ COMMA ∷ b^ ∷ COMMA ∷ c^ ∷ NEWLINE ∷ e^ ∷ COMMA ∷ f^ ∷ COMMA ∷ g^ ∷ []
     _ = refl
 
-    _ : csv1-cst ≡ Maybe.just {!!}
+    _ : csv1-cst ≡ {!!}
     _ = {!refl!}
