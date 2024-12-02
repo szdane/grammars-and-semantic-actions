@@ -33,6 +33,8 @@ data ASCIIChar : Type ℓ-zero where
     N^ O^ P^ Q^ R^ S^ T^ U^ V^ W^ X^ Y^ Z^
     a^ b^ c^ d^ e^ f^ g^ h^ i^ j^ k^ l^ m^
     n^ o^ p^ q^ r^ s^ t^ u^ v^ w^ x^ y^ z^
+    zero^ one^ two^ three^ four^ five^
+    six^ seven^ eight^ nine^
     : ASCIIChar
 
 open import String.Unicode
@@ -77,7 +79,11 @@ translation =
   ('p' , p^) ∷ ('q' , q^) ∷ ('r' , r^) ∷
   ('s' , s^) ∷ ('t' , t^) ∷ ('u' , u^) ∷
   ('v' , v^) ∷ ('w' , w^) ∷ ('x' , x^) ∷
-  ('y' , y^) ∷ ('z' , z^) ∷ []
+  ('y' , y^) ∷ ('z' , z^) ∷ ('0' , zero^) ∷
+  ('1' , one^) ∷ ('2' , two^) ∷ ('3' , three^) ∷
+  ('4' , four^) ∷ ('5' , five^) ∷ ('6' , six^) ∷
+  ('7' , seven^) ∷ ('8' , eight^) ∷ ('9' , nine^) ∷
+  []
 
 -- TODO move this
 module _ {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'}
@@ -101,97 +107,107 @@ module _ {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'}
 Unicode→ASCII : UnicodeChar → Maybe ASCIIChar
 Unicode→ASCII = find DiscreteUnicodeChar translation
 
-_ : 87 ≡ length translation
+_ : 97 ≡ length translation
 _ = refl
 
-ASCII→Fin : ASCIIChar → Fin 87
-ASCII→Fin SPACE =       fromℕ {k = 86} 0
-ASCII→Fin NEWLINE =     fromℕ {k = 86} 1
-ASCII→Fin TAB =         fromℕ {k = 86} 2
-ASCII→Fin EXLCAM =      fromℕ {k = 86} 3
-ASCII→Fin POUND =       fromℕ {k = 86} 4
-ASCII→Fin SINGLEQUOTE = fromℕ {k = 86} 5
-ASCII→Fin DOUBLEQUOTE = fromℕ {k = 86} 6
-ASCII→Fin DOLLAR =      fromℕ {k = 86} 7
-ASCII→Fin PERCENT =     fromℕ {k = 86} 8
-ASCII→Fin AMPERSAND =   fromℕ {k = 86} 9
-ASCII→Fin LPAREN =      fromℕ {k = 86} 10
-ASCII→Fin RPAREN =      fromℕ {k = 86} 11
-ASCII→Fin ASTERISK =    fromℕ {k = 86} 12
-ASCII→Fin PLUS =        fromℕ {k = 86} 13
-ASCII→Fin COMMA =       fromℕ {k = 86} 14
-ASCII→Fin MINUS =       fromℕ {k = 86} 15
-ASCII→Fin PERIOD =      fromℕ {k = 86} 16
-ASCII→Fin FSLASH =      fromℕ {k = 86} 17
-ASCII→Fin BSLASH =      fromℕ {k = 86} 18
-ASCII→Fin COLON =       fromℕ {k = 86} 19
-ASCII→Fin SEMICOLON =   fromℕ {k = 86} 20
-ASCII→Fin GT =          fromℕ {k = 86} 21
-ASCII→Fin EQ =          fromℕ {k = 86} 22
-ASCII→Fin LT =          fromℕ {k = 86} 23
-ASCII→Fin QUESTION =    fromℕ {k = 86} 24
-ASCII→Fin AT =          fromℕ {k = 86} 25
-ASCII→Fin LBRACKET =    fromℕ {k = 86} 26
-ASCII→Fin RBRACKET =    fromℕ {k = 86} 27
-ASCII→Fin CARROT =      fromℕ {k = 86} 28
-ASCII→Fin UNDERSCORE =  fromℕ {k = 86} 29
-ASCII→Fin BACKTICK =    fromℕ {k = 86} 30
-ASCII→Fin TILDE =       fromℕ {k = 86} 31
-ASCII→Fin LCURLY =      fromℕ {k = 86} 32
-ASCII→Fin RCURLY =      fromℕ {k = 86} 33
-ASCII→Fin VERTBAR =     fromℕ {k = 86} 34
-ASCII→Fin A^ =          fromℕ {k = 86} 35
-ASCII→Fin B^ =          fromℕ {k = 86} 36
-ASCII→Fin C^ =          fromℕ {k = 86} 37
-ASCII→Fin D^ =          fromℕ {k = 86} 38
-ASCII→Fin E^ =          fromℕ {k = 86} 39
-ASCII→Fin F^ =          fromℕ {k = 86} 40
-ASCII→Fin G^ =          fromℕ {k = 86} 41
-ASCII→Fin H^ =          fromℕ {k = 86} 42
-ASCII→Fin I^ =          fromℕ {k = 86} 43
-ASCII→Fin J^ =          fromℕ {k = 86} 44
-ASCII→Fin K^ =          fromℕ {k = 86} 45
-ASCII→Fin L^ =          fromℕ {k = 86} 46
-ASCII→Fin M^ =          fromℕ {k = 86} 47
-ASCII→Fin N^ =          fromℕ {k = 86} 48
-ASCII→Fin O^ =          fromℕ {k = 86} 49
-ASCII→Fin P^ =          fromℕ {k = 86} 50
-ASCII→Fin Q^ =          fromℕ {k = 86} 51
-ASCII→Fin R^ =          fromℕ {k = 86} 52
-ASCII→Fin S^ =          fromℕ {k = 86} 53
-ASCII→Fin T^ =          fromℕ {k = 86} 54
-ASCII→Fin U^ =          fromℕ {k = 86} 55
-ASCII→Fin V^ =          fromℕ {k = 86} 56
-ASCII→Fin W^ =          fromℕ {k = 86} 57
-ASCII→Fin X^ =          fromℕ {k = 86} 58
-ASCII→Fin Y^ =          fromℕ {k = 86} 59
-ASCII→Fin Z^ =          fromℕ {k = 86} 60
-ASCII→Fin a^ =          fromℕ {k = 86} 61
-ASCII→Fin b^ =          fromℕ {k = 86} 62
-ASCII→Fin c^ =          fromℕ {k = 86} 63
-ASCII→Fin d^ =          fromℕ {k = 86} 64
-ASCII→Fin e^ =          fromℕ {k = 86} 65
-ASCII→Fin f^ =          fromℕ {k = 86} 66
-ASCII→Fin g^ =          fromℕ {k = 86} 67
-ASCII→Fin h^ =          fromℕ {k = 86} 68
-ASCII→Fin i^ =          fromℕ {k = 86} 69
-ASCII→Fin j^ =          fromℕ {k = 86} 70
-ASCII→Fin k^ =          fromℕ {k = 86} 71
-ASCII→Fin l^ =          fromℕ {k = 86} 72
-ASCII→Fin m^ =          fromℕ {k = 86} 73
-ASCII→Fin n^ =          fromℕ {k = 86} 74
-ASCII→Fin o^ =          fromℕ {k = 86} 75
-ASCII→Fin p^ =          fromℕ {k = 86} 76
-ASCII→Fin q^ =          fromℕ {k = 86} 77
-ASCII→Fin r^ =          fromℕ {k = 86} 78
-ASCII→Fin s^ =          fromℕ {k = 86} 79
-ASCII→Fin t^ =          fromℕ {k = 86} 80
-ASCII→Fin u^ =          fromℕ {k = 86} 81
-ASCII→Fin v^ =          fromℕ {k = 86} 82
-ASCII→Fin w^ =          fromℕ {k = 86} 83
-ASCII→Fin x^ =          fromℕ {k = 86} 84
-ASCII→Fin y^ =          fromℕ {k = 86} 85
-ASCII→Fin z^ =          fromℕ {k = 86} 86
+ASCII→Fin : ASCIIChar → Fin 97
+ASCII→Fin SPACE =       fromℕ {k = 96} 0
+ASCII→Fin NEWLINE =     fromℕ {k = 96} 1
+ASCII→Fin TAB =         fromℕ {k = 96} 2
+ASCII→Fin EXLCAM =      fromℕ {k = 96} 3
+ASCII→Fin POUND =       fromℕ {k = 96} 4
+ASCII→Fin SINGLEQUOTE = fromℕ {k = 96} 5
+ASCII→Fin DOUBLEQUOTE = fromℕ {k = 96} 6
+ASCII→Fin DOLLAR =      fromℕ {k = 96} 7
+ASCII→Fin PERCENT =     fromℕ {k = 96} 8
+ASCII→Fin AMPERSAND =   fromℕ {k = 96} 9
+ASCII→Fin LPAREN =      fromℕ {k = 96} 10
+ASCII→Fin RPAREN =      fromℕ {k = 96} 11
+ASCII→Fin ASTERISK =    fromℕ {k = 96} 12
+ASCII→Fin PLUS =        fromℕ {k = 96} 13
+ASCII→Fin COMMA =       fromℕ {k = 96} 14
+ASCII→Fin MINUS =       fromℕ {k = 96} 15
+ASCII→Fin PERIOD =      fromℕ {k = 96} 16
+ASCII→Fin FSLASH =      fromℕ {k = 96} 17
+ASCII→Fin BSLASH =      fromℕ {k = 96} 18
+ASCII→Fin COLON =       fromℕ {k = 96} 19
+ASCII→Fin SEMICOLON =   fromℕ {k = 96} 20
+ASCII→Fin GT =          fromℕ {k = 96} 21
+ASCII→Fin EQ =          fromℕ {k = 96} 22
+ASCII→Fin LT =          fromℕ {k = 96} 23
+ASCII→Fin QUESTION =    fromℕ {k = 96} 24
+ASCII→Fin AT =          fromℕ {k = 96} 25
+ASCII→Fin LBRACKET =    fromℕ {k = 96} 26
+ASCII→Fin RBRACKET =    fromℕ {k = 96} 27
+ASCII→Fin CARROT =      fromℕ {k = 96} 28
+ASCII→Fin UNDERSCORE =  fromℕ {k = 96} 29
+ASCII→Fin BACKTICK =    fromℕ {k = 96} 30
+ASCII→Fin TILDE =       fromℕ {k = 96} 31
+ASCII→Fin LCURLY =      fromℕ {k = 96} 32
+ASCII→Fin RCURLY =      fromℕ {k = 96} 33
+ASCII→Fin VERTBAR =     fromℕ {k = 96} 34
+ASCII→Fin A^ =          fromℕ {k = 96} 35
+ASCII→Fin B^ =          fromℕ {k = 96} 36
+ASCII→Fin C^ =          fromℕ {k = 96} 37
+ASCII→Fin D^ =          fromℕ {k = 96} 38
+ASCII→Fin E^ =          fromℕ {k = 96} 39
+ASCII→Fin F^ =          fromℕ {k = 96} 40
+ASCII→Fin G^ =          fromℕ {k = 96} 41
+ASCII→Fin H^ =          fromℕ {k = 96} 42
+ASCII→Fin I^ =          fromℕ {k = 96} 43
+ASCII→Fin J^ =          fromℕ {k = 96} 44
+ASCII→Fin K^ =          fromℕ {k = 96} 45
+ASCII→Fin L^ =          fromℕ {k = 96} 46
+ASCII→Fin M^ =          fromℕ {k = 96} 47
+ASCII→Fin N^ =          fromℕ {k = 96} 48
+ASCII→Fin O^ =          fromℕ {k = 96} 49
+ASCII→Fin P^ =          fromℕ {k = 96} 50
+ASCII→Fin Q^ =          fromℕ {k = 96} 51
+ASCII→Fin R^ =          fromℕ {k = 96} 52
+ASCII→Fin S^ =          fromℕ {k = 96} 53
+ASCII→Fin T^ =          fromℕ {k = 96} 54
+ASCII→Fin U^ =          fromℕ {k = 96} 55
+ASCII→Fin V^ =          fromℕ {k = 96} 56
+ASCII→Fin W^ =          fromℕ {k = 96} 57
+ASCII→Fin X^ =          fromℕ {k = 96} 58
+ASCII→Fin Y^ =          fromℕ {k = 96} 59
+ASCII→Fin Z^ =          fromℕ {k = 96} 60
+ASCII→Fin a^ =          fromℕ {k = 96} 61
+ASCII→Fin b^ =          fromℕ {k = 96} 62
+ASCII→Fin c^ =          fromℕ {k = 96} 63
+ASCII→Fin d^ =          fromℕ {k = 96} 64
+ASCII→Fin e^ =          fromℕ {k = 96} 65
+ASCII→Fin f^ =          fromℕ {k = 96} 66
+ASCII→Fin g^ =          fromℕ {k = 96} 67
+ASCII→Fin h^ =          fromℕ {k = 96} 68
+ASCII→Fin i^ =          fromℕ {k = 96} 69
+ASCII→Fin j^ =          fromℕ {k = 96} 70
+ASCII→Fin k^ =          fromℕ {k = 96} 71
+ASCII→Fin l^ =          fromℕ {k = 96} 72
+ASCII→Fin m^ =          fromℕ {k = 96} 73
+ASCII→Fin n^ =          fromℕ {k = 96} 74
+ASCII→Fin o^ =          fromℕ {k = 96} 75
+ASCII→Fin p^ =          fromℕ {k = 96} 76
+ASCII→Fin q^ =          fromℕ {k = 96} 77
+ASCII→Fin r^ =          fromℕ {k = 96} 78
+ASCII→Fin s^ =          fromℕ {k = 96} 79
+ASCII→Fin t^ =          fromℕ {k = 96} 80
+ASCII→Fin u^ =          fromℕ {k = 96} 81
+ASCII→Fin v^ =          fromℕ {k = 96} 82
+ASCII→Fin w^ =          fromℕ {k = 96} 83
+ASCII→Fin x^ =          fromℕ {k = 96} 84
+ASCII→Fin y^ =          fromℕ {k = 96} 85
+ASCII→Fin z^ =          fromℕ {k = 96} 86
+ASCII→Fin zero^ =       fromℕ {k = 96} 87
+ASCII→Fin one^ =        fromℕ {k = 96} 88
+ASCII→Fin two^ =        fromℕ {k = 96} 89
+ASCII→Fin three^ =      fromℕ {k = 96} 90
+ASCII→Fin four^ =       fromℕ {k = 96} 91
+ASCII→Fin five^ =       fromℕ {k = 96} 92
+ASCII→Fin six^ =        fromℕ {k = 96} 93
+ASCII→Fin seven^ =      fromℕ {k = 96} 94
+ASCII→Fin eight^ =      fromℕ {k = 96} 95
+ASCII→Fin nine^ =       fromℕ {k = 96} 96
 
 -- This is incredibly ugly but works
 -- Agda has issues pattern matching on nat literals
@@ -200,7 +216,7 @@ ASCII→Fin z^ =          fromℕ {k = 86} 86
 -- It would be really nice to have some sort of macro
 -- to define an enumerated type and automatically prove
 -- that it is a FinSet
-Fin→ASCII : Fin 87 → ASCIIChar
+Fin→ASCII : Fin 97 → ASCIIChar
 Fin→ASCII (fzero) = SPACE
 Fin→ASCII (fsuc fzero) = NEWLINE
 Fin→ASCII (fsuc (fsuc fzero)) = TAB
@@ -288,6 +304,16 @@ Fin→ASCII (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc
 Fin→ASCII (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = x^
 Fin→ASCII (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = y^
 Fin→ASCII (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = z^
+Fin→ASCII (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = zero^
+Fin→ASCII (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = one^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = two^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = three^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = four^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = five^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = six^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = seven^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = eight^
+Fin→ASCII (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) = nine^
 
 ASCIIFinRetract : (c : ASCIIChar) → Fin→ASCII (ASCII→Fin c) ≡ c
 ASCIIFinRetract SPACE = refl
@@ -377,8 +403,18 @@ ASCIIFinRetract w^ = refl
 ASCIIFinRetract x^ = refl
 ASCIIFinRetract y^ = refl
 ASCIIFinRetract z^ = refl
+ASCIIFinRetract zero^ = refl
+ASCIIFinRetract one^ = refl
+ASCIIFinRetract two^ = refl
+ASCIIFinRetract three^ = refl
+ASCIIFinRetract four^ = refl
+ASCIIFinRetract five^ = refl
+ASCIIFinRetract six^ = refl
+ASCIIFinRetract seven^ = refl
+ASCIIFinRetract eight^ = refl
+ASCIIFinRetract nine^ = refl
 
-ASCIIFinSection : (n : Fin 87) → (ASCII→Fin (Fin→ASCII n)) ≡ n
+ASCIIFinSection : (n : Fin 97) → (ASCII→Fin (Fin→ASCII n)) ≡ n
 ASCIIFinSection (fzero) = refl
 ASCIIFinSection (fsuc fzero) = refl
 ASCIIFinSection (fsuc (fsuc fzero)) = refl
@@ -464,25 +500,35 @@ ASCIIFinSection (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( 
 ASCIIFinSection (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = refl
 ASCIIFinSection (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = refl
 ASCIIFinSection (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = refl
-ASCIIFinSection (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = refl
-ASCIIFinSection (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) = refl
-
-isSetASCIIChar : isSet ASCIIChar
-isSetASCIIChar =
-  isSetRetract ASCII→Fin Fin→ASCII
-    ASCIIFinRetract (isSetFin {87})
+ASCIIFinSection (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ))  = refl
+ASCIIFinSection (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) = refl
+ASCIIFinSection (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) ) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) ) ) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) ) ) ) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) ) ) ) ) ) ) = refl
+ASCIIFinSection (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc (fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc ( fsuc (fsuc (fsuc fzero))  ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )) ) ) ) ) ) ) ) ) ) ) = refl
+opaque
+  isSetASCIIChar : isSet ASCIIChar
+  isSetASCIIChar =
+    isSetRetract ASCII→Fin Fin→ASCII
+      ASCIIFinRetract (isSetFin {97})
 
 ASCII : hSet ℓ-zero
 ASCII = ASCIIChar , isSetASCIIChar
 -- isSetASCIIChar
-ASCII≅Fin : Iso ASCIIChar (Fin 87)
+ASCII≅Fin : Iso ASCIIChar (Fin 97)
 ASCII≅Fin = iso ASCII→Fin Fin→ASCII ASCIIFinSection ASCIIFinRetract
 
-ASCII≃Fin : ASCIIChar ≃ Fin 87
+ASCII≃Fin : ASCIIChar ≃ Fin 97
 ASCII≃Fin = isoToEquiv ASCII≅Fin
 
 isFinSetASCIIChar : isFinSet ASCIIChar
-isFinSetASCIIChar = EquivPresIsFinSet (invEquiv ASCII≃Fin) (isFinSetFin {87})
+isFinSetASCIIChar = EquivPresIsFinSet (invEquiv ASCII≃Fin) (isFinSetFin {97})
 
 DiscreteASCIIChar : Discrete ASCIIChar
 DiscreteASCIIChar = isFinSet→Discrete isFinSetASCIIChar
