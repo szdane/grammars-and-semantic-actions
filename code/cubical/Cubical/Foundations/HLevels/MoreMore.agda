@@ -11,25 +11,19 @@ isPropLift :
   {L L' : Level} →
   {A : Type L} →
   isProp A → isProp (Lift {L}{L'} A)
-isPropLift x a b = liftExt (x _ _)
+isPropLift = isOfHLevelLift 1
 
 isSetLift :
   {L L' : Level} →
   {A : Type L} →
   isSet A → isSet (Lift {L}{L'} A)
-isSetLift isSetA x y a b i =
-  liftExt
-    (isSetA (lower x) (lower y)
-    (cong lower a) (cong lower b) i)
+isSetLift = isOfHLevelLift 2
 
 isGroupoidLift :
   {L L' : Level} →
   {A : Type L} →
   isGroupoid A → isGroupoid (Lift {L}{L'} A)
-isGroupoidLift isGroupoidA x y a b u v i j k =
-  lift
-  ((isGroupoidA (lower x) (lower y)) (cong lower a)
-    (cong lower b) (cong (cong lower) u) (cong (cong lower) v) i j k)
+isGroupoidLift = isOfHLevelLift 3
 
 isPropCod→isProp≃ :
   {a : Type ℓ}{b : Type ℓ'} →

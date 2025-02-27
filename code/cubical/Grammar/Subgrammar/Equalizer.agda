@@ -10,7 +10,7 @@ open import Term Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD ℓX : Level
+    ℓA ℓB ℓC ℓD ℓX ℓ : Level
     A : Grammar ℓA
     B : Grammar ℓB
     C : Grammar ℓC
@@ -65,7 +65,7 @@ module _
     ∙ cong (_∘g f'') eq-π-pf
     ∙ cong (f' ∘g_) p
 
-module _ {X : Type ℓX} (F : X → Functor X) (A : X → SetGrammar ℓA)
+module _ {X : Type ℓX} (F : X → Functor X ℓ) (A : X → SetGrammar ℓA)
   (e e' : ∀ (x : X) → μ F x ⊢ ⟨ A x ⟩)
   (pf : ∀ (x : X) →
     e  x ∘g roll ∘g map (F x) (λ y → eq-π {B = A y} (e y) (e' y)) ≡

@@ -32,10 +32,15 @@ module _ where
   ⟨_⟩ : SetGrammar ℓA → Grammar ℓA
   ⟨ A ⟩ = A .fst
 
-  module _ {A : Grammar ℓA} {B : Grammar ℓB} (A≅B : A ≅ B) (isLang-A : isLang A) where
+  module _ {A : Grammar ℓA} {B : Grammar ℓB} (A≅B : A ≅ B) where
     open StrongEquivalence
-    isLang≅ : isLang B
-    isLang≅ w x y =
-      sym (funExt⁻ (funExt⁻ (A≅B .sec) w) x)
-      ∙ cong (A≅B .fun w) (isLang-A w (A≅B .inv w x) (A≅B .inv w y))
-      ∙ (funExt⁻ (funExt⁻ (A≅B .sec) w) y)
+    module _ (isLang-A : isLang A) where
+      isLang≅ : isLang B
+      isLang≅ w =
+        isPropRetract (A≅B .inv w) (A≅B .fun w)
+          (funExt⁻ (funExt⁻ (A≅B .sec) w)) (isLang-A w)
+    module _ (isSet-A : isSetGrammar A) where
+      isSetGrammar≅ : isSetGrammar B
+      isSetGrammar≅ w =
+        isSetRetract (A≅B .inv w) (A≅B .fun w)
+          (funExt⁻ (funExt⁻ (A≅B .sec) w)) (isSet-A w)

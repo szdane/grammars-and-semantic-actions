@@ -14,6 +14,7 @@ open import Grammar.HLevels Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
 private
@@ -22,14 +23,14 @@ private
 module _ where
   data Functor (X : Type ℓX) : Level → Typeω where
     k : (A : Grammar ℓA) → Functor X ℓA
-    Var : (x : X) → Functor X ℓX -- reference one of the mutually inductive types being defined
+    Var : ∀ {ℓ} → (x : X) → Functor X (ℓ-max ℓ ℓX) -- reference one of the mutually inductive types being defined
     &e ⊕e : ∀ {ℓ} (Y : Type ℓY) → (F : Y → Functor X ℓ) → Functor X (ℓ-max ℓY ℓ)
     ⊗e : ∀ {ℓ}{ℓ'} → (F : Functor X ℓ) → (F' : Functor X ℓ') → Functor X (ℓ-max ℓ ℓ')
 
   module _ {X : Type ℓX} where
     ⟦_⟧ : Functor X ℓ → (X → Grammar ℓA) → Grammar (ℓ-max ℓ ℓA)
     ⟦ k B ⟧ A = LiftG (LevelOfDepG A) B
-    ⟦ Var x ⟧ A = LiftG ℓX (A x)
+    ⟦_⟧ {ℓ = ℓ} (Var x) A = LiftG (ℓ-max ℓ ℓX) (A x)
     ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊗e F F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
@@ -87,3 +88,18 @@ module _ where
       cong (ϕ .fst x ∘g_) (ψ .snd x)
       ∙ cong (_∘g map (F x) (ψ .fst)) (ϕ .snd x)
       ∙ cong (η x ∘g_) (sym (map-∘ (F x) (ϕ .fst) (ψ .fst)))
+
+  open StrongEquivalence
+  map≅ : ∀ {X : Type ℓX}(F : Functor X ℓ) {A : X → Grammar ℓA}{B : X → Grammar ℓB}
+         → (∀ x → A x ≅ B x)
+         → ⟦ F ⟧ A ≅ ⟦ F ⟧ B
+  map≅ F A≅B .fun = map F (λ x → A≅B x .fun)
+  map≅ F A≅B .inv = map F (λ x → A≅B x .inv)
+  map≅ F A≅B .sec =
+    sym (map-∘ F (λ x → A≅B x .fun) (λ x → A≅B x .inv))
+    ∙ cong (map F) (funExt (λ x → A≅B x .sec))
+    ∙ map-id F
+  map≅ F A≅B .ret =
+    sym (map-∘ F (λ x → A≅B x .inv) (λ x → A≅B x .fun))
+    ∙ cong (map F) (funExt (λ x → A≅B x .ret))
+    ∙ map-id F

@@ -52,3 +52,6 @@ isLangLift isLangA w = isOfHLevelLift 1 (isLangA w)
 
 isSetGrammarLift : isSetGrammar A → isSetGrammar (LiftG ℓB A)
 isSetGrammarLift isSetGrammarA w = isOfHLevelLift 2 (isSetGrammarA w)
+
+isSetGrammarLower : isSetGrammar (LiftG ℓB A) → isSetGrammar A
+isSetGrammarLower isSetGrammarA w = isOfHLevelLower 2 (isSetGrammarA w)

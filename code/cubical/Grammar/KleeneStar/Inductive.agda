@@ -38,7 +38,7 @@ module _ (A : Grammar ℓA) where
     nil cons : *Tag
 
   *Ty : Unit → Functor Unit ℓA
-  *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → ⊗e (k A) (Var _)})
+  *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → ⊗e (k A) (Var {ℓ = ℓ-zero} _)})
 
   isFinSet*Tag : isFinSet *Tag
   isFinSet*Tag =
@@ -59,7 +59,7 @@ module _ (A : Grammar ℓA) where
 
   repeatTy : ℕ → Functor ℕ ℓA
   repeatTy zero = k ε*
-  repeatTy (suc n) = ⊗e (k A) (Var n)
+  repeatTy (suc n) = ⊗e (k A) (Var {ℓ = ℓ-zero} n)
 
   repeat' : ℕ → Grammar ℓA
   repeat' n = μ repeatTy n
@@ -149,7 +149,7 @@ module _ (A : Grammar ℓA) where
     nil snoc : *TagL
 
   *LTy : Unit → Functor Unit ℓA
-  *LTy _ = ⊕e *TagL (λ { nil → k ε* ; snoc → ⊗e (Var _) (k A)})
+  *LTy _ = ⊕e *TagL (λ { nil → k ε* ; snoc → ⊗e (Var {ℓ = ℓ-zero} _) (k A)})
 
   *LAlg→*Alg : Algebra *LTy (λ _ → B)  → Algebra *Ty (λ _ → B ⟜ B)
   *LAlg→*Alg l-alg _ = ⊕ᴰ-elim (λ {
@@ -174,7 +174,7 @@ module _ (A : Grammar ℓA) where
 
   repeatTyL : ℕ → Functor ℕ ℓA
   repeatTyL zero = k ε*
-  repeatTyL (suc n) = ⊗e (Var n) (k A)
+  repeatTyL (suc n) = ⊗e (Var {ℓ = ℓ-zero} n) (k A)
 
   repeat'L : ℕ → Grammar ℓA
   repeat'L n = μ repeatTyL n
