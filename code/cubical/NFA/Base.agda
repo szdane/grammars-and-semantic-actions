@@ -68,11 +68,11 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
       step : ∀ t → (src t Eq.≡ q) → Tag q
       stepε : ∀ t → (ε-src t Eq.≡ q) → Tag q
 
-    TraceTy : (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
+    TraceTy : (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩ ℓN
     TraceTy q = ⊕e (Tag q) λ
       { (stop x) → k ε*
-      ; (step t x) → ⊗e (k (literal* (label t))) (Var (dst t))
-      ; (stepε t x) → Var (ε-dst t) }
+      ; (step t x) → ⊗e (k (literal (label t))) (Var {ℓ = ℓ-zero} (dst t))
+      ; (stepε t x) → Var {ℓ = ℓ-zero}(ε-dst t) }
     Trace : (q : ⟨ Q ⟩) → Grammar ℓN
     Trace = μ TraceTy
 
@@ -80,7 +80,7 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     STOP acc = roll ∘g ⊕ᴰ-in (stop acc) ∘g liftG ∘g liftG
 
     STEP : ∀ t → literal (label t) ⊗ Trace (dst t) ⊢ Trace (src t)
-    STEP t = roll ∘g ⊕ᴰ-in (step _ Eq.refl) ∘g (liftG ∘g liftG) ,⊗ liftG
+    STEP t = roll ∘g ⊕ᴰ-in (step _ Eq.refl) ∘g liftG ,⊗ liftG
 
     STEPε : ∀ t → Trace (ε-dst t) ⊢ Trace (ε-src t)
     STEPε t = roll ∘g ⊕ᴰ-in (stepε t Eq.refl) ∘g liftG
@@ -95,20 +95,22 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     data Tag : Type ℓN where
         stop step stepε : Tag
 
-    TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
+    TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩ ℓN
     TraceTy b q = ⊕e Tag λ {
-        stop → ⊕e (Lift (b Eq.≡ isAcc q)) (λ
-          (lift acc) → k (LiftG ℓN ε) )
-      ; step → ⊕e (Eq.fiber src q) λ {
-          (t , Eq.refl ) →
-            ⊗e (k (LiftG ℓN (literal (label t)))) (Var (dst t)) }
-      ; stepε → ⊕e (Eq.fiber ε-src q) λ { (t , Eq.refl) → Var (ε-dst t) } }
+        stop → ⊕e (b Eq.≡ isAcc q) (λ acc → k ε* )
+      ; step → ⊕e (Eq.fiber src q) ((λ { (t , Eq.refl) → {!!} }))
+        -- ⊕e (Eq.fiber src q) λ {
+        --   (t , Eq.refl ) →
+        --     ⊗e (k (literal (label t))) (Var (dst t)) }
+      ; stepε → ⊕e (Eq.fiber ε-src q) {!!}
+      -- λ { (t , Eq.refl) → Var (ε-dst t) } }
+      }
 
-    Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN
-    Trace b = μ (TraceTy b)
+    -- Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN
+    -- Trace b = μ (TraceTy b)
 
-    Parse : Grammar _
-    Parse = Trace true init
+    -- Parse : Grammar _
+    -- Parse = Trace true init
 
-    TraceAlg : Bool → (⟨ Q ⟩ → Grammar ℓ) → Type (ℓ-max ℓN ℓ)
-    TraceAlg b = Algebra (TraceTy b)
+    -- TraceAlg : Bool → (⟨ Q ⟩ → Grammar ℓ) → Type (ℓ-max ℓN ℓ)
+    -- TraceAlg b = Algebra (TraceTy b)
