@@ -26,7 +26,7 @@ open import Term.Bilinear Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD ℓX : Level
+    ℓA ℓB ℓC ℓD ℓX ℓ : Level
     A : Grammar ℓA
     B : Grammar ℓB
     C : Grammar ℓC
@@ -74,7 +74,7 @@ module _ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} (f f' : A ⊢ B)
     eq-intro (f'' ∘g f) (f'' ∘g f')
       (eq-π f f') (cong (f'' ∘g_) (eq-π-pf f f'))
 
-module _ {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
+module _ {X : Type ℓX} (F : X → Functor X ℓ) (A : X → Grammar ℓA)
   (e e' : ∀ (x : X) → μ F x ⊢ A x)
   (pf : ∀ (x : X) →
     e  x ∘g roll ∘g map (F x) (λ x' → eq-π (e x') (e' x')) ≡
@@ -104,7 +104,7 @@ module _ {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
           roll ∘g map (F x) λ x' → eq-π (e x') (e' x')
       eq-π-is-homo x = refl
 
-equalizer-ind-unit : (F : Functor Unit) {A : Grammar ℓA}
+equalizer-ind-unit : (F : Functor Unit ℓ) {A : Grammar ℓA}
   {e e' : μ (λ _ → F) tt ⊢ A}
   → (e ∘g roll ∘g map F (λ _ → eq-π e e'))
     ≡ (e' ∘g roll ∘g map F (λ _ → eq-π e e'))
@@ -128,11 +128,11 @@ eq-π-pf-⊸-intro f f' =
 
 module _ {X : Type ℓX}
     (tag : X → Type ℓX)
-    (F : ∀ x → tag x → Functor X)
+    (F : ∀ x → tag x → Functor X ℓX)
     where
 
   private
-    F' : X → Functor X
+    F' : X → Functor X ℓX
     F' x = ⊕e (tag x) (F x)
 
   module _

@@ -1,4 +1,5 @@
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude.More
 open import Cubical.Foundations.HLevels
 
 module Grammar.Inductive.Functor (Alphabet : hSet ℓ-zero)where
@@ -16,24 +17,24 @@ open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
 private
-  variable ℓA ℓB ℓC ℓX : Level
+  variable ℓA ℓB ℓC ℓX ℓY ℓ : Level
 
 module _ where
-  data Functor (X : Type ℓX) : Type (ℓ-suc ℓX) where
-    k : (A : Grammar ℓX) → Functor X
-    Var : (x : X) → Functor X -- reference one of the mutually inductive types being defined
-    &e ⊕e : ∀ (Y : Type ℓX) → (F : Y → Functor X) → Functor X
-    ⊗e : (F : Functor X) → (F' : Functor X) → Functor X
+  data Functor (X : Type ℓX) : Level → Typeω where
+    k : (A : Grammar ℓA) → Functor X ℓA
+    Var : (x : X) → Functor X ℓX -- reference one of the mutually inductive types being defined
+    &e ⊕e : ∀ {ℓ} (Y : Type ℓY) → (F : Y → Functor X ℓ) → Functor X (ℓ-max ℓY ℓ)
+    ⊗e : ∀ {ℓ}{ℓ'} → (F : Functor X ℓ) → (F' : Functor X ℓ') → Functor X (ℓ-max ℓ ℓ')
 
-  module _ {X : Type ℓX}{ℓA} where
-    ⟦_⟧ : Functor X → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
-    ⟦ k B ⟧ A = LiftG ℓA B
+  module _ {X : Type ℓX} where
+    ⟦_⟧ : Functor X ℓ → (X → Grammar ℓA) → Grammar (ℓ-max ℓ ℓA)
+    ⟦ k B ⟧ A = LiftG (LevelOfDepG A) B
     ⟦ Var x ⟧ A = LiftG ℓX (A x)
     ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊗e F F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
 
-  map : ∀ {X : Type ℓX}(F : Functor X) {A : X → Grammar ℓA}{B : X → Grammar ℓB}
+  map : ∀ {X : Type ℓX}(F : Functor X ℓ) {A : X → Grammar ℓA}{B : X → Grammar ℓB}
         → (∀ x → A x ⊢ B x)
         → ⟦ F ⟧ A ⊢ ⟦ F ⟧ B
   map (k A) f = liftG ∘g lowerG
@@ -46,7 +47,7 @@ module _ where
     opaque
       unfolding _⊗_ ⊗-intro
 
-      map-id : ∀ (F : Functor X) {A : X → Grammar ℓA} →
+      map-id : ∀ (F : Functor X ℓ) {A : X → Grammar ℓA} →
         map F (λ x → id {A = A x}) ≡ id
       map-id (k A) i = id
       map-id (Var x) i = id
@@ -55,7 +56,7 @@ module _ where
       map-id (⊗e F F') i = map-id F i ,⊗ map-id F' i
 
       map-∘ :  ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
-        (F : Functor X)
+        (F : Functor X ℓ)
         (f : ∀ x → B x  ⊢ C x)(f' : ∀ x → A x ⊢ B x)
         → map F (λ x → f x ∘g f' x) ≡ map F f ∘g map F f'
       map-∘ (k A) f f' i = liftG ∘g lowerG
@@ -64,8 +65,8 @@ module _ where
       map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → ⊕ᴰ-in y ∘g map-∘ (F y) f f' i)
       map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
-  module _ {X : Type ℓX} (F : X → Functor X) where
-    Algebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)
+  module _ {X : Type ℓX} (F : X → Functor X ℓ) where
+    Algebra : (X → Grammar ℓA) → Type (ℓ-max ℓX (ℓ-max ℓ ℓA))
     Algebra A = ∀ x → ⟦ F x ⟧ A ⊢ A x
 
     module _ {A : X → Grammar ℓA}{B : X → Grammar ℓB} (α : Algebra A) (β : Algebra B) where

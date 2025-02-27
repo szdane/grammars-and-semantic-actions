@@ -19,7 +19,7 @@ open import Term.Base Alphabet
 open import Grammar.Inductive.Functor Alphabet public
 
 private
-  variable ℓA ℓB ℓX : Level
+  variable ℓA ℓB ℓX ℓ : Level
 
 module _ where
   module _ {X : Type ℓX} where
@@ -27,10 +27,10 @@ module _ where
     -- opaque this passes the positivity check.
     -- https://github.com/agda/agda/issues/6970
     {-# NO_POSITIVITY_CHECK #-}
-    data μ (F : X → Functor X) x : Grammar ℓX where
+    data μ (F : X → Functor X ℓ) x : Grammar (ℓ-max ℓX ℓ) where
       roll : ⟦ F x ⟧ (μ F) ⊢ μ F x
 
-  module _ {X : Type ℓX} (F : X → Functor X) where
+  module _ {X : Type ℓX} (F : X → Functor X ℓ) where
     initialAlgebra : Algebra F (μ F)
     initialAlgebra = λ x → roll
 

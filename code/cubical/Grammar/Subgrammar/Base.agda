@@ -22,28 +22,28 @@ open import Term Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD ℓX ℓY ℓ : Level
+    ℓA ℓB ℓC ℓD ℓX ℓY ℓΩ ℓ : Level
     A : Grammar ℓA
     B : Grammar ℓB
     C : Grammar ℓC
     D : Grammar ℓD
 
-Ω : Grammar (ℓ-suc ℓ)
-Ω {ℓ = ℓ} w = hProp ℓ
+Ω : Grammar (ℓ-suc ℓΩ)
+Ω {ℓΩ = ℓΩ} w = hProp ℓΩ
 
-isSetGrammar-Ω : isSetGrammar (Ω {ℓ = ℓ})
+isSetGrammar-Ω : isSetGrammar (Ω {ℓΩ = ℓΩ})
 isSetGrammar-Ω w = isSetHProp
 
-isSet⊢Ω : isSet (A ⊢ Ω {ℓ = ℓ})
+isSet⊢Ω : isSet (A ⊢ Ω {ℓΩ = ℓΩ})
 isSet⊢Ω = isSetΠ (λ w → isSet→ (isSetGrammar-Ω w))
 
 opaque
   unfolding ⊤
-  true : ⊤ ⊢ Ω {ℓ = ℓ}
+  true : ⊤ ⊢ Ω {ℓΩ = ℓΩ}
   true w x .fst = Unit*
   true w x .snd = isPropUnit*
 
-  false : ⊤ ⊢ Ω {ℓ = ℓ}
+  false : ⊤ ⊢ Ω {ℓΩ = ℓΩ}
   false w x .fst = Empty.⊥*
   false w x .snd = Empty.isProp⊥*
 
@@ -78,10 +78,10 @@ opaque
 --      with the character c
 --      -  which would be the subgrammar over the proposition
 --         that A & (＂ c ＂ ⊗ ⊤) ⊢ ⊥
-module Subgrammar {ℓ} {A : Grammar ℓA} (p : A ⊢ Ω {ℓ = ℓ}) where
+module Subgrammar {A : Grammar ℓA} (p : A ⊢ Ω {ℓΩ = ℓΩ}) where
   opaque
     unfolding ⊤ true
-    subgrammar : Grammar (ℓ-max ℓA ℓ)
+    subgrammar : Grammar (ℓ-max ℓA ℓΩ)
     subgrammar w = Σ[ x ∈ A w ] ⟨ p w x ⟩
 
     sub-π : subgrammar ⊢ A
@@ -171,9 +171,8 @@ module Subgrammar {ℓ} {A : Grammar ℓA} (p : A ⊢ Ω {ℓ = ℓ}) where
 open Subgrammar
 
 module _
-  {ℓ'}
-  {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
-  (p : ∀ (x : X) → μ F x ⊢ Ω {ℓ = ℓ'})
+  {X : Type ℓX} (F : X → Functor X ℓ) (A : X → Grammar ℓA)
+  (p : ∀ (x : X) → μ F x ⊢ Ω {ℓΩ = ℓΩ})
   (pf : ∀ (x : X) →
     p x ∘g roll ∘g map (F x) (λ y → sub-π (p y))
       ≡
@@ -226,10 +225,10 @@ module _
   {A : Grammar ℓA}
   {B : Grammar ℓB}
   (f : B ⊢ A)
-  (p : A ⊢ Ω {ℓ = ℓ})
+  (p : A ⊢ Ω {ℓΩ = ℓΩ})
   where
 
-  preimage : Grammar (ℓ-max ℓB ℓ)
+  preimage : Grammar (ℓ-max ℓB ℓΩ)
   preimage = subgrammar (p ∘g f)
 
   preimage-map : preimage ⊢ subgrammar p

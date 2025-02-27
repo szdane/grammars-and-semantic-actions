@@ -159,7 +159,7 @@ module InductiveProduct (A : Grammar ℓA) (B : Grammar ℓB) where
         ))
       (isFinSetFin {n = 2})
 
-  &IndTy : Unit* {ℓ-max ℓA ℓB} → Functor Unit*
+  &IndTy : Unit → Functor Unit (ℓ-max ℓA ℓB)
   &IndTy _ = &e &IndTag λ {
       L → Inductive.k (LiftG ℓB A)
     ; R → Inductive.k (LiftG ℓA B)}
