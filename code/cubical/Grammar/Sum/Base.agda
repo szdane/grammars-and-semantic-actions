@@ -1,17 +1,22 @@
+{-# OPTIONS --erased-cubical --erasure #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Sum.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Base
+  (Alphabet : Type ℓ-zero)
+  (isSetAlphabet : isSet Alphabet)
+  where
 
-open import Grammar.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
     ℓA ℓB ℓC ℓX : Level
 
 ⊕ᴰ : {X : Type ℓX} → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
-⊕ᴰ {X = X} f w = Σ[ x ∈ X ] f x w
+-- ⊕ᴰ {X = X} f w = Σ[ x ∈ X ] f x w
+⊕ᴰ {X = X} f w = Σ X λ x → f x w
 
 syntax ⊕ᴰ {X = X}(λ x → A) = ⊕[ x ∈ X ] A
 infix 8 ⊕ᴰ
@@ -29,13 +34,13 @@ module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
     → f ≡ f'
   ⊕ᴰ≡ f f' fx≡fx' i w z = fx≡fx' (z .fst) i w (z .snd)
 
-⊕ᴰ-elim∘g :
-  ∀ {X : Type ℓX}{A : Grammar ℓA}
-  {B : X → Grammar ℓB}{C : Grammar ℓC}
-  → {f' : ∀ x → B x ⊢ A}
-  → {f : A ⊢ C}
-  → f ∘g ⊕ᴰ-elim f' ≡ ⊕ᴰ-elim (λ x → f ∘g f' x)
-⊕ᴰ-elim∘g = ⊕ᴰ≡ _ _ (λ x → refl)
+-- ⊕ᴰ-elim∘g :
+--   ∀ {X : Type ℓX}{A : Grammar ℓA}
+--   {B : X → Grammar ℓB}{C : Grammar ℓC}
+--   → {f' : ∀ x → B x ⊢ A}
+--   → {f : A ⊢ C}
+--   → f ∘g ⊕ᴰ-elim f' ≡ ⊕ᴰ-elim (λ x → f ∘g f' x)
+-- ⊕ᴰ-elim∘g = ⊕ᴰ≡ _ _ (λ x → refl)
 
 module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : X → Grammar ℓB}
   (e : (x : X) → A x ⊢ B x)

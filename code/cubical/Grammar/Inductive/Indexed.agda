@@ -1,4 +1,5 @@
 {- An indexed inductive type is basically just a mutually inductive type -}
+{-# OPTIONS --erased-cubical --erasure #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -9,11 +10,11 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Product.Base Alphabet
+-- open import Grammar.HLevels.Base Alphabet
+-- open import Grammar.Sum.Base Alphabet
+-- open import Grammar.Product.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Lift Alphabet
+-- open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
 open import Grammar.Inductive.Functor Alphabet public

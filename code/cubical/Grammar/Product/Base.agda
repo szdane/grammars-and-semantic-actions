@@ -1,12 +1,16 @@
+{-# OPTIONS --erased-cubical --erasure #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Product.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Product.Base
+  (Alphabet : Type ℓ-zero)
+  (isSetAlphabet : isSet Alphabet)
+  where
 
-open import Grammar.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+-- open import Grammar.Equivalence.Base Alphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -35,23 +39,22 @@ module _ {X : Type ℓX} {A : Grammar ℓA} where
   Δ : A ⊢ &[ x ∈ X ] A
   Δ = &ᴰ-intro (λ _ → id)
 
-module _ {X : Type ℓX}
-  {A : X → Grammar ℓA} {B : X → Grammar ℓB}
-  (e : (x : X) → A x ⊢ B x)
-  where
-  map&ᴰ : &[ x ∈ X ] A x ⊢ &[ x ∈ X ] B x
-  map&ᴰ = &ᴰ-intro λ x → e x ∘g π x
+-- module _ {X : Type ℓX}
+--   {A : X → Grammar ℓA} {B : X → Grammar ℓB}
+--   (e : (x : X) → A x ⊢ B x)
+--   where
+--   map&ᴰ : &[ x ∈ X ] A x ⊢ &[ x ∈ X ] B x
+--   map&ᴰ = &ᴰ-intro λ x → e x ∘g π x
 
-open StrongEquivalence
+-- open StrongEquivalence
 
-module _ {X : Type ℓX}
-  {A : X → Grammar ℓA} {B : X → Grammar ℓB}
-  (A≅B : ∀ (x : X) → A x ≅ B x)
-  where
+-- module _ {X : Type ℓX}
+--   {A : X → Grammar ℓA} {B : X → Grammar ℓB}
+--   (A≅B : ∀ (x : X) → A x ≅ B x)
+--   where
 
-  &ᴰ≅ : (&[ x ∈ X ] A x) ≅ &[ x ∈ X ] B x
-  &ᴰ≅ .fun = map&ᴰ λ x → A≅B x .fun
-  &ᴰ≅ .inv = map&ᴰ λ x → A≅B x .inv
-  &ᴰ≅ .sec = &ᴰ≡ _ _ λ x → cong (_∘g π x) (A≅B x .sec)
-  &ᴰ≅ .ret = &ᴰ≡ _ _ λ x → cong (_∘g π x) (A≅B x .ret)
-
+--   &ᴰ≅ : (&[ x ∈ X ] A x) ≅ &[ x ∈ X ] B x
+--   &ᴰ≅ .fun = map&ᴰ λ x → A≅B x .fun
+--   &ᴰ≅ .inv = map&ᴰ λ x → A≅B x .inv
+--   &ᴰ≅ .sec = &ᴰ≡ _ _ λ x → cong (_∘g π x) (A≅B x .sec)
+--   &ᴰ≅ .ret = &ᴰ≡ _ _ λ x → cong (_∘g π x) (A≅B x .ret)

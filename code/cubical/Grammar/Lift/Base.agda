@@ -1,11 +1,15 @@
+{-# OPTIONS --erased-cubical --erasure #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Lift.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Lift.Base
+  (Alphabet : Type ℓ-zero)
+  (isSetAlphabet : isSet Alphabet)
+  where
 
-open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+-- open import Grammar.HLevels.Base Alphabet
+-- open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
 private
@@ -33,22 +37,22 @@ liftG = λ w z → lift z
 lowerG : LiftG ℓB A ⊢ A
 lowerG = λ w z → z .lower
 
-open StrongEquivalence
-module _ ℓB (A : Grammar ℓA) where
-  LiftG≅ : A ≅ (LiftG ℓB A)
-  LiftG≅ .fun = liftG
-  LiftG≅ .inv = lowerG
-  LiftG≅ .sec = refl
-  LiftG≅ .ret = refl
+-- open StrongEquivalence
+-- module _ ℓB (A : Grammar ℓA) where
+--   LiftG≅ : A ≅ (LiftG ℓB A)
+--   LiftG≅ .fun = liftG
+--   LiftG≅ .inv = lowerG
+--   LiftG≅ .sec = refl
+--   LiftG≅ .ret = refl
 
-module _ ℓB ℓC (A : Grammar ℓA) where
-    LiftG≅2 : A ≅ (LiftG ℓC (LiftG ℓB A))
-    LiftG≅2 =
-      LiftG≅ ℓB A
-      ≅∙ LiftG≅ ℓC (LiftG ℓB A)
+-- module _ ℓB ℓC (A : Grammar ℓA) where
+--     LiftG≅2 : A ≅ (LiftG ℓC (LiftG ℓB A))
+--     LiftG≅2 =
+--       LiftG≅ ℓB A
+--       ≅∙ LiftG≅ ℓC (LiftG ℓB A)
 
-isLangLift : isLang A → isLang (LiftG ℓB A)
-isLangLift isLangA w = isOfHLevelLift 1 (isLangA w)
+-- isLangLift : isLang A → isLang (LiftG ℓB A)
+-- isLangLift isLangA w = isOfHLevelLift 1 (isLangA w)
 
-isSetGrammarLift : isSetGrammar A → isSetGrammar (LiftG ℓB A)
-isSetGrammarLift isSetGrammarA w = isOfHLevelLift 2 (isSetGrammarA w)
+-- isSetGrammarLift : isSetGrammar A → isSetGrammar (LiftG ℓB A)
+-- isSetGrammarLift isSetGrammarA w = isOfHLevelLift 2 (isSetGrammarA w)

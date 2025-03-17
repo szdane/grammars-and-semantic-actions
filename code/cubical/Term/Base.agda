@@ -1,11 +1,15 @@
+{-# OPTIONS --erased-cubical --erasure #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Term.Base (Alphabet : hSet ℓ-zero) where
+module Term.Base
+  (Alphabet : Type ℓ-zero)
+  (isSetAlphabet : isSet Alphabet)
+  where
 
 open import Cubical.Functions.Embedding
 
-open import Grammar.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -83,29 +87,29 @@ Mono∘g : (e : A ⊢ B) (e' : B ⊢ C) →
 Mono∘g e e' mon-e mon-e' f f' e'ef≡e'ef' =
   mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
 
-transportG :
-  A ≡ B
-  → A ⊢ B
-transportG {A = A}{B = B} p = subst (λ B → A ⊢ B) p id
+-- transportG :
+--   A ≡ B
+--   → A ⊢ B
+-- transportG {A = A}{B = B} p = subst (λ B → A ⊢ B) p id
 
-transportGRefl :
-  transportG {A = A} refl ≡ id
-transportGRefl {A = A} = substRefl {B = λ B → A ⊢ B} _
+-- transportGRefl :
+--   transportG {A = A} refl ≡ id
+-- transportGRefl {A = A} = substRefl {B = λ B → A ⊢ B} _
 
-import Cubical.Data.Equality as Eq
-EqtransportG :
-  A Eq.≡ B
-  → A ⊢ B
-EqtransportG {A = A}{B = B} Eq.refl =
-  Eq.transport (λ B → A ⊢ B) Eq.refl id
+-- import Cubical.Data.Equality as Eq
+-- EqtransportG :
+--   A Eq.≡ B
+--   → A ⊢ B
+-- EqtransportG {A = A}{B = B} Eq.refl =
+--   Eq.transport (λ B → A ⊢ B) Eq.refl id
 
-invMoveR :
-  {f : A ⊢ B} {f⁻ : B ⊢ A}
-  {f' : C ⊢ A} {f'' : C ⊢ B}
-  → f⁻ ∘g f ≡ id
-  → f ∘g f' ≡ f''
-  → f' ≡ f⁻ ∘g f''
-invMoveR {f = f}{f⁻}{f'}{f''} retr p =
-  f' ≡⟨ cong (_∘g f') (sym retr) ⟩
-  f⁻ ∘g f ∘g f' ≡⟨ cong (f⁻ ∘g_) p ⟩
-  f⁻ ∘g f'' ∎
+-- invMoveR :
+--   {f : A ⊢ B} {f⁻ : B ⊢ A}
+--   {f' : C ⊢ A} {f'' : C ⊢ B}
+--   → f⁻ ∘g f ≡ id
+--   → f ∘g f' ≡ f''
+--   → f' ≡ f⁻ ∘g f''
+-- invMoveR {f = f}{f⁻}{f'}{f''} retr p =
+--   f' ≡⟨ cong (_∘g f') (sym retr) ⟩
+--   f⁻ ∘g f ∘g f' ≡⟨ cong (f⁻ ∘g_) p ⟩
+--   f⁻ ∘g f'' ∎

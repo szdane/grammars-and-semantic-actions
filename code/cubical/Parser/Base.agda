@@ -31,7 +31,6 @@ record Parser (A : Grammar ℓA) : Type (ℓ-suc ℓA) where
       run : (w : String) → (A w) Sum.⊎ (compl w)
       run w = fun w (mkstring w)
 
-
     private
       is-inl? : ∀ {X : Type ℓX} {Y : Type ℓY} →
         X Sum.⊎ Y → Bool

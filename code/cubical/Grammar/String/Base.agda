@@ -13,12 +13,12 @@ open import Cubical.Data.Empty as Empty
 open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Literal.Base Alphabet
-open import Grammar.Epsilon.Base Alphabet
-open import Grammar.Product.Binary.Cartesian.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
+-- open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
+-- open import Grammar.Sum.Base Alphabet
+-- open import Grammar.Literal.Base Alphabet
+-- open import Grammar.Epsilon.Base Alphabet
+-- open import Grammar.Product.Binary.Cartesian.Base Alphabet
+-- open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.KleeneStar.Inductive.Base Alphabet
 open import Term.Base Alphabet
 
